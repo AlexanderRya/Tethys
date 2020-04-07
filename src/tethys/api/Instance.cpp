@@ -1,0 +1,98 @@
+#include <tethys/api/Instance.hpp>
+#include <tethys/Logger.hpp>
+#include <tethys/Util.hpp>
+
+namespace tethys::api {
+    [[maybe_unused]] VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_debug_callback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+        VkDebugUtilsMessageTypeFlagsEXT type,
+        const VkDebugUtilsMessengerCallbackDataEXT* data,
+        void*) {
+
+        util::print(util::format(
+            "[{}] [Vulkan] [{}/{}]: {}\n",
+            util::timestamp(),
+            vk::to_string(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(severity)),
+            vk::to_string(static_cast<vk::DebugUtilsMessageTypeFlagsEXT>(type)),
+            data->pMessage));
+
+        if (severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+            std::abort();
+        }
+
+        return 0;
+    }
+
+    [[nodiscard]] static inline std::vector<const char*> get_required_extensions(const VulkanContext& ctx) {
+        u32 count = 0;
+
+        auto required_extensions = glfwGetRequiredInstanceExtensions(&count);
+        auto extensions = vk::enumerateInstanceExtensionProperties(nullptr, {}, ctx.dispatcher);
+
+        std::vector<const char*> enabled_extensions;
+        enabled_extensions.reserve(count + 2);
+
+        for (u32 i = 0; i < count; ++i) {
+            for (const auto& extension : extensions) {
+                if (std::strcmp(extension.extensionName, required_extensions[i]) == 0) {
+                    logger::info("Required extension activated: ", enabled_extensions.emplace_back(required_extensions[i]));
+                    break;
+                }
+            }
+        }
+
+        if (enabled_extensions.size() != count) {
+            throw std::runtime_error("Required extension not supported.");
+        }
+#ifdef TETHYS_DEBUG
+        enabled_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+        return enabled_extensions;
+    }
+
+    vk::Instance make_instance(const VulkanContext& ctx) {
+        vk::ApplicationInfo application_info{}; {
+            application_info.apiVersion = VK_API_VERSION_1_2;
+            application_info.applicationVersion = VK_API_VERSION_1_2;
+            application_info.engineVersion = VK_API_VERSION_1_2;
+            application_info.pEngineName = "Tethys Rendering Engine";
+            application_info.pApplicationName = "Tethys Rendering Engine";
+        }
+
+        auto enabled_exts = get_required_extensions(ctx);
+
+        [[maybe_unused]] const char* validation_layer = "VK_LAYER_KHRONOS_validation";
+
+        vk::InstanceCreateInfo instance_create_info{}; {
+            instance_create_info.pApplicationInfo = &application_info;
+
+            instance_create_info.ppEnabledExtensionNames = enabled_exts.data();
+            instance_create_info.enabledExtensionCount = enabled_exts.size();
+#ifdef TETHYS_DEBUG
+            instance_create_info.ppEnabledLayerNames = &validation_layer;
+            instance_create_info.enabledLayerCount = 1;
+#else
+            instance_create_info.ppEnabledLayerNames = nullptr;
+            instance_create_info.enabledLayerCount = 0;
+#endif
+        }
+
+        return vk::createInstance(instance_create_info, nullptr, ctx.dispatcher);
+    }
+
+    vk::DebugUtilsMessengerEXT install_validation_layers(const VulkanContext& ctx) {
+        vk::DebugUtilsMessengerCreateInfoEXT create_info{}; {
+            create_info.messageSeverity =
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+            create_info.messageType =
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral    |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+            create_info.pfnUserCallback = vulkan_debug_callback;
+        }
+
+        return ctx.instance.createDebugUtilsMessengerEXT(create_info, nullptr, ctx.dispatcher);
+    }
+} // namespace tethys::api
