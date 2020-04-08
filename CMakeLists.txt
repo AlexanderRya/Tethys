@@ -16,7 +16,7 @@ set(VMA_HEADERS
 
 set(TETHYS_HEADERS
         ${VMA_HEADERS}
-        "include/tethys/api/private/InternalContext.hpp"
+        "include/tethys/api/private/Context.hpp"
         "include/tethys/Forwards.hpp"
         "include/tethys/api/private/Instance.hpp"
         "include/tethys/Logger.hpp"
@@ -31,13 +31,13 @@ set(TETHYS_HEADERS
         "include/tethys/api/private/Image.hpp"
         "include/tethys/api/private/RenderPass.hpp"
         "include/tethys/api/private/Framebuffer.hpp"
-        "include/tethys/api/Context.hpp"
+        "include/tethys/api/Core.hpp"
         "include/tethys/renderer/Renderer.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/private/Instance.cpp"
         "src/tethys/Util.cpp"
-        "src/tethys/api/private/InternalContext.cpp"
+        "src/tethys/api/private/Context.cpp"
         "src/tethys/api/private/VMA.cpp"
         "src/tethys/window/Window.cpp"
         "src/tethys/api/private/Device.cpp"
@@ -48,7 +48,7 @@ set(TETHYS_SOURCES
         "src/tethys/api/private/Image.cpp"
         "src/tethys/api/private/RenderPass.cpp"
         "src/tethys/api/private/Framebuffer.cpp"
-        "src/tethys/api/Context.cpp"
+        "src/tethys/api/Core.cpp"
         "src/tethys/renderer/Renderer.cpp")
 
 add_library(Tethys
@@ -62,7 +62,7 @@ target_include_directories(Tethys PRIVATE
         external/VulkanMemoryAllocator/src)
 
 if (UNIX)
-    target_compile_options(Tethys PRIVATE -std=c++20 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations)
+    target_compile_options(Tethys PRIVATE -std=c++20 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
 endif()
 
 if (WIN32)
@@ -78,3 +78,5 @@ endif()
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(Tethys PRIVATE TETHYS_DEBUG)
 endif()
+
+target_link_libraries(Tethys PRIVATE glfw)

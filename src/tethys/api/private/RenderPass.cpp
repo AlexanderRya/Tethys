@@ -1,5 +1,5 @@
 #include <tethys/api/private/RenderPass.hpp>
-#include <tethys/api/private/InternalContext.hpp>
+#include <tethys/api/private/Context.hpp>
 #include <tethys/Logger.hpp>
 
 #include <vulkan/vulkan.hpp>

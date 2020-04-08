@@ -1,4 +1,4 @@
-#include <tethys/api/private/InternalContext.hpp>
+#include <tethys/api/private/Context.hpp>
 #include <tethys/api/private/Swapchain.hpp>
 #include <tethys/api/private/Image.hpp>
 #include <tethys/window/Window.hpp>

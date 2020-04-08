@@ -44,7 +44,7 @@ namespace tethys::util {
         return buf;
     }
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined (_WIN64)
 #if defined(__clang__)
     [[clang::optnone]]
 #elif defined(__GNUG__)
@@ -55,7 +55,7 @@ namespace tethys::util {
         write(1, val.c_str(), val.size());
 #else
         auto stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        WriteFile(stdout_handle, val.c_str(), val.size(), nullptr, false);
+        WriteFile(stdout_handle, val.c_str(), val.size(), nullptr, nullptr);
 #endif
     }
 

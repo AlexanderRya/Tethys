@@ -1,4 +1,4 @@
-#include <tethys/api/private/InternalContext.hpp>
+#include <tethys/api/private/Context.hpp>
 #include <tethys/api/private/DescriptorPool.hpp>
 #include <tethys/api/private/CommandPool.hpp>
 #include <tethys/api/private/Framebuffer.hpp>

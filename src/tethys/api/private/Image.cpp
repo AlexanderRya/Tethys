@@ -1,5 +1,5 @@
 #include <tethys/api/private/CommandBuffer.hpp>
-#include <tethys/api/private/InternalContext.hpp>
+#include <tethys/api/private/Context.hpp>
 #include <tethys/api/private/Image.hpp>
 
 namespace tethys::api {

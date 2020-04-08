@@ -1,5 +1,5 @@
-#ifndef TETHYS_INTERNALCONTEXT_HPP
-#define TETHYS_INTERNALCONTEXT_HPP
+#ifndef TETHYS_CONTEXT_HPP
+#define TETHYS_CONTEXT_HPP
 
 #include <tethys/api/private/Image.hpp>
 #include <tethys/Forwards.hpp>
@@ -49,4 +49,4 @@ namespace tethys::api {
     } ctx;
 } // namespace tethys::api
 
-#endif //TETHYS_INTERNALCONTEXT_HPP
+#endif //TETHYS_CONTEXT_HPP
