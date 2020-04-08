@@ -12,7 +12,7 @@ namespace tethys::util {
         return LoadLibraryA(name);
     }
 
-    void (*load_symbol(HMODULE handle, LPCSTR symbol))() {
+    auto load_symbol(HMODULE handle, LPCSTR symbol) -> void(*)() {
         return reinterpret_cast<void(*)()>(GetProcAddress(handle, symbol));
     }
 
@@ -24,7 +24,7 @@ namespace tethys::util {
         return dlopen(name, RTLD_LAZY | RTLD_LOCAL);
     }
 
-    void (*load_symbol(void* handle, const char* symbol))() {
+    auto load_symbol(void* handle, const char* symbol) -> void(*)() {
         return reinterpret_cast<void(*)()>(dlsym(handle, symbol));
     }
 

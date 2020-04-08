@@ -21,12 +21,12 @@ namespace tethys::util {
 #if _WIN32
     constexpr inline const char* vulkan_module = "vulkan-1.dll";
     HMODULE load_module(LPCSTR);
-    void (*load_symbol(HMODULE, LPCSTR))();
+    auto load_symbol(HMODULE, LPCSTR) -> void(*)();
     void close_module(HMODULE);
 #elif __linux__
     constexpr inline const char* vulkan_module = "libvulkan.so";
     void* load_module(const char*);
-    void (*load_symbol(void*, const char*))();
+    auto load_symbol(void* handle, const char* symbol) -> void(*)();
     void close_module(void*);
 #endif
     template <typename ...Args>

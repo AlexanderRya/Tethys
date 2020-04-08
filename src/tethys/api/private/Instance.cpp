@@ -1,6 +1,8 @@
-#include <tethys/api/Instance.hpp>
+#include <tethys/api/private/Instance.hpp>
 #include <tethys/Logger.hpp>
 #include <tethys/Util.hpp>
+
+#include <GLFW/glfw3.h>
 
 namespace tethys::api {
     [[maybe_unused]] VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_debug_callback(
@@ -8,7 +10,6 @@ namespace tethys::api {
         VkDebugUtilsMessageTypeFlagsEXT type,
         const VkDebugUtilsMessengerCallbackDataEXT* data,
         void*) {
-
         util::print(util::format(
             "[{}] [Vulkan] [{}/{}]: {}\n",
             util::timestamp(),
@@ -23,7 +24,7 @@ namespace tethys::api {
         return 0;
     }
 
-    [[nodiscard]] static inline std::vector<const char*> get_required_extensions(const VulkanContext& ctx) {
+    [[nodiscard]] static inline std::vector<const char*> get_required_extensions() {
         u32 count = 0;
 
         auto required_extensions = glfwGetRequiredInstanceExtensions(&count);
@@ -50,7 +51,7 @@ namespace tethys::api {
         return enabled_extensions;
     }
 
-    vk::Instance make_instance(const VulkanContext& ctx) {
+    vk::Instance make_instance() {
         vk::ApplicationInfo application_info{}; {
             application_info.apiVersion = VK_API_VERSION_1_2;
             application_info.applicationVersion = VK_API_VERSION_1_2;
@@ -59,7 +60,7 @@ namespace tethys::api {
             application_info.pApplicationName = "Tethys Rendering Engine";
         }
 
-        auto enabled_exts = get_required_extensions(ctx);
+        auto enabled_exts = get_required_extensions();
 
         [[maybe_unused]] const char* validation_layer = "VK_LAYER_KHRONOS_validation";
 
@@ -80,7 +81,7 @@ namespace tethys::api {
         return vk::createInstance(instance_create_info, nullptr, ctx.dispatcher);
     }
 
-    vk::DebugUtilsMessengerEXT install_validation_layers(const VulkanContext& ctx) {
+    vk::DebugUtilsMessengerEXT install_validation_layers() {
         vk::DebugUtilsMessengerCreateInfoEXT create_info{}; {
             create_info.messageSeverity =
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
