@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(Tethys CXX)
+project(Tethys)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -66,7 +66,7 @@ add_library(Tethys STATIC
         ${TETHYS_HEADERS}
         ${TETHYS_SOURCES})
 
-target_include_directories(Tethys PRIVATE
+target_include_directories(Tethys PUBLIC
         include
         external/glm
         external/glfw/include
@@ -74,21 +74,30 @@ target_include_directories(Tethys PRIVATE
         external/VulkanMemoryAllocator/src)
 
 if (UNIX)
-    target_compile_options(Tethys PRIVATE -std=c++20 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    target_compile_options(Tethys PUBLIC -std=c++20 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
 endif()
 
 if (WIN32)
-    target_compile_definitions(Tethys PRIVATE _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+    target_compile_definitions(Tethys PUBLIC _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
 if (UNIX)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        target_compile_definitions(Tethys PRIVATE _GLIBCXX_DEBUG)
+        target_compile_definitions(Tethys PUBLIC _GLIBCXX_DEBUG)
     endif()
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    target_compile_definitions(Tethys PRIVATE TETHYS_DEBUG)
+    target_compile_definitions(Tethys PUBLIC TETHYS_DEBUG)
 endif()
 
 target_link_libraries(Tethys PRIVATE glfw)
+
+file(GLOB TETHYS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
+foreach(SHADER ${TETHYS_SHADERS})
+    get_filename_component(SHADER_FNAME ${SHADER} NAME)
+    add_custom_command(
+            TARGET Tethys
+            COMMAND echo Compiling shader ${SHADER_FNAME} &&
+            glslc --target-env=vulkan1.1 ${SHADER} "-o${CMAKE_BINARY_DIR}/shaders/${SHADER_FNAME}.spv")
+endforeach()

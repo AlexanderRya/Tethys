@@ -81,10 +81,10 @@ namespace tethys::api {
         }
 
         vk::PipelineLayoutCreateInfo layout_create_info{}; {
-            layout_create_info.setLayoutCount = 1;
-            layout_create_info.pSetLayouts = &layout.set;
-            layout_create_info.pushConstantRangeCount = 1;
-            layout_create_info.pPushConstantRanges = &range;
+            layout_create_info.setLayoutCount = 0;
+            layout_create_info.pSetLayouts = nullptr;
+            layout_create_info.pushConstantRangeCount = 0;
+            layout_create_info.pPushConstantRanges = nullptr;
         }
 
         layout.pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);

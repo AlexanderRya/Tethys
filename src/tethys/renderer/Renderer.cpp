@@ -47,7 +47,7 @@ namespace tethys::renderer {
 
         renderer.in_flight.resize(frames_in_flight, nullptr);
 
-        renderer.generic = api::make_generic_pipeline("../shaders/generic.vert", "../shaders/generic.frag");
+        renderer.generic = api::make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv");
     }
 
     Handle<Mesh> upload(Mesh&& mesh) {
@@ -70,7 +70,7 @@ namespace tethys::renderer {
         return mesh_handles;
     }
 
-    void acquire() {
+    static inline void acquire() {
         renderer.image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, renderer.image_available[renderer.current_frame], nullptr, ctx.dispatcher).value;
 
         if (!renderer.in_flight[renderer.current_frame]) {
@@ -85,6 +85,8 @@ namespace tethys::renderer {
     }
 
     void start() {
+        acquire();
+
         auto& command_buffer = renderer.command_buffers[renderer.image_index];
 
         vk::CommandBufferBeginInfo begin_info{}; {
@@ -134,6 +136,7 @@ namespace tethys::renderer {
         for (const auto& draw : draws) {
             auto& mesh = renderer.vertex_buffers[draw.mesh.index];
 
+            command_buffer.bindVertexBuffers(0, mesh.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
             command_buffer.draw(mesh.size, 1, 0, 0, ctx.dispatcher);
         }
     }

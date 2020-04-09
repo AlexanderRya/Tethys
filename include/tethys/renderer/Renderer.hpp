@@ -11,10 +11,9 @@
 namespace tethys::renderer {
     void initialise();
 
-    Handle<Mesh> upload(Mesh&&);
-    std::vector<Handle<Mesh>> upload(std::vector<Mesh>&&);
+    [[nodiscard]] Handle<Mesh> upload(Mesh&&);
+    [[nodiscard]] std::vector<Handle<Mesh>> upload(std::vector<Mesh>&&);
 
-    void acquire();
     void start();
     void draw(const std::vector<DrawCommand>&);
     void end();
