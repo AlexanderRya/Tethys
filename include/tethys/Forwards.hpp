@@ -17,10 +17,16 @@ namespace vk {
     class Sampler;
 } // namespace vk
 
+namespace tethys {
+    struct Mesh;
+    struct Vertex;
+} // namespace tethys
+
 namespace tethys::api {
     struct Context;
     struct Device;
     struct Swapchain;
+    struct Buffer;
     class DescriptorSet;
     struct Image;
     class MappedBuffer;

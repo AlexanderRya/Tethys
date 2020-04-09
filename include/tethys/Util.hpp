@@ -69,7 +69,16 @@ namespace tethys::util {
     void print(const char*);
     void print(const void* addr);
 
+#if 1 // TODO: pls release C++20
     template <typename Ty, std::enable_if_t<std::is_arithmetic_v<Ty>>* = nullptr>
+#else
+    template <typename Ty>
+    concept is_stringable = requires(Ty x ) {
+        { std::to_string(x) };
+    };
+    template <typename Ty>
+        requires is_stringable<Ty>
+#endif
     void print(const Ty val) {
         print(std::to_string(val));
     }

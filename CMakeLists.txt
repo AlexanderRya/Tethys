@@ -7,9 +7,10 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 find_package(Vulkan REQUIRED)
 
-add_subdirectory(external/glfw)
-
 set(CMAKE_CXX_STANDARD 20)
+
+add_subdirectory(external/glfw)
+add_subdirectory(external/glm)
 
 set(VMA_HEADERS
         "external/VulkanMemoryAllocator/src/vk_mem_alloc.h")
@@ -32,7 +33,14 @@ set(TETHYS_HEADERS
         "include/tethys/api/private/RenderPass.hpp"
         "include/tethys/api/private/Framebuffer.hpp"
         "include/tethys/api/Core.hpp"
-        "include/tethys/renderer/Renderer.hpp")
+        "include/tethys/renderer/Renderer.hpp"
+        "include/tethys/api/private/Pipeline.hpp"
+        "include/tethys/Handle.hpp"
+        "include/tethys/Vertex.hpp"
+        "include/tethys/Mesh.hpp"
+        "include/tethys/renderer/DrawCommand.hpp"
+        "include/tethys/api/private/Buffer.hpp"
+        "include/tethys/api/private/VertexBuffer.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/private/Instance.cpp"
@@ -49,14 +57,18 @@ set(TETHYS_SOURCES
         "src/tethys/api/private/RenderPass.cpp"
         "src/tethys/api/private/Framebuffer.cpp"
         "src/tethys/api/Core.cpp"
-        "src/tethys/renderer/Renderer.cpp")
+        "src/tethys/renderer/Renderer.cpp"
+        "src/tethys/api/private/Pipeline.cpp"
+        "src/tethys/api/private/Buffer.cpp"
+        "src/tethys/api/private/VertexBuffer.cpp")
 
-add_library(Tethys
+add_library(Tethys STATIC
         ${TETHYS_HEADERS}
         ${TETHYS_SOURCES})
 
 target_include_directories(Tethys PRIVATE
         include
+        external/glm
         external/glfw/include
         ${Vulkan_INCLUDE_DIRS}
         external/VulkanMemoryAllocator/src)
