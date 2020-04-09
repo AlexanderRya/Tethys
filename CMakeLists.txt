@@ -91,7 +91,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(Tethys PUBLIC TETHYS_DEBUG)
 endif()
 
-target_link_libraries(Tethys PRIVATE glfw)
+target_link_libraries(Tethys PUBLIC glfw)
 
 file(GLOB TETHYS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 foreach(SHADER ${TETHYS_SHADERS})

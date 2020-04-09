@@ -17,43 +17,41 @@ namespace tethys::renderer {
 
     using namespace api;
 
-    struct RendererContext {
-        std::vector<vk::Semaphore> image_available{};
-        std::vector<vk::Semaphore> render_finished{};
-        std::vector<vk::Fence> in_flight{};
+    static std::vector<vk::Semaphore> image_available{};
+    static std::vector<vk::Semaphore> render_finished{};
+    static std::vector<vk::Fence> in_flight{};
 
-        std::vector<vk::CommandBuffer> command_buffers{};
+    static std::vector<vk::CommandBuffer> command_buffers{};
 
-        u32 image_index{};
-        u32 current_frame{};
+    static u32 image_index{};
+    static u32 current_frame{};
 
-        api::Pipeline generic{};
+    static api::Pipeline generic{};
 
-        std::vector<api::Buffer> vertex_buffers;
-    } renderer;
+    static std::vector<api::Buffer> vertex_buffers;
 
     void initialise() {
-        renderer.command_buffers = api::make_rendering_command_buffers();
+        command_buffers = api::make_rendering_command_buffers();
 
         vk::SemaphoreCreateInfo semaphore_create_info{};
 
-        renderer.image_available.reserve(frames_in_flight);
-        renderer.render_finished.reserve(frames_in_flight);
+        image_available.reserve(frames_in_flight);
+        render_finished.reserve(frames_in_flight);
 
         for (u64 i = 0; i < frames_in_flight; ++i) {
-            renderer.image_available.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
-            renderer.render_finished.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
+            image_available.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
+            render_finished.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
         }
 
-        renderer.in_flight.resize(frames_in_flight, nullptr);
+        in_flight.resize(frames_in_flight, nullptr);
 
-        renderer.generic = api::make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv");
+        generic = api::make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv");
     }
 
     Handle<Mesh> upload(Mesh&& mesh) {
         static usize index = 0;
 
-        renderer.vertex_buffers.emplace_back(api::make_vertex_buffer(std::move(mesh.geometry)));
+        vertex_buffers.emplace_back(api::make_vertex_buffer(std::move(mesh.geometry)));
 
         return Handle<Mesh>{ index++ };
     }
@@ -71,26 +69,26 @@ namespace tethys::renderer {
     }
 
     static inline void acquire() {
-        renderer.image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, renderer.image_available[renderer.current_frame], nullptr, ctx.dispatcher).value;
+        image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, image_available[current_frame], nullptr, ctx.dispatcher).value;
 
-        if (!renderer.in_flight[renderer.current_frame]) {
+        if (!in_flight[current_frame]) {
             vk::FenceCreateInfo fence_create_info{}; {
                 fence_create_info.flags = vk::FenceCreateFlagBits::eSignaled;
             }
 
-            renderer.in_flight[renderer.current_frame] = ctx.device.logical.createFence(fence_create_info, nullptr, ctx.dispatcher);
+            in_flight[current_frame] = ctx.device.logical.createFence(fence_create_info, nullptr, ctx.dispatcher);
         }
 
-        ctx.device.logical.waitForFences(renderer.in_flight[renderer.current_frame], true, -1, ctx.dispatcher);
+        ctx.device.logical.waitForFences(in_flight[current_frame], true, -1, ctx.dispatcher);
     }
 
     void start() {
         acquire();
 
-        auto& command_buffer = renderer.command_buffers[renderer.image_index];
+        auto& command_buffer = command_buffers[image_index];
 
         vk::CommandBufferBeginInfo begin_info{}; {
-            begin_info.flags |= vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+            begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
         }
 
         command_buffer.begin(begin_info, ctx.dispatcher);
@@ -102,7 +100,7 @@ namespace tethys::renderer {
 
         vk::RenderPassBeginInfo render_pass_begin_info{}; {
             render_pass_begin_info.renderArea.extent = ctx.swapchain.extent;
-            render_pass_begin_info.framebuffer = ctx.default_framebuffers[renderer.image_index];
+            render_pass_begin_info.framebuffer = ctx.default_framebuffers[image_index];
             render_pass_begin_info.renderPass = ctx.default_render_pass;
             render_pass_begin_info.clearValueCount = clear_values.size();
             render_pass_begin_info.pClearValues = clear_values.data();
@@ -129,12 +127,12 @@ namespace tethys::renderer {
     }
 
     void draw(const std::vector<DrawCommand>& draws) {
-        auto& command_buffer = renderer.command_buffers[renderer.image_index];
+        auto& command_buffer = command_buffers[image_index];
 
-        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, renderer.generic.handle, ctx.dispatcher);
+        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
 
         for (const auto& draw : draws) {
-            auto& mesh = renderer.vertex_buffers[draw.mesh.index];
+            auto& mesh = vertex_buffers[draw.mesh.index];
 
             command_buffer.bindVertexBuffers(0, mesh.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
             command_buffer.draw(mesh.size, 1, 0, 0, ctx.dispatcher);
@@ -142,7 +140,7 @@ namespace tethys::renderer {
     }
 
     void end() {
-        auto& command_buffer = renderer.command_buffers[renderer.image_index];
+        auto& command_buffer = command_buffers[image_index];
 
         command_buffer.endRenderPass(ctx.dispatcher);
 
@@ -153,27 +151,27 @@ namespace tethys::renderer {
         vk::PipelineStageFlags wait_mask{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
         vk::SubmitInfo submit_info{}; {
             submit_info.commandBufferCount = 1;
-            submit_info.pCommandBuffers = &renderer.command_buffers[renderer.image_index];
+            submit_info.pCommandBuffers = &command_buffers[image_index];
             submit_info.pWaitDstStageMask = &wait_mask;
             submit_info.waitSemaphoreCount = 1;
-            submit_info.pWaitSemaphores = &renderer.image_available[renderer.current_frame];
+            submit_info.pWaitSemaphores = &image_available[current_frame];
             submit_info.signalSemaphoreCount = 1;
-            submit_info.pSignalSemaphores = &renderer.render_finished[renderer.current_frame];
+            submit_info.pSignalSemaphores = &render_finished[current_frame];
         }
 
-        ctx.device.logical.resetFences(renderer.in_flight[renderer.current_frame], ctx.dispatcher);
-        ctx.device.queue.submit(submit_info, renderer.in_flight[renderer.current_frame], ctx.dispatcher);
+        ctx.device.logical.resetFences(in_flight[current_frame], ctx.dispatcher);
+        ctx.device.queue.submit(submit_info, in_flight[current_frame], ctx.dispatcher);
 
         vk::PresentInfoKHR present_info{}; {
             present_info.waitSemaphoreCount = 1;
-            present_info.pWaitSemaphores = &renderer.render_finished[renderer.current_frame];
+            present_info.pWaitSemaphores = &render_finished[current_frame];
             present_info.swapchainCount = 1;
             present_info.pSwapchains = &ctx.swapchain.handle;
-            present_info.pImageIndices = &renderer.image_index;
+            present_info.pImageIndices = &image_index;
         }
 
         ctx.device.queue.presentKHR(present_info, ctx.dispatcher);
 
-        renderer.current_frame = (renderer.current_frame + 1) % frames_in_flight;
+        current_frame = (current_frame + 1) % frames_in_flight;
     }
 } // namespace tethys::renderer
