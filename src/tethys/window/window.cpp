@@ -64,4 +64,8 @@ namespace tethys::window {
     const char* title() {
         return window.title;
     }
+
+    void poll() {
+        glfwPollEvents();
+    }
 } // namespace tethys::window

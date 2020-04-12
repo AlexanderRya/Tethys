@@ -1,10 +1,11 @@
-#include <tethys/api/private/Context.hpp>
 #include <tethys/api/private/DescriptorPool.hpp>
 #include <tethys/api/private/CommandPool.hpp>
 #include <tethys/api/private/Framebuffer.hpp>
 #include <tethys/api/private/RenderPass.hpp>
 #include <tethys/api/private/Swapchain.hpp>
 #include <tethys/api/private/Instance.hpp>
+#include <tethys/api/private/Sampler.hpp>
+#include <tethys/api/private/Context.hpp>
 #include <tethys/api/private/Device.hpp>
 #include <tethys/window/Window.hpp>
 #include <tethys/Logger.hpp>
@@ -98,6 +99,7 @@ namespace tethys::api {
         ctx.descriptor_pool = make_descriptor_pool();
         ctx.default_render_pass = make_default_render_pass();
         ctx.default_framebuffers = make_default_framebuffers();
+        ctx.default_sampler = make_default_sampler();
 
         logger::info("Vulkan initialization sequence completed successfully");
     }

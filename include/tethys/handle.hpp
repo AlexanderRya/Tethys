@@ -6,10 +6,7 @@
 
 namespace tethys {
     template <typename Ty>
-    struct Handle; // Empty
-
-    template <>
-    struct Handle<Mesh> {
+    struct Handle {
         usize index;
     };
 } // namespace tethys

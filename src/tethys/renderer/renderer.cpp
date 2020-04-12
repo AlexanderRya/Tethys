@@ -1,20 +1,25 @@
 #include <tethys/api/private/CommandBuffer.hpp>
+#include <tethys/api/private/DescriptorSet.hpp>
 #include <tethys/api/private/VertexBuffer.hpp>
+#include <tethys/api/private/StaticBuffer.hpp>
 #include <tethys/api/private/Pipeline.hpp>
-#include <tethys/renderer/DrawCommand.hpp>
+#include <tethys/renderer/RenderData.hpp>
 #include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Buffer.hpp>
+#include <tethys/api/meta/constants.hpp>
+#include <tethys/api/private/buffer.hpp>
 #include <tethys/renderer/Renderer.hpp>
 #include <tethys/Forwards.hpp>
+#include <tethys/Texture.hpp>
 #include <tethys/Types.hpp>
 
 #include <vulkan/vulkan.hpp>
 
+#include <glm/mat4x4.hpp>
+
 #include <vector>
+#include <stack>
 
 namespace tethys::renderer {
-    constexpr static auto frames_in_flight = 2;
-
     using namespace api;
 
     static std::vector<vk::Semaphore> image_available{};
@@ -28,22 +33,28 @@ namespace tethys::renderer {
 
     static api::Pipeline generic{};
 
-    static std::vector<api::Buffer> vertex_buffers;
+    static std::stack<usize> free_vertex_buffers{};
+    static std::vector<api::VertexBuffer> vertex_buffers{};
+
+    static std::vector<Texture> textures{};
+
+    /*static api::Buffer<glm::mat4> camera_buffer{};
+    static api::Buffer<glm::mat4> transform_buffer{};*/
 
     void initialise() {
         command_buffers = api::make_rendering_command_buffers();
 
         vk::SemaphoreCreateInfo semaphore_create_info{};
 
-        image_available.reserve(frames_in_flight);
-        render_finished.reserve(frames_in_flight);
+        image_available.reserve(meta::frames_in_flight);
+        render_finished.reserve(meta::frames_in_flight);
 
-        for (u64 i = 0; i < frames_in_flight; ++i) {
+        for (u64 i = 0; i < meta::frames_in_flight; ++i) {
             image_available.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
             render_finished.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
         }
 
-        in_flight.resize(frames_in_flight, nullptr);
+        in_flight.resize(meta::frames_in_flight, nullptr);
 
         generic = api::make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv");
     }
@@ -51,9 +62,19 @@ namespace tethys::renderer {
     Handle<Mesh> upload(Mesh&& mesh) {
         static usize index = 0;
 
-        vertex_buffers.emplace_back(api::make_vertex_buffer(std::move(mesh.geometry)));
+        if (!free_vertex_buffers.empty()) {
+            auto free_idx = free_vertex_buffers.top();
 
-        return Handle<Mesh>{ index++ };
+            vertex_buffers[free_idx] = api::make_vertex_buffer(std::move(mesh.geometry));
+
+            free_vertex_buffers.pop();
+
+            return Handle<Mesh>{ free_idx };
+        } else {
+            vertex_buffers.emplace_back(api::make_vertex_buffer(std::move(mesh.geometry)));
+
+            return Handle<Mesh>{ index++ };
+        }
     }
 
     std::vector<Handle<Mesh>> upload(std::vector<Mesh>&& meshes) {
@@ -66,6 +87,14 @@ namespace tethys::renderer {
         }
 
         return mesh_handles;
+    }
+
+    void unload(Handle<Mesh>&& mesh) {
+        if (mesh.index < vertex_buffers.size()) {
+            std::swap(vertex_buffers[mesh.index], vertex_buffers.emplace_back());
+            api::destroy_buffer(vertex_buffers.back().buffer);
+            vertex_buffers.pop_back();
+        }
     }
 
     static inline void acquire() {
@@ -126,15 +155,15 @@ namespace tethys::renderer {
         command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
     }
 
-    void draw(const std::vector<DrawCommand>& draws) {
+    void draw(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
         command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
 
-        for (const auto& draw : draws) {
+        for (const auto& draw : data.commands) {
             auto& mesh = vertex_buffers[draw.mesh.index];
 
-            command_buffer.bindVertexBuffers(0, mesh.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
+            command_buffer.bindVertexBuffers(0, mesh.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
             command_buffer.draw(mesh.size, 1, 0, 0, ctx.dispatcher);
         }
     }
@@ -172,6 +201,6 @@ namespace tethys::renderer {
 
         ctx.device.queue.presentKHR(present_info, ctx.dispatcher);
 
-        current_frame = (current_frame + 1) % frames_in_flight;
+        current_frame = (current_frame + 1) % meta::frames_in_flight;
     }
 } // namespace tethys::renderer

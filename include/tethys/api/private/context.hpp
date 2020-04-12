@@ -46,6 +46,7 @@ namespace tethys::api {
         vk::DescriptorPool descriptor_pool{};
         vk::RenderPass default_render_pass{};
         std::vector<vk::Framebuffer> default_framebuffers{};
+        vk::Sampler default_sampler{};
     } ctx;
 } // namespace tethys::api
 

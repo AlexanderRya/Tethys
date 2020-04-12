@@ -1,10 +1,10 @@
 #include <tethys/api/private/CommandBuffer.hpp>
+#include <tethys/api/private/StaticBuffer.hpp>
 #include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Buffer.hpp>
 #include <tethys/api/private/Device.hpp>
 
 namespace tethys::api {
-    Buffer make_buffer(const usize size, const vk::BufferUsageFlags& usage, const VmaMemoryUsage memory_usage, const VmaAllocationCreateFlags alloc_flags) {
+    StaticBuffer make_buffer(const usize size, const vk::BufferUsageFlags& usage, const VmaMemoryUsage memory_usage, const VmaAllocationCreateFlags alloc_flags) {
         vk::BufferCreateInfo buffer_create_info{}; {
             buffer_create_info.size = size;
             buffer_create_info.queueFamilyIndexCount = 1;
@@ -23,7 +23,7 @@ namespace tethys::api {
             allocation_create_info.usage = memory_usage;
         }
 
-        Buffer buffer{};
+        StaticBuffer buffer{};
 
         vmaCreateBuffer(
             ctx.allocator,
@@ -33,51 +33,9 @@ namespace tethys::api {
             &buffer.allocation,
             nullptr);
 
-        buffer.size = size;
+        buffer.flags = usage;
 
         return buffer;
-    }
-
-    vk::Buffer make_buffer(const usize size, const vk::BufferUsageFlags usage) {
-        vk::BufferCreateInfo buffer_create_info{}; {
-            buffer_create_info.size = size;
-            buffer_create_info.queueFamilyIndexCount = 1;
-            buffer_create_info.pQueueFamilyIndices = &ctx.device.queue_family;
-            buffer_create_info.usage = usage;
-            buffer_create_info.sharingMode = vk::SharingMode::eExclusive;
-        }
-
-        return ctx.device.logical.createBuffer(buffer_create_info, nullptr, ctx.dispatcher);
-    }
-
-    vk::DeviceMemory allocate_memory(const vk::Buffer buffer, const vk::MemoryPropertyFlags flags) {
-        const auto memory_requirements = ctx.device.logical.getBufferMemoryRequirements(buffer, ctx.dispatcher);
-
-        vk::MemoryAllocateInfo memory_allocate_info{}; {
-            memory_allocate_info.allocationSize = memory_requirements.size;
-            memory_allocate_info.memoryTypeIndex = api::find_memory_type(memory_requirements.memoryTypeBits, flags);
-        }
-
-        auto memory = ctx.device.logical.allocateMemory(memory_allocate_info, nullptr, ctx.dispatcher);
-
-        ctx.device.logical.bindBufferMemory(buffer, memory, 0, ctx.dispatcher);
-
-        return memory;
-    }
-
-    vk::DeviceMemory allocate_memory(const vk::Image image, const vk::MemoryPropertyFlags flags) {
-        const auto memory_requirements = ctx.device.logical.getImageMemoryRequirements(image, ctx.dispatcher);
-
-        vk::MemoryAllocateInfo memory_allocate_info{}; {
-            memory_allocate_info.allocationSize = memory_requirements.size;
-            memory_allocate_info.memoryTypeIndex = api::find_memory_type(memory_requirements.memoryTypeBits, flags);
-        }
-
-        auto memory = ctx.device.logical.allocateMemory(memory_allocate_info, nullptr, ctx.dispatcher);
-
-        ctx.device.logical.bindImageMemory(image, memory, 0, ctx.dispatcher);
-
-        return memory;
     }
 
     void copy_buffer(const vk::Buffer src, vk::Buffer dst, const usize size) {
@@ -118,5 +76,9 @@ namespace tethys::api {
 
             end_transient(command_buffer);
         }
+    }
+
+    void destroy_buffer(StaticBuffer& buffer) {
+        vmaDestroyBuffer(ctx.allocator, buffer.handle, buffer.allocation);
     }
 } // namespace tethys::api

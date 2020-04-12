@@ -26,11 +26,13 @@ namespace tethys::api {
     struct Context;
     struct Device;
     struct Swapchain;
-    struct Buffer;
+    struct StaticBuffer;
     class DescriptorSet;
     struct Image;
-    class MappedBuffer;
-    class SingleMappedBuffer;
+    template <typename>
+    class Buffer;
+    template <typename>
+    class SingleBuffer;
     struct Pipeline;
     struct PipelineLayout;
 } // namespace tethys::api

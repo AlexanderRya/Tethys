@@ -19,6 +19,7 @@ namespace tethys::window {
     [[nodiscard]] u32 width();
     [[nodiscard]] u32 height();
     [[nodiscard]] const char* title();
+    void poll();
 } // namespace tethys::window
 
 #endif //TETHYS_WINDOW_HPP

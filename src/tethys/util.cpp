@@ -64,10 +64,8 @@ namespace tethys::util {
     }
 
     void print(const void* addr) {
-        auto size = std::snprintf(nullptr, 0, "%p", addr);
-
-        std::string str(size, '\0');
-        std::snprintf(str.data(), size, "%p", addr);
+        std::string str(std::snprintf(nullptr, 0, "%p", addr), '\0');
+        std::snprintf(str.data(), str.size(), "%p", addr);
 
         print(str);
     }

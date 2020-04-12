@@ -1,5 +1,6 @@
 #include <tethys/api/private/Pipeline.hpp>
 #include <tethys/api/private/Context.hpp>
+#include <tethys/api/meta/constants.hpp>
 #include <tethys/Vertex.hpp>
 #include <tethys/Logger.hpp>
 
@@ -35,22 +36,22 @@ namespace tethys::api {
         std::array<vk::DescriptorSetLayoutBinding, 4> layout_bindings{}; {
             layout_bindings[0].descriptorCount = 1;
             layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-            layout_bindings[0].binding = 0;
+            layout_bindings[0].binding = meta::binding::camera;
             layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
 
             layout_bindings[1].descriptorCount = 1;
             layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
-            layout_bindings[1].binding = 1;
+            layout_bindings[1].binding = meta::binding::transform;
             layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
 
             layout_bindings[2].descriptorCount = 1;
             layout_bindings[2].descriptorType = vk::DescriptorType::eStorageBuffer;
-            layout_bindings[2].binding = 2;
+            layout_bindings[2].binding = meta::binding::material;
             layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
 
             layout_bindings[3].descriptorCount = 128;
             layout_bindings[3].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-            layout_bindings[3].binding = 3;
+            layout_bindings[3].binding = meta::binding::texture;
             layout_bindings[3].stageFlags = vk::ShaderStageFlagBits::eFragment;
         }
 
@@ -81,10 +82,10 @@ namespace tethys::api {
         }
 
         vk::PipelineLayoutCreateInfo layout_create_info{}; {
-            /*layout_create_info.setLayoutCount = 1;
+            layout_create_info.setLayoutCount = 1;
             layout_create_info.pSetLayouts = &layout.set;
             layout_create_info.pushConstantRangeCount = 1;
-            layout_create_info.pPushConstantRanges = &range;*/
+            layout_create_info.pPushConstantRanges = &range;
         }
 
         layout.pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
