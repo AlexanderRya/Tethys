@@ -1,15 +1,15 @@
-#include <tethys/api/private/DescriptorPool.hpp>
-#include <tethys/api/private/CommandPool.hpp>
-#include <tethys/api/private/Framebuffer.hpp>
-#include <tethys/api/private/RenderPass.hpp>
-#include <tethys/api/private/Swapchain.hpp>
-#include <tethys/api/private/Instance.hpp>
-#include <tethys/api/private/Sampler.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Device.hpp>
-#include <tethys/window/Window.hpp>
-#include <tethys/Logger.hpp>
-#include <tethys/Util.hpp>
+#include <tethys/api/private/descriptor_pool.hpp>
+#include <tethys/api/private/command_pool.hpp>
+#include <tethys/api/private/framebuffer.hpp>
+#include <tethys/api/private/render_pass.hpp>
+#include <tethys/api/private/swapchain.hpp>
+#include <tethys/api/private/instance.hpp>
+#include <tethys/api/private/sampler.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/api/private/device.hpp>
+#include <tethys/window/window.hpp>
+#include <tethys/logger.hpp>
+#include <tethys/util.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

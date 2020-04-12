@@ -1,4 +1,4 @@
-#include <tethys/api/private/DescriptorSet.hpp>
+#include <tethys/api/private/descriptor_set.hpp>
 
 namespace tethys::api {
     void DescriptorSet::create(const vk::DescriptorSetLayout layout) {
@@ -9,13 +9,31 @@ namespace tethys::api {
 
     void DescriptorSet::update(const UpdateBufferInfo& info) {
         for (auto& descriptor_set : descriptor_sets) {
-            descriptor_set.update(info);
+            for (const auto& buffer : info.buffers) {
+                SingleUpdateBufferInfo single_info{}; {
+                    single_info.buffer = buffer;
+                    single_info.binding = info.binding;
+                    single_info.type = info.type;
+                }
+
+                descriptor_set.update(single_info);
+            }
         }
     }
 
-    void DescriptorSet::update(const std::vector<UpdateBufferInfo>& info) {
+    void DescriptorSet::update(const std::vector<UpdateBufferInfo>& infos) {
         for (auto& descriptor_set : descriptor_sets) {
-            descriptor_set.update(info);
+            for (auto& info : infos) {
+                for (const auto& buffer : info.buffers) {
+                    SingleUpdateBufferInfo single_info{}; {
+                        single_info.buffer = buffer;
+                        single_info.binding = info.binding;
+                        single_info.type = info.type;
+                    }
+
+                    descriptor_set.update(single_info);
+                }
+            }
         }
     }
 

@@ -1,10 +1,10 @@
-#ifndef TETHYS_DESCRIPTORPOOL_HPP
-#define TETHYS_DESCRIPTORPOOL_HPP
+#ifndef TETHYS_DESCRIPTOR_POOL_HPP
+#define TETHYS_DESCRIPTOR_POOL_HPP
 
-#include <tethys/Forwards.hpp>
+#include <tethys/forwards.hpp>
 
 namespace tethys::api {
     [[nodiscard]] vk::DescriptorPool make_descriptor_pool();
 } // namespace tethys::api
 
-#endif //TETHYS_DESCRIPTORPOOL_HPP
+#endif //TETHYS_DESCRIPTOR_POOL_HPP

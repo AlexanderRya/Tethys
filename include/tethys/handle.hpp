@@ -1,8 +1,8 @@
 #ifndef TETHYS_HANDLE_HPP
 #define TETHYS_HANDLE_HPP
 
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 namespace tethys {
     template <typename Ty>

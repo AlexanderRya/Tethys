@@ -1,15 +1,15 @@
-#ifndef TETHYS_SINGLEDESCRIPTORSET_HPP
-#define TETHYS_SINGLEDESCRIPTORSET_HPP
+#ifndef TETHYS_SINGLE_DESCRIPTOR_SET_HPP
+#define TETHYS_SINGLE_DESCRIPTOR_SET_HPP
 
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 
 #include <vector>
 
 namespace tethys::api {
-    struct UpdateBufferInfo {
+    struct SingleUpdateBufferInfo {
         vk::DescriptorBufferInfo buffer{};
         vk::DescriptorType type{};
         u64 binding{};
@@ -25,12 +25,12 @@ namespace tethys::api {
         vk::DescriptorSet descriptor_set{};
     public:
         void create(const vk::DescriptorSetLayout);
-        void update(const UpdateBufferInfo&);
-        void update(const std::vector<UpdateBufferInfo>&);
+        void update(const SingleUpdateBufferInfo&);
+        void update(const std::vector<SingleUpdateBufferInfo>&);
         void update(const UpdateImageInfo&);
 
         [[nodiscard]] vk::DescriptorSet handle() const;
     };
 } // namespace tethys::api
 
-#endif //TETHYS_SINGLEDESCRIPTORSET_HPP
+#endif //TETHYS_SINGLE_DESCRIPTOR_SET_HPP

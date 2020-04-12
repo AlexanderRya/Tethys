@@ -1,5 +1,5 @@
-#include <tethys/api/private/Sampler.hpp>
-#include <tethys/api/private/Context.hpp>
+#include <tethys/api/private/sampler.hpp>
+#include <tethys/api/private/context.hpp>
 
 namespace tethys::api {
     vk::Sampler make_default_sampler() {

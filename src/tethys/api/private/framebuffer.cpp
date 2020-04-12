@@ -1,6 +1,6 @@
-#include <tethys/api/private/Framebuffer.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/Logger.hpp>
+#include <tethys/api/private/framebuffer.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/logger.hpp>
 
 namespace tethys::api {
     std::vector<vk::Framebuffer> make_default_framebuffers() {

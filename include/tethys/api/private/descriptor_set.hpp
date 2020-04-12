@@ -1,16 +1,22 @@
-#ifndef TETHYS_DESCRIPTORSET_HPP
-#define TETHYS_DESCRIPTORSET_HPP
+#ifndef TETHYS_DESCRIPTOR_SET_HPP
+#define TETHYS_DESCRIPTOR_SET_HPP
 
-#include <tethys/api/private/SingleDescriptorSet.hpp>
+#include <tethys/api/private/single_descriptor_set.hpp>
 #include <tethys/api/meta/constants.hpp>
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 
 #include <array>
 
 namespace tethys::api {
+    struct UpdateBufferInfo {
+        std::array<vk::DescriptorBufferInfo, meta::frames_in_flight> buffers;
+        vk::DescriptorType type{};
+        u64 binding{};
+    };
+
     class DescriptorSet {
         std::array<SingleDescriptorSet, meta::frames_in_flight> descriptor_sets;
     public:
@@ -26,4 +32,4 @@ namespace tethys::api {
     };
 } // namespace tethys::api
 
-#endif //TETHYS_DESCRIPTORSET_HPP
+#endif //TETHYS_DESCRIPTOR_SET_HPP

@@ -1,8 +1,8 @@
-#include <tethys/api/private/VertexBuffer.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/StaticBuffer.hpp>
-#include <tethys/Vertex.hpp>
-#include <tethys/Logger.hpp>
+#include <tethys/api/private/vertex_buffer.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/api/private/static_buffer.hpp>
+#include <tethys/vertex.hpp>
+#include <tethys/logger.hpp>
 
 namespace tethys::api {
     VertexBuffer make_vertex_buffer(std::vector<Vertex>&& vertices) {

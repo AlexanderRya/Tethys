@@ -1,6 +1,6 @@
-#include <tethys/api/private/Instance.hpp>
-#include <tethys/Logger.hpp>
-#include <tethys/Util.hpp>
+#include <tethys/api/private/instance.hpp>
+#include <tethys/logger.hpp>
+#include <tethys/util.hpp>
 
 #include <GLFW/glfw3.h>
 

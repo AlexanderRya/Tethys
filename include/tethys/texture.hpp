@@ -3,7 +3,7 @@
 
 #include <tethys/api/private/image.hpp>
 #include <tethys/forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 

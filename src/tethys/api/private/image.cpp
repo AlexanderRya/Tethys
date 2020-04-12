@@ -1,6 +1,6 @@
-#include <tethys/api/private/CommandBuffer.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Image.hpp>
+#include <tethys/api/private/command_buffer.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/api/private/image.hpp>
 
 namespace tethys::api {
     Image make_image(const Image::CreateInfo& info) {

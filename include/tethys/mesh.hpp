@@ -1,7 +1,7 @@
 #ifndef TETHYS_MESH_HPP
 #define TETHYS_MESH_HPP
 
-#include <tethys/Vertex.hpp>
+#include <tethys/vertex.hpp>
 
 #include <vector>
 

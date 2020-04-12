@@ -1,8 +1,8 @@
-#include <tethys/api/private/Pipeline.hpp>
-#include <tethys/api/private/Context.hpp>
+#include <tethys/api/private/pipeline.hpp>
+#include <tethys/api/private/context.hpp>
 #include <tethys/api/meta/constants.hpp>
-#include <tethys/Vertex.hpp>
-#include <tethys/Logger.hpp>
+#include <tethys/vertex.hpp>
+#include <tethys/logger.hpp>
 
 #include <fstream>
 
@@ -33,7 +33,7 @@ namespace tethys::api {
     [[nodiscard]] static inline PipelineLayout make_generic_pipeline_layout() {
         PipelineLayout layout;
 
-        std::array<vk::DescriptorSetLayoutBinding, 4> layout_bindings{}; {
+        std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings{}; {
             layout_bindings[0].descriptorCount = 1;
             layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
             layout_bindings[0].binding = meta::binding::camera;
@@ -44,22 +44,22 @@ namespace tethys::api {
             layout_bindings[1].binding = meta::binding::transform;
             layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
 
-            layout_bindings[2].descriptorCount = 1;
+            /*layout_bindings[2].descriptorCount = 1;
             layout_bindings[2].descriptorType = vk::DescriptorType::eStorageBuffer;
             layout_bindings[2].binding = meta::binding::material;
-            layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
+            layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;*/
 
-            layout_bindings[3].descriptorCount = 128;
-            layout_bindings[3].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-            layout_bindings[3].binding = meta::binding::texture;
-            layout_bindings[3].stageFlags = vk::ShaderStageFlagBits::eFragment;
+            layout_bindings[2].descriptorCount = 128;
+            layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+            layout_bindings[2].binding = meta::binding::texture;
+            layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
         }
 
-        std::array<vk::DescriptorBindingFlags, 4> binding_flags{}; {
+        std::array<vk::DescriptorBindingFlags, 3> binding_flags{}; {
             binding_flags[0] = {};
             binding_flags[1] = {};
-            binding_flags[2] = {};
-            binding_flags[3] = vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound;
+//          binding_flags[2] = {};
+            binding_flags[2] = vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound;
         }
 
         vk::DescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{}; {

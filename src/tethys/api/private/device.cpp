@@ -1,7 +1,7 @@
-#include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Device.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/api/private/device.hpp>
 
-#include <tethys/Logger.hpp>
+#include <tethys/logger.hpp>
 
 namespace tethys::api {
     [[nodiscard]] static inline vk::PhysicalDevice get_physical_device() {

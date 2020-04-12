@@ -1,7 +1,7 @@
-#include <tethys/api/private/CommandBuffer.hpp>
-#include <tethys/api/private/StaticBuffer.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Device.hpp>
+#include <tethys/api/private/command_buffer.hpp>
+#include <tethys/api/private/static_buffer.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/api/private/device.hpp>
 
 namespace tethys::api {
     StaticBuffer make_buffer(const usize size, const vk::BufferUsageFlags& usage, const VmaMemoryUsage memory_usage, const VmaAllocationCreateFlags alloc_flags) {

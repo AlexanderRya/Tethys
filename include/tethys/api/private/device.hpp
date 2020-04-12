@@ -1,9 +1,9 @@
 #ifndef TETHYS_DEVICE_HPP
 #define TETHYS_DEVICE_HPP
 
-#include <tethys/api/private/Context.hpp>
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 

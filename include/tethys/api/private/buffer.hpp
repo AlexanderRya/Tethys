@@ -1,7 +1,7 @@
 #ifndef TETHYS_BUFFER_HPP
 #define TETHYS_BUFFER_HPP
 
-#include <tethys/api/private/SingleBuffer.hpp>
+#include <tethys/api/private/single_buffer.hpp>
 #include <tethys/api/meta/constants.hpp>
 
 namespace tethys::api {
@@ -60,7 +60,7 @@ namespace tethys::api {
     std::array<vk::DescriptorBufferInfo, meta::frames_in_flight> Buffer<Ty>::info() const {
         std::array<vk::DescriptorBufferInfo, meta::frames_in_flight> infos{};
 
-        for (int i = 0; i < meta::frames_in_flight; ++i) {
+        for (usize i = 0; i < meta::frames_in_flight; ++i) {
             infos[i] = buffers[i].info();
         }
 

@@ -1,18 +1,19 @@
 #ifndef TETHYS_RENDERER_HPP
 #define TETHYS_RENDERER_HPP
 
-#include <tethys/renderer/RenderData.hpp>
-#include <tethys/Forwards.hpp>
-#include <tethys/Handle.hpp>
-#include <tethys/Mesh.hpp>
+#include <tethys/renderer/render_data.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/handle.hpp>
+#include <tethys/mesh.hpp>
 
 #include <vector>
 
 namespace tethys::renderer {
     void initialise();
 
-    [[nodiscard]] Handle<Mesh> upload(Mesh&&);
-    [[nodiscard]] std::vector<Handle<Mesh>> upload(std::vector<Mesh>&&);
+    [[nodiscard]] Handle<Mesh> upload(std::vector<Vertex>&&);
+    [[nodiscard]] Handle<Texture> upload(const char*);
+    [[nodiscard]] std::vector<Handle<Mesh>> upload(std::vector<std::vector<Vertex>>&&);
     void unload(Handle<Mesh>&&);
 
     void start();

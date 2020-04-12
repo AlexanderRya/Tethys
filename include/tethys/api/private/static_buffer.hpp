@@ -1,7 +1,7 @@
-#ifndef TETHYS_STATICBUFFER_HPP
-#define TETHYS_STATICBUFFER_HPP
+#ifndef TETHYS_STATIC_BUFFER_HPP
+#define TETHYS_STATIC_BUFFER_HPP
 
-#include <tethys/Types.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 #include <vk_mem_alloc.h>
@@ -19,4 +19,4 @@ namespace tethys::api {
     void destroy_buffer(StaticBuffer& buffer);
 } // namespace tethys::api
 
-#endif //TETHYS_STATICBUFFER_HPP
+#endif //TETHYS_STATIC_BUFFER_HPP

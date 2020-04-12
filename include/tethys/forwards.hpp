@@ -20,6 +20,7 @@ namespace vk {
 namespace tethys {
     struct Mesh;
     struct Vertex;
+    class Texture;
 } // namespace tethys
 
 namespace tethys::api {

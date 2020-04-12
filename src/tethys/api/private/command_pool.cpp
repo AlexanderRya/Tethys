@@ -1,7 +1,7 @@
-#include <tethys/api/private/CommandPool.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/Logger.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/api/private/command_pool.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/logger.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 

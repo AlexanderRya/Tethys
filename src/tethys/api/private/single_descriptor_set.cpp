@@ -1,5 +1,5 @@
-#include <tethys/api/private/SingleDescriptorSet.hpp>
-#include <tethys/api/private/Context.hpp>
+#include <tethys/api/private/single_descriptor_set.hpp>
+#include <tethys/api/private/context.hpp>
 
 #include <vulkan/vulkan.hpp>
 
@@ -14,7 +14,7 @@ namespace tethys::api {
         descriptor_set = ctx.device.logical.allocateDescriptorSets(info, ctx.dispatcher).back();
     }
 
-    void SingleDescriptorSet::update(const UpdateBufferInfo& info) {
+    void SingleDescriptorSet::update(const SingleUpdateBufferInfo& info) {
         vk::WriteDescriptorSet write{}; {
             write.descriptorCount = 1;
             write.pImageInfo = nullptr;
@@ -29,7 +29,7 @@ namespace tethys::api {
         ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
     }
 
-    void SingleDescriptorSet::update(const std::vector<UpdateBufferInfo>& info) {
+    void SingleDescriptorSet::update(const std::vector<SingleUpdateBufferInfo>& info) {
         for (const auto& each : info) {
             vk::WriteDescriptorSet write{}; {
                 write.descriptorCount = 1;

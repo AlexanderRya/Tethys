@@ -1,8 +1,8 @@
-#ifndef TETHYS_SINGLEBUFFER_HPP
-#define TETHYS_SINGLEBUFFER_HPP
+#ifndef TETHYS_SINGLE_BUFFER_HPP
+#define TETHYS_SINGLE_BUFFER_HPP
 
-#include <tethys/api/private/StaticBuffer.hpp>
-#include <tethys/api/private/Context.hpp>
+#include <tethys/api/private/static_buffer.hpp>
+#include <tethys/api/private/context.hpp>
 
 namespace tethys::api {
     template <typename Ty>
@@ -20,6 +20,7 @@ namespace tethys::api {
         void write(const std::vector<Ty>&);
         void deallocate();
 
+        [[nodiscard]] usize size() const;
         [[nodiscard]] vk::DescriptorBufferInfo info() const;
     };
 
@@ -65,13 +66,20 @@ namespace tethys::api {
     }
 
     template <typename Ty>
+    usize SingleBuffer<Ty>::size() const {
+        return current_size;
+    }
+
+    template <typename Ty>
     vk::DescriptorBufferInfo SingleBuffer<Ty>::info() const {
-        return vk::DescriptorBufferInfo{
-            .buffer = buffer.handle,
-            .offset = 0,
-            .range = current_size
-        };
+        vk::DescriptorBufferInfo buffer_info{}; {
+            buffer_info.buffer = buffer.handle;
+            buffer_info.range = current_size;
+            buffer_info.offset = 0ull;
+        }
+
+        return buffer_info;
     }
 } // namespace tethys::api
 
-#endif //TETHYS_SINGLEBUFFER_HPP
+#endif //TETHYS_SINGLE_BUFFER_HPP

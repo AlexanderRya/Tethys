@@ -1,4 +1,4 @@
-#include <tethys/Util.hpp>
+#include <tethys/util.hpp>
 
 #include <cmath>
 #include <ctime>

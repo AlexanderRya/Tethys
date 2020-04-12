@@ -1,4 +1,4 @@
-#include <tethys/api/private/Context.hpp>
+#include <tethys/api/private/context.hpp>
 
 namespace tethys::api {
     Context ctx;

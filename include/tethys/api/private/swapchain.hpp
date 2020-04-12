@@ -1,10 +1,10 @@
 #ifndef TETHYS_SWAPCHAIN_HPP
 #define TETHYS_SWAPCHAIN_HPP
 
-#include <tethys/api/private/Context.hpp>
-#include <tethys/api/private/Image.hpp>
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/api/private/image.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 

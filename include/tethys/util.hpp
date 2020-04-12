@@ -1,7 +1,7 @@
 #ifndef TETHYS_UTIL_HPP
 #define TETHYS_UTIL_HPP
 
-#include <tethys/Types.hpp>
+#include <tethys/types.hpp>
 
 #include <string>
 #include <sstream>

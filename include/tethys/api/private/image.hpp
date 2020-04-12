@@ -1,8 +1,8 @@
 #ifndef TETHYS_IMAGE_HPP
 #define TETHYS_IMAGE_HPP
 
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 #include <vk_mem_alloc.h>

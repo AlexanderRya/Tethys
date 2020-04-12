@@ -1,7 +1,7 @@
 #ifndef TETHYS_LOGGER_HPP
 #define TETHYS_LOGGER_HPP
 
-#include <tethys/Util.hpp>
+#include <tethys/util.hpp>
 
 namespace tethys::logger {
     template <typename ...Args>

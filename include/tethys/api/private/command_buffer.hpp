@@ -1,7 +1,7 @@
-#ifndef TETHYS_COMMANDBUFFER_HPP
-#define TETHYS_COMMANDBUFFER_HPP
+#ifndef TETHYS_COMMAND_BUFFER_HPP
+#define TETHYS_COMMAND_BUFFER_HPP
 
-#include <tethys/Forwards.hpp>
+#include <tethys/forwards.hpp>
 
 #include <vector>
 
@@ -11,4 +11,4 @@ namespace tethys::api {
     void end_transient(const vk::CommandBuffer);
 } // namespace tethys::api
 
-#endif //TETHYS_COMMANDBUFFER_HPP
+#endif //TETHYS_COMMAND_BUFFER_HPP

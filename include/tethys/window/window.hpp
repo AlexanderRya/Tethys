@@ -1,8 +1,8 @@
 #ifndef TETHYS_WINDOW_HPP
 #define TETHYS_WINDOW_HPP
 
-#include <tethys/Forwards.hpp>
-#include <tethys/Types.hpp>
+#include <tethys/forwards.hpp>
+#include <tethys/types.hpp>
 
 namespace tethys::window {
     struct Window {

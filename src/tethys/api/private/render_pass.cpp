@@ -1,6 +1,6 @@
-#include <tethys/api/private/RenderPass.hpp>
-#include <tethys/api/private/Context.hpp>
-#include <tethys/Logger.hpp>
+#include <tethys/api/private/render_pass.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/logger.hpp>
 
 #include <vulkan/vulkan.hpp>
 

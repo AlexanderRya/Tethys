@@ -1,7 +1,7 @@
-#include <tethys/api/private/Context.hpp>
-#include <tethys/window/Window.hpp>
-#include <tethys/Logger.hpp>
-#include <tethys/Util.hpp>
+#include <tethys/api/private/context.hpp>
+#include <tethys/window/window.hpp>
+#include <tethys/logger.hpp>
+#include <tethys/util.hpp>
 
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>

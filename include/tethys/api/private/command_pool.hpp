@@ -1,11 +1,11 @@
-#ifndef TETHYS_COMMANDPOOL_HPP
-#define TETHYS_COMMANDPOOL_HPP
+#ifndef TETHYS_COMMAND_POOL_HPP
+#define TETHYS_COMMAND_POOL_HPP
 
-#include <tethys/Forwards.hpp>
+#include <tethys/forwards.hpp>
 
 namespace tethys::api {
     [[nodiscard]] vk::CommandPool make_command_pool();
     [[nodiscard]] vk::CommandPool make_transient_pool();
 } // namespace tethys::api
 
-#endif //TETHYS_COMMANDPOOL_HPP
+#endif //TETHYS_COMMAND_POOL_HPP

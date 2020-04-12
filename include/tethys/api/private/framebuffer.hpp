@@ -1,7 +1,7 @@
 #ifndef TETHYS_FRAMEBUFFER_HPP
 #define TETHYS_FRAMEBUFFER_HPP
 
-#include <tethys/Forwards.hpp>
+#include <tethys/forwards.hpp>
 
 #include <vector>
 
