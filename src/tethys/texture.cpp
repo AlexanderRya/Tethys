@@ -60,4 +60,15 @@ namespace tethys {
                      ", height: ", height,
                      ", channels: ", channels);
     }
+
+    vk::DescriptorImageInfo Texture::info() const {
+        using namespace api;
+
+        vk::DescriptorImageInfo image_info{}; {
+            image_info.sampler = ctx.default_sampler;
+            image_info.imageView = view;
+            image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        }
+        return image_info;
+    }
 } // namespace tethys

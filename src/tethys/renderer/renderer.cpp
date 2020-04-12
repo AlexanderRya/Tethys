@@ -69,6 +69,10 @@ namespace tethys::renderer {
             info[0].binding = meta::binding::camera;
             info[0].type = vk::DescriptorType::eUniformBuffer;
             info[0].buffers = camera_buffer.info();
+
+            info[1].binding = meta::binding::transform;
+            info[1].type = vk::DescriptorType::eStorageBuffer;
+            info[1].buffers = transform_buffer.info();
         }
 
         descriptor_set.update(info);
@@ -118,7 +122,7 @@ namespace tethys::renderer {
             info.type = vk::DescriptorType::eCombinedImageSampler;
         }
 
-        descriptor_set[current_frame].update(info);
+        descriptor_set.update(info);
 
         return Handle<Texture>{ textures.size() - 1 };
     }
@@ -149,7 +153,20 @@ namespace tethys::renderer {
     }
 
     static inline void update_camera(const glm::mat4& pvmat) {
-        camera_buffer[current_frame].write(pvmat);
+        auto& current = camera_buffer[current_frame];
+        if (current.size() == 1) {
+            camera_buffer[current_frame].write(pvmat);
+        } else {
+            current.write(pvmat);
+
+            api::SingleUpdateBufferInfo info{}; {
+                info.buffer = current.info();
+                info.type = vk::DescriptorType::eUniformBuffer;
+                info.binding = meta::binding::camera;
+            }
+
+            descriptor_set[current_frame].update(info);
+        }
     }
 
     void unload(Handle<Mesh>&& mesh) {
@@ -238,7 +255,7 @@ namespace tethys::renderer {
             };
 
             command_buffer.bindVertexBuffers(0, mesh.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-            command_buffer.pushConstants<i32*>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
+            command_buffer.pushConstants(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), vk::ArrayProxy<const i32>{ 2, indices }, ctx.dispatcher);
             command_buffer.draw(mesh.size, 1, 0, 0, ctx.dispatcher);
         }
     }

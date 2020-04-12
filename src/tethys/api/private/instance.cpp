@@ -14,7 +14,7 @@ namespace tethys::api {
             "[{}] [Vulkan] [{}/{}]: {}\n",
             util::timestamp(),
             vk::to_string(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(severity)),
-            vk::to_string(static_cast<vk::DebugUtilsMessageTypeFlagsEXT>(type)),
+            vk::to_string(static_cast<vk::DebugUtilsMessageTypeFlagBitsEXT>(type)),
             data->pMessage));
 
         if (severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
