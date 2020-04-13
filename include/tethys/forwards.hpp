@@ -21,6 +21,7 @@ namespace tethys {
     struct Mesh;
     struct Vertex;
     class Texture;
+    struct PointLight;
 } // namespace tethys
 
 namespace tethys::api {

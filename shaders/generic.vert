@@ -6,13 +6,16 @@ layout (location = 2) in vec2 iuvs;
 
 layout (location = 0) out vec2 uvs;
 layout (location = 1) out vec3 normals;
+layout (location = 2) out vec3 frag_pos;
+layout (location = 3) out vec3 view_pos;
 
 layout (set = 0, binding = 0) uniform Camera {
-    mat4 pv_matrix;
-};
+    mat4 pv;
+    vec4 pos;
+} camera;
 
 layout (set = 0, binding = 1) buffer readonly Transform {
-    mat4 transform[];
+    mat4[] transforms;
 };
 
 layout (push_constant) uniform Indices {
@@ -21,7 +24,10 @@ layout (push_constant) uniform Indices {
 };
 
 void main() {
-    gl_Position = pv_matrix * transform[transform_index] * vec4(ivertex_pos, 1.0);
+    mat4 model = transforms[transform_index];
     uvs = iuvs;
-    normals = inormals;
+    normals = mat3(transpose(inverse(model))) * inormals;
+    frag_pos = vec3(model * vec4(ivertex_pos, 1.0));
+    view_pos = vec3(camera.pos);
+    gl_Position = camera.pv * vec4(frag_pos, 1.0);
 }

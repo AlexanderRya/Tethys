@@ -65,6 +65,18 @@ namespace tethys::window {
         return window.title;
     }
 
+    bool key_pressed(const i32 key) {
+        return glfwGetKey(window.handle, key) == GLFW_PRESS;
+    }
+
+    bool key_released(const i32 key) {
+        return glfwGetKey(window.handle, key) == GLFW_RELEASE;
+    }
+
+    bool key_repeated(const i32 key) {
+        return glfwGetKey(window.handle, key) == GLFW_REPEAT;
+    }
+
     void poll() {
         glfwPollEvents();
     }

@@ -4,6 +4,8 @@
 #include <tethys/api/private/static_buffer.hpp>
 #include <tethys/api/private/context.hpp>
 
+#include <type_traits>
+
 namespace tethys::api {
     template <typename Ty>
     class SingleBuffer {

@@ -3,11 +3,12 @@
 #include <tethys/api/private/vertex_buffer.hpp>
 #include <tethys/api/private/static_buffer.hpp>
 #include <tethys/api/private/pipeline.hpp>
-#include <tethys/renderer/render_data.hpp>
 #include <tethys/api/private/context.hpp>
 #include <tethys/api/meta/constants.hpp>
 #include <tethys/api/private/buffer.hpp>
 #include <tethys/renderer/renderer.hpp>
+#include <tethys/point_light.hpp>
+#include <tethys/render_data.hpp>
 #include <tethys/forwards.hpp>
 #include <tethys/texture.hpp>
 #include <tethys/types.hpp>
@@ -38,8 +39,9 @@ namespace tethys::renderer {
 
     static std::vector<Texture> textures{};
 
-    static api::Buffer<glm::mat4> camera_buffer{};
+    static api::Buffer<Camera> camera_buffer{};
     static api::Buffer<glm::mat4> transform_buffer{};
+    static api::Buffer<PointLight> point_light_buffer{};
 
     static api::DescriptorSet descriptor_set{};
 
@@ -64,8 +66,9 @@ namespace tethys::renderer {
 
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
+        point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
 
-        std::vector<api::UpdateBufferInfo> info(2); {
+        std::vector<api::UpdateBufferInfo> info(3); {
             info[0].binding = meta::binding::camera;
             info[0].type = vk::DescriptorType::eUniformBuffer;
             info[0].buffers = camera_buffer.info();
@@ -73,6 +76,10 @@ namespace tethys::renderer {
             info[1].binding = meta::binding::transform;
             info[1].type = vk::DescriptorType::eStorageBuffer;
             info[1].buffers = transform_buffer.info();
+
+            info[2].binding = meta::binding::point_light;
+            info[2].type = vk::DescriptorType::eStorageBuffer;
+            info[2].buffers = point_light_buffer.info();
         }
 
         descriptor_set.update(info);
@@ -137,7 +144,7 @@ namespace tethys::renderer {
             transforms.emplace_back(each.transform);
         }
 
-        if (current.size() != transforms.size()) {
+        if (current.size() == transforms.size()) {
             current.write(transforms);
         } else {
             current.write(transforms);
@@ -152,12 +159,13 @@ namespace tethys::renderer {
         }
     }
 
-    static inline void update_camera(const glm::mat4& pvmat) {
+    static inline void update_camera(const Camera& camera) {
         auto& current = camera_buffer[current_frame];
+
         if (current.size() == 1) {
-            camera_buffer[current_frame].write(pvmat);
+            camera_buffer[current_frame].write(camera);
         } else {
-            current.write(pvmat);
+            current.write(camera);
 
             api::SingleUpdateBufferInfo info{}; {
                 info.buffer = current.info();
@@ -169,10 +177,29 @@ namespace tethys::renderer {
         }
     }
 
+    static inline void update_point_lights(const std::vector<PointLight>& point_lights) {
+        auto& current = point_light_buffer[current_frame];
+
+        if (current.size() == point_lights.size()) {
+            current.write(point_lights);
+        } else {
+            current.write(point_lights);
+
+            api::SingleUpdateBufferInfo info{}; {
+                info.buffer = current.info();
+                info.type = vk::DescriptorType::eStorageBuffer;
+                info.binding = meta::binding::point_light;
+            }
+
+            descriptor_set[current_frame].update(info);
+        }
+    }
+
     void unload(Handle<Mesh>&& mesh) {
         if (mesh.index < vertex_buffers.size()) {
             std::swap(vertex_buffers[mesh.index], vertex_buffers.emplace_back());
             api::destroy_buffer(vertex_buffers.back().buffer);
+            free_vertex_buffers.push(mesh.index);
             vertex_buffers.pop_back();
         }
     }
@@ -239,7 +266,8 @@ namespace tethys::renderer {
         auto& command_buffer = command_buffers[image_index];
 
         update_transforms(data);
-        update_camera(data.pv_matrix);
+        update_camera(data.camera);
+        update_point_lights(data.point_lights);
 
         command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
         command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, descriptor_set[current_frame].handle(), nullptr, ctx.dispatcher);

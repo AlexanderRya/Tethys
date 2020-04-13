@@ -19,6 +19,9 @@ namespace tethys::window {
     [[nodiscard]] u32 width();
     [[nodiscard]] u32 height();
     [[nodiscard]] const char* title();
+    [[nodiscard]] bool key_pressed(const i32);
+    [[nodiscard]] bool key_released(const i32);
+    [[nodiscard]] bool key_repeated(const i32);
     void poll();
 } // namespace tethys::window
 

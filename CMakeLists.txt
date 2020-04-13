@@ -38,7 +38,7 @@ set(TETHYS_HEADERS
         "include/tethys/handle.hpp"
         "include/tethys/vertex.hpp"
         "include/tethys/mesh.hpp"
-        "include/tethys/renderer/render_data.hpp"
+        "include/tethys/render_data.hpp"
         "include/tethys/api/private/static_buffer.hpp"
         "include/tethys/api/private/vertex_buffer.hpp"
         "include/tethys/api/meta/constants.hpp"
@@ -47,7 +47,7 @@ set(TETHYS_HEADERS
         "include/tethys/api/private/single_descriptor_set.hpp"
         "include/tethys/api/private/descriptor_set.hpp"
         "include/tethys/texture.hpp"
-        "include/tethys/api/private/sampler.hpp")
+        "include/tethys/api/private/sampler.hpp" include/tethys/point_light.hpp include/tethys/camera.hpp)
 
 set(TETHYS_SOURCES
         "src/tethys/api/private/instance.cpp"

@@ -2,12 +2,13 @@
 #define TETHYS_RENDER_DATA_HPP
 
 #include <tethys/forwards.hpp>
+#include <tethys/camera.hpp>
 #include <tethys/handle.hpp>
 #include <tethys/mesh.hpp>
 
 #include <glm/mat4x4.hpp>
 
-namespace tethys::renderer {
+namespace tethys {
     struct RenderData {
         struct DrawCommand {
             Handle<Mesh> mesh;
@@ -17,8 +18,10 @@ namespace tethys::renderer {
 
         std::vector<DrawCommand> commands;
 
-        glm::mat4 pv_matrix;
+        std::vector<PointLight> point_lights;
+
+        Camera camera; // Just one for now
     };
-} // namespace tethys::renderer
+} // namespace tethys
 
 #endif //TETHYS_RENDER_DATA_HPP
