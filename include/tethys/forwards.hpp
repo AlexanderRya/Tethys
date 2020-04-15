@@ -15,12 +15,14 @@ namespace vk {
     class Fence;
     class Semaphore;
     class Sampler;
+    class Pipeline;
 } // namespace vk
 
 namespace tethys {
     struct Mesh;
     struct Vertex;
     class Texture;
+    struct PipelineLayout;
     struct PointLight;
 } // namespace tethys
 
@@ -35,8 +37,6 @@ namespace tethys::api {
     class Buffer;
     template <typename>
     class SingleBuffer;
-    struct Pipeline;
-    struct PipelineLayout;
 } // namespace tethys::api
 
 namespace tethys::window {

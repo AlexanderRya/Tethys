@@ -76,6 +76,7 @@ namespace tethys::util {
     concept is_stringable = requires(Ty x ) {
         { std::to_string(x) };
     };
+
     template <typename Ty>
         requires is_stringable<Ty>
 #endif

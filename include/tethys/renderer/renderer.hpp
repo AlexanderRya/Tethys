@@ -13,7 +13,6 @@ namespace tethys::renderer {
 
     [[nodiscard]] Handle<Mesh> upload(std::vector<Vertex>&&);
     [[nodiscard]] Handle<Texture> upload(const char*);
-    [[nodiscard]] std::vector<Handle<Mesh>> upload(std::vector<std::vector<Vertex>>&&);
     void unload(Handle<Mesh>&&);
 
     void start();

@@ -44,12 +44,6 @@ namespace tethys::util {
         return buf;
     }
 
-#if defined(__x86_64__) || defined (_WIN64)
-#if defined(__clang__)
-    [[clang::optnone]]
-#elif defined(__GNUG__)
-    [[gnu::optimize("O0")]]
-#endif
     void print(const std::string& val) {
 #if defined(__linux__)
         write(1, val.c_str(), val.size());
@@ -69,5 +63,4 @@ namespace tethys::util {
 
         print(str);
     }
-#endif
 } // namespace tethys::util

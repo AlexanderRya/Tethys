@@ -22,6 +22,9 @@ namespace tethys::window {
     [[nodiscard]] bool key_pressed(const i32);
     [[nodiscard]] bool key_released(const i32);
     [[nodiscard]] bool key_repeated(const i32);
+    [[nodiscard]] GLFWwindow* handle();
+
+    void close();
     void poll();
 } // namespace tethys::window
 

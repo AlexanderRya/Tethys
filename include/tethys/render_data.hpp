@@ -2,6 +2,7 @@
 #define TETHYS_RENDER_DATA_HPP
 
 #include <tethys/forwards.hpp>
+#include <tethys/material.hpp>
 #include <tethys/camera.hpp>
 #include <tethys/handle.hpp>
 #include <tethys/mesh.hpp>
@@ -12,7 +13,7 @@ namespace tethys {
     struct RenderData {
         struct DrawCommand {
             Handle<Mesh> mesh;
-            Handle<Texture> texture;
+            Material material;
             glm::mat4 transform;
         };
 

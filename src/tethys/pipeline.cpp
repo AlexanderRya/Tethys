@@ -1,12 +1,18 @@
-#include <tethys/api/private/pipeline.hpp>
 #include <tethys/api/private/context.hpp>
 #include <tethys/api/meta/constants.hpp>
+#include <tethys/pipeline.hpp>
 #include <tethys/vertex.hpp>
 #include <tethys/logger.hpp>
 
 #include <fstream>
+#include <vector>
 
-namespace tethys::api {
+namespace tethys {
+    using namespace api;
+
+    static std::vector<PipelineLayout> layouts;
+    static std::vector<Pipeline> pipelines;
+
     [[nodiscard]] static inline vk::ShaderModule load_module(const char* path) {
         using namespace std::string_literals;
 
@@ -93,7 +99,64 @@ namespace tethys::api {
         return layout;
     }
 
-    Pipeline make_generic_pipeline(const char* vertex, const char* fragment) {
+    [[nodiscard]] static inline PipelineLayout make_minimal_pipeline_layout() {
+        PipelineLayout layout;
+
+        std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings{}; {
+            layout_bindings[0].descriptorCount = 1;
+            layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+            layout_bindings[0].binding = meta::binding::camera;
+            layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+            layout_bindings[1].descriptorCount = 1;
+            layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
+            layout_bindings[1].binding = meta::binding::transform;
+            layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+            layout_bindings[2].descriptorCount = 128;
+            layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+            layout_bindings[2].binding = meta::binding::texture;
+            layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
+        }
+
+        std::array<vk::DescriptorBindingFlags, 3> binding_flags{}; {
+            binding_flags[0] = {};
+            binding_flags[1] = {};
+            binding_flags[2] = vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound;
+        }
+
+        vk::DescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{}; {
+            binding_flags_info.bindingCount = binding_flags.size();
+            binding_flags_info.pBindingFlags = binding_flags.data();
+        }
+
+        vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
+            set_layout_create_info.pNext = &binding_flags_info;
+            set_layout_create_info.bindingCount = layout_bindings.size();
+            set_layout_create_info.pBindings = layout_bindings.data();
+        }
+
+        layout.set = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);
+
+        vk::PushConstantRange range{}; {
+            range.size = 2 * sizeof(i32);
+            range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+            range.offset = 0;
+        }
+
+        vk::PipelineLayoutCreateInfo layout_create_info{}; {
+            layout_create_info.setLayoutCount = 1;
+            layout_create_info.pSetLayouts = &layout.set;
+            layout_create_info.pushConstantRangeCount = 1;
+            layout_create_info.pPushConstantRanges = &range;
+        }
+
+        layout.pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+
+        return layout;
+    }
+
+    [[nodiscard]] static inline Pipeline make_generic_pipeline(const char* vertex, const char* fragment, const u32 layout_idx) {
         std::array<vk::ShaderModule, 2> modules{}; {
             modules[0] = load_module(vertex);
             modules[1] = load_module(fragment);
@@ -231,8 +294,6 @@ namespace tethys::api {
             color_blend_info.blendConstants[3] = 0.0f;
         }
 
-        auto layout = make_generic_pipeline_layout();
-
         vk::GraphicsPipelineCreateInfo pipeline_info{}; {
             pipeline_info.stageCount = stages.size();
             pipeline_info.pStages = stages.data();
@@ -244,17 +305,17 @@ namespace tethys::api {
             pipeline_info.pDepthStencilState = &depth_stencil_info;
             pipeline_info.pColorBlendState = &color_blend_info;
             pipeline_info.pDynamicState = &dynamic_state_create_info;
-            pipeline_info.layout = layout.pipeline;
+            pipeline_info.layout = layouts[layout_idx].pipeline;
             pipeline_info.renderPass = ctx.default_render_pass;
             pipeline_info.subpass = 0;
             pipeline_info.basePipelineHandle = nullptr;
             pipeline_info.basePipelineIndex = -1;
         }
 
-        Pipeline pipeline{}; {
-            pipeline.handle = ctx.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, ctx.dispatcher);
-            pipeline.layout = layout;
-        }
+        Pipeline pipeline{};
+
+        pipeline.handle = ctx.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, ctx.dispatcher);
+        pipeline.layout_idx = layout_idx;
 
         logger::info("Generic pipeline successfully created");
 
@@ -264,4 +325,22 @@ namespace tethys::api {
 
         return pipeline;
     }
-} // namespace tethys::api
+
+    void load_all_builtin_shaders() {
+        layouts.reserve(2);
+        layouts.emplace_back(make_generic_pipeline_layout());
+        layouts.emplace_back(make_minimal_pipeline_layout());
+
+        pipelines.reserve(2);
+        pipelines.emplace_back(make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv", meta::layout::generic));
+        pipelines.emplace_back(make_generic_pipeline("shaders/minimal.vert.spv", "shaders/minimal.frag.spv", meta::layout::minimal));
+    }
+
+    Pipeline& get_shader(const u32 idx) {
+        return pipelines[idx];
+    }
+
+    PipelineLayout& get_layout(const u32 idx) {
+        return layouts[idx];
+    }
+} // namespace tethys

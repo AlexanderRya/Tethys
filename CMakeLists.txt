@@ -34,7 +34,7 @@ set(TETHYS_HEADERS
         "include/tethys/api/private/framebuffer.hpp"
         "include/tethys/api/core.hpp"
         "include/tethys/renderer/renderer.hpp"
-        "include/tethys/api/private/pipeline.hpp"
+        "include/tethys/pipeline.hpp"
         "include/tethys/handle.hpp"
         "include/tethys/vertex.hpp"
         "include/tethys/mesh.hpp"
@@ -47,7 +47,7 @@ set(TETHYS_HEADERS
         "include/tethys/api/private/single_descriptor_set.hpp"
         "include/tethys/api/private/descriptor_set.hpp"
         "include/tethys/texture.hpp"
-        "include/tethys/api/private/sampler.hpp" include/tethys/point_light.hpp include/tethys/camera.hpp)
+        "include/tethys/api/private/sampler.hpp" include/tethys/point_light.hpp include/tethys/camera.hpp include/tethys/material.hpp)
 
 set(TETHYS_SOURCES
         "src/tethys/api/private/instance.cpp"
@@ -65,7 +65,7 @@ set(TETHYS_SOURCES
         "src/tethys/api/private/framebuffer.cpp"
         "src/tethys/api/core.cpp"
         "src/tethys/renderer/renderer.cpp"
-        "src/tethys/api/private/pipeline.cpp"
+        "src/tethys/pipeline.cpp"
         "src/tethys/api/private/static_buffer.cpp"
         "src/tethys/api/private/vertex_buffer.cpp"
         "src/tethys/api/private/single_descriptor_set.cpp"

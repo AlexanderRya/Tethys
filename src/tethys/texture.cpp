@@ -38,12 +38,14 @@ namespace tethys {
         std::memcpy(mapped, data, texture_size);
         vmaUnmapMemory(ctx.allocator, staging.allocation);
 
+        stbi_image_free(data);
+
         api::Image::CreateInfo create_info{}; {
             create_info.width = width;
             create_info.height = height;
             create_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             create_info.usage_flags = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
-            create_info.format = vk::Format::eR8G8B8A8Unorm;
+            create_info.format = vk::Format::eR8G8B8A8Srgb;
             create_info.tiling = vk::ImageTiling::eOptimal;
         }
 
@@ -53,7 +55,7 @@ namespace tethys {
         api::copy_buffer_to_image(staging.handle, image.handle, width, height);
         api::transition_image_layout(image.handle, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-        view = api::make_image_view(image.handle, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor);
+        view = api::make_image_view(image.handle, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor);
 
         logger::info("Successfully loaded texture, "
                      "width: ", width,

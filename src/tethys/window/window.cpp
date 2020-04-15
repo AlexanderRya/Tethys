@@ -77,6 +77,14 @@ namespace tethys::window {
         return glfwGetKey(window.handle, key) == GLFW_REPEAT;
     }
 
+    GLFWwindow* handle() {
+        return window.handle;
+    }
+
+    void close() {
+        glfwSetWindowShouldClose(window.handle, true);
+    }
+
     void poll() {
         glfwPollEvents();
     }

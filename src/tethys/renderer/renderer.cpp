@@ -2,7 +2,7 @@
 #include <tethys/api/private/descriptor_set.hpp>
 #include <tethys/api/private/vertex_buffer.hpp>
 #include <tethys/api/private/static_buffer.hpp>
-#include <tethys/api/private/pipeline.hpp>
+#include <tethys/pipeline.hpp>
 #include <tethys/api/private/context.hpp>
 #include <tethys/api/meta/constants.hpp>
 #include <tethys/api/private/buffer.hpp>
@@ -32,8 +32,6 @@ namespace tethys::renderer {
     static u32 image_index{};
     static u32 current_frame{};
 
-    static api::Pipeline generic{};
-
     static std::stack<usize> free_vertex_buffers{};
     static std::vector<api::VertexBuffer> vertex_buffers{};
 
@@ -43,7 +41,8 @@ namespace tethys::renderer {
     static api::Buffer<glm::mat4> transform_buffer{};
     static api::Buffer<PointLight> point_light_buffer{};
 
-    static api::DescriptorSet descriptor_set{};
+    static api::DescriptorSet generic_set{};
+    static api::DescriptorSet minimal_set{};
 
     void initialise() {
         command_buffers = api::make_rendering_command_buffers();
@@ -60,13 +59,14 @@ namespace tethys::renderer {
 
         in_flight.resize(meta::frames_in_flight, nullptr);
 
-        generic = api::make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv");
-
-        descriptor_set.create(generic.layout.set);
+        load_all_builtin_shaders();
 
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
+
+        generic_set.create(get_layout(meta::layout::generic).set);
+        minimal_set.create(get_layout(meta::layout::minimal).set);
 
         std::vector<api::UpdateBufferInfo> info(3); {
             info[0].binding = meta::binding::camera;
@@ -82,7 +82,11 @@ namespace tethys::renderer {
             info[2].buffers = point_light_buffer.info();
         }
 
-        descriptor_set.update(info);
+        generic_set.update(info);
+
+        info.pop_back();
+
+        minimal_set.update(info);
     }
 
     Handle<Mesh> upload(std::vector<Vertex>&& mesh) {
@@ -101,18 +105,6 @@ namespace tethys::renderer {
         }
     }
 
-    std::vector<Handle<Mesh>> upload(std::vector<std::vector<Vertex>>&& meshes) {
-        std::vector<Handle<Mesh>> mesh_handles;
-
-        mesh_handles.reserve(meshes.size());
-
-        for (auto&& each : meshes) {
-            mesh_handles.emplace_back(upload(std::move(each)));
-        }
-
-        return mesh_handles;
-    }
-
     Handle<Texture> upload(const char* path) {
         textures.emplace_back().load(path);
 
@@ -129,7 +121,8 @@ namespace tethys::renderer {
             info.type = vk::DescriptorType::eCombinedImageSampler;
         }
 
-        descriptor_set.update(info);
+        generic_set.update(info);
+        minimal_set.update(info);
 
         return Handle<Texture>{ textures.size() - 1 };
     }
@@ -155,7 +148,8 @@ namespace tethys::renderer {
                 info.binding = meta::binding::transform;
             }
 
-            descriptor_set[current_frame].update(info);
+            generic_set[current_frame].update(info);
+            minimal_set[current_frame].update(info);
         }
     }
 
@@ -173,7 +167,8 @@ namespace tethys::renderer {
                 info.binding = meta::binding::camera;
             }
 
-            descriptor_set[current_frame].update(info);
+            generic_set[current_frame].update(info);
+            minimal_set[current_frame].update(info);
         }
     }
 
@@ -191,7 +186,7 @@ namespace tethys::renderer {
                 info.binding = meta::binding::point_light;
             }
 
-            descriptor_set[current_frame].update(info);
+            generic_set[current_frame].update(info);
         }
     }
 
@@ -269,21 +264,23 @@ namespace tethys::renderer {
         update_camera(data.camera);
         update_point_lights(data.point_lights);
 
-        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
-        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, descriptor_set[current_frame].handle(), nullptr, ctx.dispatcher);
-
         for (usize i = 0; i < data.commands.size(); ++i) {
             auto& draw = data.commands[i];
 
             auto& mesh = vertex_buffers[draw.mesh.index];
+            auto& shader = get_shader(draw.material.shader);
+            auto& layout = get_layout(shader.layout_idx);
+            auto& descriptor_set = meta::layout::generic == shader.layout_idx ? generic_set : minimal_set;
 
             i32 indices[]{
                 static_cast<i32>(i),
-                static_cast<i32>(draw.texture.index)
+                static_cast<i32>(draw.material.texture.index)
             };
 
+            command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shader.handle, ctx.dispatcher);
+            command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout.pipeline, 0, descriptor_set[current_frame].handle(), nullptr, ctx.dispatcher);
             command_buffer.bindVertexBuffers(0, mesh.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-            command_buffer.pushConstants(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), vk::ArrayProxy<const i32>{ 2, indices }, ctx.dispatcher);
+            command_buffer.pushConstants(layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), vk::ArrayProxy<const i32>{ 2, indices }, ctx.dispatcher);
             command_buffer.draw(mesh.size, 1, 0, 0, ctx.dispatcher);
         }
     }
