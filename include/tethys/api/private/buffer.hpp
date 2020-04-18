@@ -2,12 +2,12 @@
 #define TETHYS_BUFFER_HPP
 
 #include <tethys/api/private/single_buffer.hpp>
-#include <tethys/api/meta/constants.hpp>
+#include <tethys/constants.hpp>
 
 namespace tethys::api {
     template <typename Ty>
     class Buffer {
-        std::array<SingleBuffer<Ty>, meta::frames_in_flight> buffers;
+        std::array<SingleBuffer<Ty>, frames_in_flight> buffers;
     public:
         Buffer() = default;
         void create(const vk::BufferUsageFlags);
@@ -16,7 +16,7 @@ namespace tethys::api {
         void write(const std::vector<Ty>&);
         void deallocate();
 
-        [[nodiscard]] std::array<vk::DescriptorBufferInfo, meta::frames_in_flight> info() const;
+        [[nodiscard]] std::array<vk::DescriptorBufferInfo, frames_in_flight> info() const;
         [[nodiscard]] SingleBuffer<Ty>& operator [](const usize);
         [[nodiscard]] const SingleBuffer<Ty>& operator [](const usize) const;
     };
@@ -57,10 +57,10 @@ namespace tethys::api {
     }
 
     template <typename Ty>
-    std::array<vk::DescriptorBufferInfo, meta::frames_in_flight> Buffer<Ty>::info() const {
-        std::array<vk::DescriptorBufferInfo, meta::frames_in_flight> infos{};
+    std::array<vk::DescriptorBufferInfo, frames_in_flight> Buffer<Ty>::info() const {
+        std::array<vk::DescriptorBufferInfo, frames_in_flight> infos{};
 
-        for (usize i = 0; i < meta::frames_in_flight; ++i) {
+        for (usize i = 0; i < frames_in_flight; ++i) {
             infos[i] = buffers[i].info();
         }
 

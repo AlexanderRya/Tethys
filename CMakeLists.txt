@@ -41,13 +41,16 @@ set(TETHYS_HEADERS
         "include/tethys/render_data.hpp"
         "include/tethys/api/private/static_buffer.hpp"
         "include/tethys/api/private/vertex_buffer.hpp"
-        "include/tethys/api/meta/constants.hpp"
+        "include/tethys/constants.hpp"
         "include/tethys/api/private/single_buffer.hpp"
         "include/tethys/api/private/buffer.hpp"
         "include/tethys/api/private/single_descriptor_set.hpp"
         "include/tethys/api/private/descriptor_set.hpp"
         "include/tethys/texture.hpp"
-        "include/tethys/api/private/sampler.hpp" include/tethys/point_light.hpp include/tethys/camera.hpp include/tethys/material.hpp)
+        "include/tethys/api/private/sampler.hpp"
+        "include/tethys/point_light.hpp"
+        "include/tethys/camera.hpp"
+        "include/tethys/material.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/private/instance.cpp"
@@ -71,7 +74,8 @@ set(TETHYS_SOURCES
         "src/tethys/api/private/single_descriptor_set.cpp"
         "src/tethys/api/private/descriptor_set.cpp"
         "src/tethys/api/private/sampler.cpp"
-        "src/tethys/texture.cpp" src/tethys/api/private/stb_image.cpp)
+        "src/tethys/texture.cpp"
+        "src/tethys/api/private/stb_image.cpp")
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}

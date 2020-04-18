@@ -15,7 +15,7 @@ struct PointLight {
     vec3 specular;
 };
 
-layout (std430, set = 0, binding = 2) buffer readonly PointLights {
+layout (std430, set = 1, binding = 2) buffer readonly PointLights {
     PointLight[] point_lights;
 };
 

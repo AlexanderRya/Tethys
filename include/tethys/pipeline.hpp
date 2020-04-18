@@ -10,17 +10,18 @@
 namespace tethys {
     struct PipelineLayout {
         vk::PipelineLayout pipeline{};
-        vk::DescriptorSetLayout set{};
+        std::vector<vk::DescriptorSetLayout> sets{};
     };
 
     struct Pipeline {
         vk::Pipeline handle{};
-        u32 layout_idx{};
+        PipelineLayout layout{};
     };
 
     void load_all_builtin_shaders();
-    [[nodiscard]] Pipeline& get_shader(const u32);
-    [[nodiscard]] PipelineLayout& get_layout(const u32);
+
+    template <typename Ty>
+    Ty& acquire(const u32);
 } // namespace tethys
 
 #endif //TETHYS_PIPELINE_HPP
