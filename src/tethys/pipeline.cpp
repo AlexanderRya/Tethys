@@ -1,6 +1,7 @@
 #include <tethys/api/private/context.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/pipeline.hpp>
+#include <tethys/acquire.hpp>
 #include <tethys/vertex.hpp>
 #include <tethys/logger.hpp>
 
@@ -56,16 +57,21 @@ namespace tethys {
         }
 
         /* Generic set layout */ {
-            vk::DescriptorSetLayoutBinding layout_binding{}; {
-                layout_binding.descriptorCount = 1;
-                layout_binding.descriptorType = vk::DescriptorType::eStorageBuffer;
-                layout_binding.binding = binding::point_light;
-                layout_binding.stageFlags = vk::ShaderStageFlagBits::eFragment;
+            std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings{}; {
+                layout_bindings[0].descriptorCount = 1;
+                layout_bindings[0].descriptorType = vk::DescriptorType::eStorageBuffer;
+                layout_bindings[0].binding = binding::point_light;
+                layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+                layout_bindings[1].descriptorCount = 1;
+                layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
+                layout_bindings[1].binding = binding::directional_light;
+                layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
             }
 
             vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
-                set_layout_create_info.bindingCount = 1;
-                set_layout_create_info.pBindings = &layout_binding;
+                set_layout_create_info.bindingCount = layout_bindings.size();
+                set_layout_create_info.pBindings = layout_bindings.data();
             }
 
             set_layouts[layout::generic] = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);

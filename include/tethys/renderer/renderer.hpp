@@ -1,7 +1,6 @@
 #ifndef TETHYS_RENDERER_HPP
 #define TETHYS_RENDERER_HPP
 
-#include <tethys/render_data.hpp>
 #include <tethys/forwards.hpp>
 #include <tethys/handle.hpp>
 #include <tethys/mesh.hpp>

@@ -5,12 +5,14 @@
 #include <tethys/api/private/context.hpp>
 #include <tethys/api/private/buffer.hpp>
 #include <tethys/renderer/renderer.hpp>
+#include <tethys/directional_light.hpp>
 #include <tethys/point_light.hpp>
 #include <tethys/render_data.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/forwards.hpp>
 #include <tethys/pipeline.hpp>
 #include <tethys/texture.hpp>
+#include <tethys/acquire.hpp>
 #include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
@@ -40,6 +42,7 @@ namespace tethys::renderer {
     static api::Buffer<Camera> camera_buffer{};
     static api::Buffer<glm::mat4> transform_buffer{};
     static api::Buffer<PointLight> point_light_buffer{};
+    static api::Buffer<DirectionalLight> directional_light_buffer{};
 
     static api::DescriptorSet generic_set{};
     static api::DescriptorSet minimal_set{};
@@ -67,6 +70,7 @@ namespace tethys::renderer {
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
+        directional_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
 
         generic = acquire<Pipeline>(shader::generic);
         minimal = acquire<Pipeline>(shader::minimal);
@@ -86,10 +90,14 @@ namespace tethys::renderer {
 
         minimal_set.update(minimal_update);
 
-        api::UpdateBufferInfo generic_update{}; {
-            generic_update.binding = binding::point_light;
-            generic_update.type = vk::DescriptorType::eStorageBuffer;
-            generic_update.buffers = point_light_buffer.info();
+        std::vector<api::UpdateBufferInfo> generic_update(2); {
+            generic_update[0].binding = binding::point_light;
+            generic_update[0].type = vk::DescriptorType::eStorageBuffer;
+            generic_update[0].buffers = point_light_buffer.info();
+
+            generic_update[1].binding = binding::directional_light;
+            generic_update[1].type = vk::DescriptorType::eStorageBuffer;
+            generic_update[1].buffers = directional_light_buffer.info();
         }
 
         generic_set.update(generic_update);
@@ -193,6 +201,24 @@ namespace tethys::renderer {
         }
     }
 
+    static inline void update_directional_lights(const std::vector<DirectionalLight>& directional_lights) {
+        auto& current = directional_light_buffer[current_frame];
+
+        if (current.size() == directional_lights.size()) {
+            current.write(directional_lights);
+        } else {
+            current.write(directional_lights);
+
+            api::SingleUpdateBufferInfo info{}; {
+                info.buffer = current.info();
+                info.type = vk::DescriptorType::eStorageBuffer;
+                info.binding = binding::directional_light;
+            }
+
+            generic_set[current_frame].update(info);
+        }
+    }
+
     void unload(Handle<Mesh>&& mesh) {
         if (mesh.index < vertex_buffers.size()) {
             std::swap(vertex_buffers[mesh.index], vertex_buffers.emplace_back());
@@ -266,6 +292,7 @@ namespace tethys::renderer {
         update_transforms(data);
         update_camera(data.camera);
         update_point_lights(data.point_lights);
+        update_directional_lights(data.directional_lights);
 
         for (usize i = 0; i < data.commands.size(); ++i) {
             auto& draw = data.commands[i];

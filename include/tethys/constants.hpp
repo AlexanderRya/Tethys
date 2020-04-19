@@ -6,10 +6,13 @@
 
 namespace tethys {
     namespace binding {
+        // Set = 0
         constexpr inline u32 camera = 0;
         constexpr inline u32 transform = 1;
-        constexpr inline u32 point_light = 2;
-        constexpr inline u32 texture = 3;
+        constexpr inline u32 texture = 2;
+        // Set = 1
+        constexpr inline u32 point_light = 0;
+        constexpr inline u32 directional_light = 1;
     } // namespace tethys::binding
 
     namespace layout {

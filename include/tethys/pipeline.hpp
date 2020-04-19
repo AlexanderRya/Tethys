@@ -19,9 +19,6 @@ namespace tethys {
     };
 
     void load_all_builtin_shaders();
-
-    template <typename Ty>
-    Ty& acquire(const u32);
 } // namespace tethys
 
 #endif //TETHYS_PIPELINE_HPP

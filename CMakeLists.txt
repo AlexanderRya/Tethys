@@ -50,7 +50,7 @@ set(TETHYS_HEADERS
         "include/tethys/api/private/sampler.hpp"
         "include/tethys/point_light.hpp"
         "include/tethys/camera.hpp"
-        "include/tethys/material.hpp")
+        "include/tethys/material.hpp" include/tethys/directional_light.hpp include/tethys/acquire.hpp)
 
 set(TETHYS_SOURCES
         "src/tethys/api/private/instance.cpp"

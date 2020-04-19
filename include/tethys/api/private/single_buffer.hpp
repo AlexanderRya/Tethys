@@ -52,7 +52,7 @@ namespace tethys::api {
     template <typename Ty>
     void SingleBuffer<Ty>::write(const std::vector<Ty>& objs) {
         static_assert(std::is_trivially_copyable_v<Ty>, "Type is not trivially copyable!");
-        if (objs.capacity() > current_capacity) {
+        if (objs.size() > current_capacity) {
             deallocate();
             allocate(objs.capacity());
         }

@@ -13,13 +13,14 @@ namespace tethys {
     struct RenderData {
         struct DrawCommand {
             Handle<Mesh> mesh;
-            Material material;
             glm::mat4 transform;
+            Material material;
         };
 
         std::vector<DrawCommand> commands;
 
         std::vector<PointLight> point_lights;
+        std::vector<DirectionalLight> directional_lights;
 
         Camera camera; // Just one for now
     };

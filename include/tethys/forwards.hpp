@@ -24,6 +24,8 @@ namespace tethys {
     class Texture;
     struct PipelineLayout;
     struct PointLight;
+    struct DirectionalLight;
+    struct RenderData;
 } // namespace tethys
 
 namespace tethys::api {
