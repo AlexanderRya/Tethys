@@ -4,11 +4,9 @@
 #include <glm/vec3.hpp>
 
 namespace tethys {
-    struct PointLight { // Aligned as 12?
-        alignas(16) glm::vec3 position; // Offset 12 (? I guess?)
-        alignas(16) glm::vec3 ambient;
-        alignas(16) glm::vec3 diffuse;
-        alignas(16) glm::vec3 specular;
+    struct PointLight {
+        alignas(16) glm::vec3 position;
+        alignas(16) glm::vec3 color;
 
         float constant;
         float linear;
