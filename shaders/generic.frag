@@ -36,6 +36,7 @@ layout (push_constant) uniform Indices {
     uint transform_index;
     uint diffuse_index;
     uint specular_index;
+    uint normal_index;
 };
 
 vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 diffuse, vec3 specular, vec3 normal, vec3 view_dir);

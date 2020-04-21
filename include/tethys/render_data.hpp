@@ -11,13 +11,25 @@
 
 namespace tethys {
     struct RenderData {
-        struct DrawCommand {
+        template <typename>
+        struct DrawCommand;
+
+        template <>
+        struct DrawCommand<Mesh>{
             Handle<Mesh> mesh;
             glm::mat4 transform;
             Material material;
         };
 
-        std::vector<DrawCommand> commands;
+        template <>
+        struct DrawCommand<Model>{
+            Handle<Model> model;
+            glm::mat4 transform;
+            u32 shader;
+        };
+
+        std::vector<DrawCommand<Model>> model_commands;
+        std::vector<DrawCommand<Mesh>> mesh_commands;
 
         std::vector<PointLight> point_lights;
         std::vector<DirectionalLight> directional_lights;
