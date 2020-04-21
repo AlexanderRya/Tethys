@@ -1,6 +1,6 @@
-#include <tethys/api/private/command_buffer.hpp>
-#include <tethys/api/private/context.hpp>
-#include <tethys/api/private/image.hpp>
+#include <tethys/api/command_buffer.hpp>
+#include <tethys/api/context.hpp>
+#include <tethys/api/image.hpp>
 
 namespace tethys::api {
     Image make_image(const Image::CreateInfo& info) {
@@ -40,6 +40,11 @@ namespace tethys::api {
             reinterpret_cast<VkImage*>(&image.handle),
             &image.allocation,
             nullptr);
+
+        image.format = info.format;
+        image.height = info.height;
+        image.width = info.width;
+        image.tiling = info.tiling;
 
         return image;
     }
@@ -87,28 +92,46 @@ namespace tethys::api {
             vk::PipelineStageFlags source_stage{};
             vk::PipelineStageFlags destination_stage{};
 
-            if (old_layout == vk::ImageLayout::eUndefined && new_layout == vk::ImageLayout::eTransferDstOptimal) {
-                image_memory_barrier.srcAccessMask = {};
-                image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+            switch (old_layout) {
+                case vk::ImageLayout::eUndefined: {
+                    image_memory_barrier.srcAccessMask = {};
+                    source_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+                } break;
 
-                source_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-                destination_stage = vk::PipelineStageFlagBits::eTransfer;
-            } else if (old_layout == vk::ImageLayout::eTransferDstOptimal && new_layout == vk::ImageLayout::eShaderReadOnlyOptimal) {
-                image_memory_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-                image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+                case vk::ImageLayout::eTransferDstOptimal: {
+                    image_memory_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+                    source_stage = vk::PipelineStageFlagBits::eTransfer;
+                } break;
 
-                source_stage = vk::PipelineStageFlagBits::eTransfer;
-                destination_stage = vk::PipelineStageFlagBits::eFragmentShader;
-            } else if (old_layout == vk::ImageLayout::eUndefined && new_layout == vk::ImageLayout::eDepthStencilAttachmentOptimal) {
-                image_memory_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+                default: {
+                    throw std::runtime_error("Error, old layout not supported");
+                }
+            }
 
-                image_memory_barrier.srcAccessMask = {};
-                image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            switch (new_layout) {
+                case vk::ImageLayout::eTransferDstOptimal: {
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+                    destination_stage = vk::PipelineStageFlagBits::eTransfer;
+                } break;
 
-                source_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-                destination_stage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
-            } else {
-                throw std::invalid_argument("Unsupported layout transition");
+                case vk::ImageLayout::eShaderReadOnlyOptimal: {
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+                    destination_stage = vk::PipelineStageFlagBits::eFragmentShader;
+                } break;
+
+                case vk::ImageLayout::eDepthStencilAttachmentOptimal: {
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+                    image_memory_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+                    destination_stage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+                } break;
+
+                case vk::ImageLayout::eGeneral: {
+                    destination_stage = vk::PipelineStageFlagBits::eAllCommands;
+                } break;
+
+                default: {
+                    throw std::runtime_error("Error, new layout not supported");
+                }
             }
 
             command_buffer.pipelineBarrier(

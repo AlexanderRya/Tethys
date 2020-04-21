@@ -1,5 +1,5 @@
-#include <tethys/api/private/framebuffer.hpp>
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/framebuffer.hpp>
+#include <tethys/api/context.hpp>
 #include <tethys/logger.hpp>
 
 namespace tethys::api {

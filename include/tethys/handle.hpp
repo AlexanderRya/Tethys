@@ -9,6 +9,12 @@ namespace tethys {
     struct Handle {
         usize index;
     };
+
+    template <>
+    struct Handle<Mesh> {
+        usize vbo_index;
+        usize ibo_index;
+    };
 } // namespace tethys
 
 #endif //TETHYS_HANDLE_HPP

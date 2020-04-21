@@ -1,5 +1,5 @@
-#include <tethys/api/private/single_descriptor_set.hpp>
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/single_descriptor_set.hpp>
+#include <tethys/api/context.hpp>
 
 #include <vulkan/vulkan.hpp>
 
@@ -48,8 +48,8 @@ namespace tethys::api {
 
     void SingleDescriptorSet::update(const UpdateImageInfo& info) {
         vk::WriteDescriptorSet write{}; {
-            write.descriptorCount = info.image.size();
-            write.pImageInfo = info.image.data();
+            write.descriptorCount = info.images.size();
+            write.pImageInfo = info.images.data();
             write.pTexelBufferView = nullptr;
             write.pBufferInfo = nullptr;
             write.dstSet = descriptor_set;

@@ -1,8 +1,8 @@
 #ifndef TETHYS_SINGLE_BUFFER_HPP
 #define TETHYS_SINGLE_BUFFER_HPP
 
-#include <tethys/api/private/static_buffer.hpp>
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/static_buffer.hpp>
+#include <tethys/api/context.hpp>
 
 #include <type_traits>
 

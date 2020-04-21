@@ -2,16 +2,18 @@
 #define TETHYS_RENDERER_HPP
 
 #include <tethys/forwards.hpp>
-#include <tethys/handle.hpp>
-#include <tethys/mesh.hpp>
+#include <tethys/types.hpp>
 
 #include <vector>
 
 namespace tethys::renderer {
     void initialise();
 
-    [[nodiscard]] Handle<Mesh> upload(std::vector<Vertex>&&);
-    [[nodiscard]] Handle<Texture> upload(const char*);
+    template <typename Ty>
+    [[nodiscard]] Handle<Ty> upload(std::vector<Vertex>&&, std::vector<u32>&&);
+
+    template <typename Ty>
+    [[nodiscard]] Handle<Ty> upload(const char*);
     void unload(Handle<Mesh>&&);
 
     void start();

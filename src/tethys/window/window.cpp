@@ -1,4 +1,4 @@
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/context.hpp>
 #include <tethys/window/window.hpp>
 #include <tethys/logger.hpp>
 #include <tethys/util.hpp>

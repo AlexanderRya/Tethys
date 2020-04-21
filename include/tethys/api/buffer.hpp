@@ -1,7 +1,7 @@
 #ifndef TETHYS_BUFFER_HPP
 #define TETHYS_BUFFER_HPP
 
-#include <tethys/api/private/single_buffer.hpp>
+#include <tethys/api/single_buffer.hpp>
 #include <tethys/constants.hpp>
 
 namespace tethys::api {

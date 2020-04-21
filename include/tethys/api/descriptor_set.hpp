@@ -1,7 +1,7 @@
 #ifndef TETHYS_DESCRIPTOR_SET_HPP
 #define TETHYS_DESCRIPTOR_SET_HPP
 
-#include <tethys/api/private/single_descriptor_set.hpp>
+#include <tethys/api/single_descriptor_set.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/forwards.hpp>
 #include <tethys/types.hpp>

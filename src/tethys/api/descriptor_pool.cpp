@@ -1,5 +1,5 @@
-#include <tethys/api/private/descriptor_pool.hpp>
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/descriptor_pool.hpp>
+#include <tethys/api/context.hpp>
 #include <tethys/logger.hpp>
 #include <tethys/types.hpp>
 

@@ -1,6 +1,6 @@
-#include <tethys/api/private/vertex_buffer.hpp>
-#include <tethys/api/private/context.hpp>
-#include <tethys/api/private/static_buffer.hpp>
+#include <tethys/api/vertex_buffer.hpp>
+#include <tethys/api/static_buffer.hpp>
+#include <tethys/api/context.hpp>
 #include <tethys/vertex.hpp>
 #include <tethys/logger.hpp>
 

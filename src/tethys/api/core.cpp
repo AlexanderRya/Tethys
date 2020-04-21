@@ -1,12 +1,12 @@
-#include <tethys/api/private/descriptor_pool.hpp>
-#include <tethys/api/private/command_pool.hpp>
-#include <tethys/api/private/framebuffer.hpp>
-#include <tethys/api/private/render_pass.hpp>
-#include <tethys/api/private/swapchain.hpp>
-#include <tethys/api/private/instance.hpp>
-#include <tethys/api/private/sampler.hpp>
-#include <tethys/api/private/context.hpp>
-#include <tethys/api/private/device.hpp>
+#include <tethys/api/descriptor_pool.hpp>
+#include <tethys/api/command_pool.hpp>
+#include <tethys/api/framebuffer.hpp>
+#include <tethys/api/render_pass.hpp>
+#include <tethys/api/swapchain.hpp>
+#include <tethys/api/instance.hpp>
+#include <tethys/api/sampler.hpp>
+#include <tethys/api/context.hpp>
+#include <tethys/api/device.hpp>
 #include <tethys/window/window.hpp>
 #include <tethys/logger.hpp>
 #include <tethys/util.hpp>
@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 
 namespace tethys::api {
-    static inline void load_vulkan_module() {
+    static void load_vulkan_module() {
         auto module = util::load_module(util::vulkan_module);
 
         logger::info("Vulkan module: ", util::vulkan_module, " loaded at address: ", module);
@@ -27,7 +27,7 @@ namespace tethys::api {
         util::close_module(module);
     }
 
-    static inline void load_vma() {
+    static void load_vma() {
         logger::info("Initializing Vulkan Memory Allocator.");
 
         ctx.vma_dispatcher.vkAllocateMemory = ctx.dispatcher.vkAllocateMemory;
@@ -54,7 +54,7 @@ namespace tethys::api {
         ctx.vma_dispatcher.vkUnmapMemory = ctx.dispatcher.vkUnmapMemory;
     }
 
-    [[nodiscard]] static inline VmaAllocator make_allocator() {
+    [[nodiscard]] static VmaAllocator make_allocator() {
         VmaAllocatorCreateInfo allocator_create_info{}; {
             allocator_create_info.pVulkanFunctions = &ctx.vma_dispatcher;
             allocator_create_info.instance = static_cast<VkInstance>(ctx.instance);

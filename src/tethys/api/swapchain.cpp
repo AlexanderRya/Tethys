@@ -1,14 +1,14 @@
-#include <tethys/api/private/context.hpp>
-#include <tethys/api/private/swapchain.hpp>
-#include <tethys/api/private/image.hpp>
 #include <tethys/window/window.hpp>
+#include <tethys/api/swapchain.hpp>
+#include <tethys/api/context.hpp>
+#include <tethys/api/image.hpp>
 #include <tethys/logger.hpp>
 #include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 
 namespace tethys::api {
-    [[nodiscard]] static inline u32 get_image_count(const vk::SurfaceCapabilitiesKHR& capabilities) {
+    [[nodiscard]] static u32 get_image_count(const vk::SurfaceCapabilitiesKHR& capabilities) {
         auto count = capabilities.minImageCount + 1;
 
         if (capabilities.maxImageCount > 0 && count > capabilities.maxImageCount) {
@@ -20,7 +20,7 @@ namespace tethys::api {
         return count;
     }
 
-    [[nodiscard]] static inline vk::Extent2D get_extent(const vk::SurfaceCapabilitiesKHR& capabilities) {
+    [[nodiscard]] static vk::Extent2D get_extent(const vk::SurfaceCapabilitiesKHR& capabilities) {
         if (capabilities.currentExtent.width != UINT32_MAX) {
 
             return capabilities.currentExtent;
@@ -34,7 +34,7 @@ namespace tethys::api {
         }
     }
 
-    [[nodiscard]] static inline vk::SurfaceFormatKHR get_format() {
+    [[nodiscard]] static vk::SurfaceFormatKHR get_format() {
         auto surface_formats = ctx.device.physical.getSurfaceFormatsKHR(ctx.surface, {}, ctx.dispatcher);
 
         vk::SurfaceFormatKHR format = surface_formats[0];
@@ -55,7 +55,7 @@ namespace tethys::api {
         return format;
     }
 
-    [[nodiscard]] static inline vk::PresentModeKHR get_present_mode() {
+    [[nodiscard]] static vk::PresentModeKHR get_present_mode() {
         for (const auto& mode : ctx.device.physical.getSurfacePresentModesKHR(ctx.surface, {}, ctx.dispatcher)) {
             if (mode == vk::PresentModeKHR::eImmediate) {
                 logger::info("Swapchain details: present mode: vk::PresentModeKHR::", vk::to_string(mode));
@@ -68,7 +68,7 @@ namespace tethys::api {
         return vk::PresentModeKHR::eFifo;
     }
 
-    static inline void get_swapchain(Swapchain& swapchain) {
+    static void get_swapchain(Swapchain& swapchain) {
         vk::SwapchainCreateInfoKHR swapchain_create_info{}; {
             swapchain_create_info.surface = ctx.surface;
             swapchain_create_info.minImageCount = swapchain.image_count;
@@ -92,19 +92,19 @@ namespace tethys::api {
         logger::info("Swapchain successfully created");
     }
 
-    static inline void create_images(Swapchain& swapchain) {
+    static void create_images(Swapchain& swapchain) {
         swapchain.images = ctx.device.logical.getSwapchainImagesKHR(swapchain.handle, ctx.dispatcher);
 
         swapchain.image_views.reserve(swapchain.image_count);
 
         for (const auto& image : swapchain.images) {
-            swapchain.image_views.emplace_back(api::make_image_view( image, swapchain.format.format, vk::ImageAspectFlagBits::eColor));
+            swapchain.image_views.emplace_back(api::make_image_view(image, swapchain.format.format, vk::ImageAspectFlagBits::eColor));
         }
 
         logger::info("Swapchain images successfully created");
     }
 
-    static inline void make_depth_image(Swapchain& swapchain) {
+    static void make_depth_image(Swapchain& swapchain) {
         api::Image::CreateInfo create_info{}; {
             create_info.format = vk::Format::eD32SfloatS8Uint;
             create_info.tiling = vk::ImageTiling::eOptimal;

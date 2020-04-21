@@ -10,7 +10,7 @@ namespace tethys::logger {
             "[{}] [Logger] [Info]: ",
             util::timestamp()));
 
-        (((util::print(args)), ...), util::print("\n"));
+        ((util::print(args), ...), util::print("\n"));
     }
 
     template <typename ...Args>
@@ -19,7 +19,7 @@ namespace tethys::logger {
             "[{}] [Logger] [Warning]: ",
             util::timestamp()));
 
-        (((util::print(args)), ...), util::print("\n"));
+        ((util::print(args), ...), util::print("\n"));
     }
 
     template <typename ...Args>
@@ -28,7 +28,7 @@ namespace tethys::logger {
             "[{}] [Logger] [Error]: ",
             util::timestamp()));
 
-        (((util::print(args)), ...), util::print("\n"));
+        ((util::print(args), ...), util::print("\n"));
     }
 } // namespace tethys::logger
 

@@ -9,6 +9,8 @@ namespace tethys {
         glm::vec3 pos;
         glm::vec3 norms;
         glm::vec2 uvs;
+        glm::vec3 tangent;
+        glm::vec3 bitangent;
     };
 } // namespace tethys
 

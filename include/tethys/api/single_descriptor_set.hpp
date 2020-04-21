@@ -16,7 +16,7 @@ namespace tethys::api {
     };
 
     struct UpdateImageInfo {
-        std::vector<vk::DescriptorImageInfo> image{};
+        std::vector<vk::DescriptorImageInfo> images{};
         vk::DescriptorType type{};
         u64 binding{};
     };

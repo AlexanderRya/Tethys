@@ -1,7 +1,7 @@
 #ifndef TETHYS_DEVICE_HPP
 #define TETHYS_DEVICE_HPP
 
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/context.hpp>
 #include <tethys/forwards.hpp>
 #include <tethys/types.hpp>
 

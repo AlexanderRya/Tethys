@@ -1,7 +1,7 @@
 #ifndef TETHYS_INSTANCE_HPP
 #define TETHYS_INSTANCE_HPP
 
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/context.hpp>
 
 namespace tethys::api {
     [[nodiscard]] vk::Instance make_instance();

@@ -3,6 +3,8 @@
 layout (location = 0) in vec3 ivertex_pos;
 layout (location = 1) in vec3 inormals;
 layout (location = 2) in vec2 iuvs;
+layout (location = 3) in vec3 itangents;
+layout (location = 4) in vec3 ibi_tangents;
 
 layout (location = 0) out vec2 uvs;
 layout (location = 1) out vec3 normals;
@@ -20,7 +22,9 @@ layout (set = 0, binding = 1) buffer readonly Transform {
 
 layout (push_constant) uniform Indices {
     int transform_index;
-    int material_index;
+    int diffuse_index;
+    int specular_index;
+    int normal_index;
 };
 
 void main() {

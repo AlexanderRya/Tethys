@@ -1,4 +1,4 @@
-#include <tethys/api/private/context.hpp>
+#include <tethys/api/context.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/pipeline.hpp>
 #include <tethys/acquire.hpp>
@@ -15,7 +15,7 @@ namespace tethys {
     static std::vector<PipelineLayout> pipeline_layouts;
     static std::vector<Pipeline> pipelines;
 
-    static inline void load_set_layouts() {
+    static void load_set_layouts() {
         set_layouts.resize(2);
 
         /* Minimal set layout */ {
@@ -78,7 +78,7 @@ namespace tethys {
         }
     }
 
-    [[nodiscard]] static inline vk::ShaderModule load_module(const char* path) {
+    [[nodiscard]] static vk::ShaderModule load_module(const char* path) {
         using namespace std::string_literals;
 
         std::ifstream in(path, std::fstream::binary);
@@ -101,7 +101,7 @@ namespace tethys {
         return module;
     }
 
-    static inline void load_pipeline_layouts() {
+    static void load_pipeline_layouts() {
         pipeline_layouts.resize(2);
 
         /* Generic pipeline layout */ {
@@ -146,7 +146,7 @@ namespace tethys {
         }
     }
 
-    [[nodiscard]] static inline Pipeline make_generic_pipeline(const char* vertex, const char* fragment, const u32 layout_idx) {
+    [[nodiscard]] static Pipeline make_generic_pipeline(const char* vertex, const char* fragment, const u32 layout_idx) {
         std::array<vk::ShaderModule, 2> modules{}; {
             modules[0] = load_module(vertex);
             modules[1] = load_module(fragment);
@@ -181,13 +181,13 @@ namespace tethys {
             dynamic_state_create_info.pDynamicStates = dynamic_states.data();
         }
 
-        std::array<vk::VertexInputBindingDescription, 1> vertex_bindings{}; {
-            vertex_bindings[0].stride = sizeof(Vertex);
-            vertex_bindings[0].binding = 0;
-            vertex_bindings[0].inputRate = vk::VertexInputRate::eVertex;
+        vk::VertexInputBindingDescription vertex_binding{}; {
+            vertex_binding.binding = 0;
+            vertex_binding.stride = sizeof(Vertex);
+            vertex_binding.inputRate = vk::VertexInputRate::eVertex;
         }
 
-        std::array<vk::VertexInputAttributeDescription, 3> vertex_attributes{}; {
+        std::array<vk::VertexInputAttributeDescription, 5> vertex_attributes{}; {
             vertex_attributes[0].binding = 0;
             vertex_attributes[0].format = vk::Format::eR32G32B32Sfloat;
             vertex_attributes[0].location = 0;
@@ -202,11 +202,21 @@ namespace tethys {
             vertex_attributes[2].format = vk::Format::eR32G32Sfloat;
             vertex_attributes[2].location = 2;
             vertex_attributes[2].offset = offsetof(Vertex, uvs);
+
+            vertex_attributes[3].binding = 0;
+            vertex_attributes[3].format = vk::Format::eR32G32B32Sfloat;
+            vertex_attributes[3].location = 3;
+            vertex_attributes[3].offset = offsetof(Vertex, tangent);
+
+            vertex_attributes[4].binding = 0;
+            vertex_attributes[4].format = vk::Format::eR32G32B32Sfloat;
+            vertex_attributes[4].location = 4;
+            vertex_attributes[4].offset = offsetof(Vertex, bitangent);
         }
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_info{}; {
-            vertex_input_info.pVertexBindingDescriptions = vertex_bindings.data();
-            vertex_input_info.vertexBindingDescriptionCount = vertex_bindings.size();
+            vertex_input_info.pVertexBindingDescriptions = &vertex_binding;
+            vertex_input_info.vertexBindingDescriptionCount = 1;
             vertex_input_info.pVertexAttributeDescriptions = vertex_attributes.data();
             vertex_input_info.vertexAttributeDescriptionCount = vertex_attributes.size();
         }

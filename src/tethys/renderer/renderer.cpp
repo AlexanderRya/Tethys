@@ -1,19 +1,22 @@
-#include <tethys/api/private/command_buffer.hpp>
-#include <tethys/api/private/descriptor_set.hpp>
-#include <tethys/api/private/vertex_buffer.hpp>
-#include <tethys/api/private/static_buffer.hpp>
-#include <tethys/api/private/context.hpp>
-#include <tethys/api/private/buffer.hpp>
+#include <tethys/api/command_buffer.hpp>
+#include <tethys/api/descriptor_set.hpp>
+#include <tethys/api/vertex_buffer.hpp>
+#include <tethys/api/static_buffer.hpp>
 #include <tethys/renderer/renderer.hpp>
 #include <tethys/directional_light.hpp>
+#include <tethys/api/index_buffer.hpp>
 #include <tethys/point_light.hpp>
 #include <tethys/render_data.hpp>
+#include <tethys/api/context.hpp>
+#include <tethys/api/buffer.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/forwards.hpp>
 #include <tethys/pipeline.hpp>
 #include <tethys/texture.hpp>
 #include <tethys/acquire.hpp>
+#include <tethys/handle.hpp>
 #include <tethys/types.hpp>
+#include <tethys/mesh.hpp>
 
 #include <vulkan/vulkan.hpp>
 
@@ -36,6 +39,9 @@ namespace tethys::renderer {
 
     static std::stack<usize> free_vertex_buffers{};
     static std::vector<api::VertexBuffer> vertex_buffers{};
+
+    static std::stack<usize> free_index_buffers{};
+    static std::vector<api::IndexBuffer> index_buffers{};
 
     static std::vector<Texture> textures{};
 
@@ -101,36 +107,56 @@ namespace tethys::renderer {
         }
 
         generic_set.update(generic_update);
-    }
 
-    Handle<Mesh> upload(std::vector<Vertex>&& mesh) {
-        if (!free_vertex_buffers.empty()) {
-            auto free_idx = free_vertex_buffers.top();
+        const u8 white_texture[]{ 255, 255, 255, 255 };
 
-            vertex_buffers[free_idx] = api::make_vertex_buffer(std::move(mesh));
-
-            free_vertex_buffers.pop();
-
-            return Handle<Mesh>{ free_idx };
-        } else {
-            vertex_buffers.emplace_back(api::make_vertex_buffer(std::move(mesh)));
-
-            return Handle<Mesh>{ vertex_buffers.size() - 1 };
+        api::UpdateImageInfo info{}; {
+            info.images = { textures.emplace_back(load_texture(white_texture, 1, 1, 4)).info() };
+            info.binding = binding::texture;
+            info.type = vk::DescriptorType::eCombinedImageSampler;
         }
+
+        minimal_set.update(info);
     }
 
-    Handle<Texture> upload(const char* path) {
-        textures.emplace_back().load(path);
+    template <>
+    Handle<Mesh> upload<Mesh>(std::vector<Vertex>&& geometry, std::vector<u32>&& indices) {
+        usize vbo_index, ibo_index;
 
-        std::vector<vk::DescriptorImageInfo> image_info{};
-        image_info.reserve(textures.size());
+        if (!free_vertex_buffers.empty()) {
+            vbo_index = free_vertex_buffers.top();
+            vertex_buffers[vbo_index] = api::make_vertex_buffer(std::move(geometry));
+            free_vertex_buffers.pop();
+        } else {
+            vertex_buffers.emplace_back(api::make_vertex_buffer(std::move(geometry)));
+            vbo_index = vertex_buffers.size() - 1;
+        }
 
-        for (const auto& texture : textures) {
-            image_info.emplace_back(texture.info());
+        if (!free_index_buffers.empty()) {
+            ibo_index = free_index_buffers.top();
+            index_buffers[ibo_index] = api::make_index_buffer(std::move(indices));
+            free_index_buffers.pop();
+        } else {
+            index_buffers.emplace_back(api::make_index_buffer(std::move(indices)));
+            ibo_index = index_buffers.size() - 1;
+        }
+
+        return Handle<Mesh>{ vbo_index, ibo_index };
+    }
+
+    template <>
+    Handle<Texture> upload<Texture>(const char* path) {
+        textures.emplace_back(load_texture(path));
+
+        std::vector<vk::DescriptorImageInfo> images{};
+        images.reserve(textures.size());
+
+        for (const auto& image : textures) {
+            images.emplace_back(image.info());
         }
 
         api::UpdateImageInfo info{}; {
-            info.image = std::move(image_info);
+            info.images = std::move(images);
             info.binding = binding::texture;
             info.type = vk::DescriptorType::eCombinedImageSampler;
         }
@@ -140,7 +166,7 @@ namespace tethys::renderer {
         return Handle<Texture>{ textures.size() - 1 };
     }
 
-    static inline void update_transforms(const RenderData& data) {
+    static void update_transforms(const RenderData& data) {
         auto& current = transform_buffer[current_frame];
 
         std::vector<glm::mat4> transforms;
@@ -165,7 +191,7 @@ namespace tethys::renderer {
         }
     }
 
-    static inline void update_camera(const Camera& camera) {
+    static void update_camera(const Camera& camera) {
         auto& current = camera_buffer[current_frame];
 
         if (current.size() == 1) {
@@ -183,7 +209,7 @@ namespace tethys::renderer {
         }
     }
 
-    static inline void update_point_lights(const std::vector<PointLight>& point_lights) {
+    static void update_point_lights(const std::vector<PointLight>& point_lights) {
         auto& current = point_light_buffer[current_frame];
 
         if (current.size() == point_lights.size()) {
@@ -201,7 +227,7 @@ namespace tethys::renderer {
         }
     }
 
-    static inline void update_directional_lights(const std::vector<DirectionalLight>& directional_lights) {
+    static void update_directional_lights(const std::vector<DirectionalLight>& directional_lights) {
         auto& current = directional_light_buffer[current_frame];
 
         if (current.size() == directional_lights.size()) {
@@ -220,15 +246,22 @@ namespace tethys::renderer {
     }
 
     void unload(Handle<Mesh>&& mesh) {
-        if (mesh.index < vertex_buffers.size()) {
-            std::swap(vertex_buffers[mesh.index], vertex_buffers.emplace_back());
+        if (mesh.vbo_index < vertex_buffers.size()) {
+            std::swap(vertex_buffers[mesh.vbo_index], vertex_buffers.emplace_back());
             api::destroy_buffer(vertex_buffers.back().buffer);
-            free_vertex_buffers.push(mesh.index);
+            free_vertex_buffers.push(mesh.vbo_index);
             vertex_buffers.pop_back();
+        }
+
+        if (mesh.ibo_index < index_buffers.size()) {
+            std::swap(index_buffers[mesh.ibo_index], index_buffers.emplace_back());
+            api::destroy_buffer(index_buffers.back().buffer);
+            free_index_buffers.push(mesh.ibo_index);
+            index_buffers.pop_back();
         }
     }
 
-    static inline void acquire() {
+    static void acquire() {
         image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, image_available[current_frame], nullptr, ctx.dispatcher).value;
 
         if (!in_flight[current_frame]) {
@@ -297,11 +330,14 @@ namespace tethys::renderer {
         for (usize i = 0; i < data.commands.size(); ++i) {
             auto& draw = data.commands[i];
 
-            auto& mesh = vertex_buffers[draw.mesh.index];
+            auto& vbo = vertex_buffers[draw.mesh.vbo_index];
+            auto& ibo = index_buffers[draw.mesh.ibo_index];
 
-            i32 indices[]{
-                static_cast<i32>(i),
-                static_cast<i32>(draw.material.texture.index)
+            u32 indices[]{
+                static_cast<u32>(i),
+                static_cast<u32>(draw.material.texture.index),
+                static_cast<u32>(texture::white),
+                static_cast<u32>(texture::white)
             };
 
             if (draw.material.shader == shader::generic) {
@@ -311,14 +347,16 @@ namespace tethys::renderer {
                     generic_set[current_frame].handle()
                 };
                 command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
-                command_buffer.pushConstants(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), vk::ArrayProxy<const i32>{ 2, indices }, ctx.dispatcher);
+                command_buffer.pushConstants<const u32*>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
             } else if (draw.material.shader == shader::minimal) {
                 command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, ctx.dispatcher);
                 command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, ctx.dispatcher);
-                command_buffer.pushConstants(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), vk::ArrayProxy<const i32>{ 2, indices }, ctx.dispatcher);
+                command_buffer.pushConstants<const u32*>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
             }
-            command_buffer.bindVertexBuffers(0, mesh.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-            command_buffer.draw(mesh.size, 1, 0, 0, ctx.dispatcher);
+
+            command_buffer.bindIndexBuffer(ibo.buffer.handle, static_cast<vk::DeviceSize>(0), vk::IndexType::eUint32, ctx.dispatcher);
+            command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
+            command_buffer.draw(vbo.size, 1, 0, 0, ctx.dispatcher);
         }
     }
 

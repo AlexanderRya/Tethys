@@ -25,6 +25,10 @@ namespace tethys {
         constexpr inline u32 minimal = 1;
     } // namespace tethys::shader
 
+    namespace texture {
+        constexpr inline u32 white = 0;
+    }
+
     namespace api {
         constexpr inline u32 frames_in_flight = 2;
     } // namespace tethys::api

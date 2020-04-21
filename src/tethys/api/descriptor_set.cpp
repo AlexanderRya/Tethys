@@ -1,4 +1,4 @@
-#include <tethys/api/private/descriptor_set.hpp>
+#include <tethys/api/descriptor_set.hpp>
 
 namespace tethys::api {
     void DescriptorSet::create(const vk::DescriptorSetLayout layout) {
