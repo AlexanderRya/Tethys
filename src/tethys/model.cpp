@@ -8,13 +8,14 @@
 
 namespace tethys {
     static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type) {
+        using namespace std::string_literals;
         if (!material->GetTextureCount(type)) {
             return Handle<Texture>{ texture::white };
         }
 
         aiString str;
         material->GetTexture(type, 0, &str);
-        return renderer::upload<Texture>(str.C_Str());
+        return renderer::upload<Texture>(("../resources/models/nanosuit/"s + str.C_Str()).c_str()); // Temporary lol
     }
 
     static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh) {
@@ -34,9 +35,9 @@ namespace tethys {
             vertex.norms.x = mesh->mNormals[i].y;
             vertex.norms.x = mesh->mNormals[i].z;
 
-            if (mesh->mTextureCoords[i]) {
-                vertex.uvs.x = mesh->mTextureCoords[i]->x;
-                vertex.uvs.x = mesh->mTextureCoords[i]->y;
+            if (*mesh->mTextureCoords) {
+                vertex.uvs.x = (*mesh->mTextureCoords)[i].x;
+                vertex.uvs.x = (*mesh->mTextureCoords)[i].y;
             }
 
             vertex.tangent.x = mesh->mTangents[i].x;
@@ -46,6 +47,8 @@ namespace tethys {
             vertex.bitangent.x = mesh->mBitangents[i].x;
             vertex.bitangent.y = mesh->mBitangents[i].y;
             vertex.bitangent.z = mesh->mBitangents[i].z;
+
+            geometry.emplace_back(vertex);
         }
 
         for (usize i = 0; i < mesh->mNumFaces; i++) {

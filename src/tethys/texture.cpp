@@ -25,7 +25,7 @@ namespace tethys {
         logger::info("Loading texture: "s + path);
 
         auto data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
-        auto texture = load_texture(data, width, height, channels);
+        auto texture = load_texture(data, width, height, 4);
         stbi_image_free(data);
 
         return texture;

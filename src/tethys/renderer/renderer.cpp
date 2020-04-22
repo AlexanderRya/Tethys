@@ -180,13 +180,9 @@ namespace tethys::renderer {
         auto& current = transform_buffer[current_frame];
 
         std::vector<glm::mat4> transforms;
-        transforms.reserve(data.mesh_commands.size() + data.model_commands.size());
+        transforms.reserve(data.draw_commands.size());
 
-        for (const auto& each : data.mesh_commands) {
-            transforms.emplace_back(each.transform);
-        }
-
-        for (const auto& each : data.model_commands) {
+        for (const auto& each : data.draw_commands) {
             transforms.emplace_back(each.transform);
         }
 
@@ -341,40 +337,8 @@ namespace tethys::renderer {
         update_point_lights(data.point_lights);
         update_directional_lights(data.directional_lights);
 
-        for (usize i = 0; i < data.mesh_commands.size(); ++i) {
-            auto& draw = data.mesh_commands[i];
-
-            auto& vbo = vertex_buffers[draw.mesh.vbo_index];
-            auto& ibo = index_buffers[draw.mesh.ibo_index];
-
-            u32 indices[]{
-                static_cast<u32>(i),
-                static_cast<u32>(draw.material.texture.index),
-                static_cast<u32>(texture::white),
-                static_cast<u32>(texture::white)
-            };
-
-            if (draw.material.shader == shader::generic) {
-                command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
-                std::array<vk::DescriptorSet, 2> sets{
-                    minimal_set[current_frame].handle(),
-                    generic_set[current_frame].handle()
-                };
-                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
-                command_buffer.pushConstants<const u32*>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
-            } else if (draw.material.shader == shader::minimal) {
-                command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, ctx.dispatcher);
-                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, ctx.dispatcher);
-                command_buffer.pushConstants<const u32*>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
-            }
-
-            command_buffer.bindIndexBuffer(ibo.buffer.handle, static_cast<vk::DeviceSize>(0), vk::IndexType::eUint32, ctx.dispatcher);
-            command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-            command_buffer.draw(vbo.size, 1, 0, 0, ctx.dispatcher);
-        }
-
-        for (usize i = 0; i < data.model_commands.size(); ++i) {
-            auto& draw = data.model_commands[i];
+        for (usize i = 0; i < data.draw_commands.size(); ++i) {
+            auto& draw = data.draw_commands[i];
             auto& model = models[draw.model.index];
 
             for (auto& submesh : model.submeshes) {
@@ -382,7 +346,7 @@ namespace tethys::renderer {
                 auto& ibo = index_buffers[submesh.mesh.ibo_index];
 
                 u32 indices[]{
-                    static_cast<u32>(data.mesh_commands.size() + i),
+                    static_cast<u32>(i),
                     static_cast<u32>(submesh.diffuse.index),
                     static_cast<u32>(submesh.specular.index),
                     static_cast<u32>(submesh.normal.index)

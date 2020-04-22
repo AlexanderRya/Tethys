@@ -55,8 +55,7 @@ set(TETHYS_HEADERS
         "include/tethys/directional_light.hpp"
         "include/tethys/acquire.hpp"
         "include/tethys/model.hpp"
-        "include/tethys/api/index_buffer.hpp"
-        "include/tethys/experimental/rtx_renderer.hpp")
+        "include/tethys/api/index_buffer.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/instance.cpp"
@@ -83,8 +82,7 @@ set(TETHYS_SOURCES
         "src/tethys/texture.cpp"
         "src/tethys/api/stb_image.cpp"
         "src/tethys/api/index_buffer.cpp"
-        "src/tethys/model.cpp"
-        "src/tethys/experimental/rtx_renderer.cpp")
+        "src/tethys/model.cpp")
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}

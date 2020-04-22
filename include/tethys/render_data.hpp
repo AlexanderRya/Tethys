@@ -10,31 +10,19 @@
 #include <glm/mat4x4.hpp>
 
 namespace tethys {
+    struct DrawCommand{
+        Handle<Model> model{};
+        glm::mat4 transform{};
+        u32 shader{};
+    };
+
     struct RenderData {
-        template <typename>
-        struct DrawCommand;
+        std::vector<DrawCommand> draw_commands{};
 
-        template <>
-        struct DrawCommand<Mesh>{
-            Handle<Mesh> mesh;
-            glm::mat4 transform;
-            Material material;
-        };
+        std::vector<PointLight> point_lights{};
+        std::vector<DirectionalLight> directional_lights{};
 
-        template <>
-        struct DrawCommand<Model>{
-            Handle<Model> model;
-            glm::mat4 transform;
-            u32 shader;
-        };
-
-        std::vector<DrawCommand<Model>> model_commands;
-        std::vector<DrawCommand<Mesh>> mesh_commands;
-
-        std::vector<PointLight> point_lights;
-        std::vector<DirectionalLight> directional_lights;
-
-        Camera camera; // Just one for now
+        Camera camera{}; // Just one for now
     };
 } // namespace tethys
 

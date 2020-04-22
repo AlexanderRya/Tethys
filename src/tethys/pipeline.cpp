@@ -106,7 +106,7 @@ namespace tethys {
 
         /* Generic pipeline layout */ {
             vk::PushConstantRange range{}; {
-                range.size = 2 * sizeof(i32);
+                range.size = 4 * sizeof(u32);
                 range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
                 range.offset = 0;
             }
@@ -129,7 +129,7 @@ namespace tethys {
 
         /* Minimal pipeline layout */ {
             vk::PushConstantRange range{}; {
-                range.size = 2 * sizeof(i32);
+                range.size = 4 * sizeof(u32);
                 range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
                 range.offset = 0;
             }
@@ -146,7 +146,7 @@ namespace tethys {
         }
     }
 
-    [[nodiscard]] static Pipeline make_generic_pipeline(const char* vertex, const char* fragment, const u32 layout_idx) {
+    [[nodiscard]] static Pipeline make_pipeline(const char* vertex, const char* fragment, const u32 layout_idx) {
         std::array<vk::ShaderModule, 2> modules{}; {
             modules[0] = load_module(vertex);
             modules[1] = load_module(fragment);
@@ -317,7 +317,7 @@ namespace tethys {
         pipeline.handle = ctx.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, ctx.dispatcher);
         pipeline.layout = pipeline_layouts[layout_idx];
 
-        logger::info("Generic pipeline successfully created");
+        logger::info("Pipeline successfully created");
 
         for (const auto& module : modules) {
             ctx.device.logical.destroyShaderModule(module, nullptr, ctx.dispatcher);
@@ -331,8 +331,8 @@ namespace tethys {
         load_pipeline_layouts();
 
         pipelines.reserve(2);
-        pipelines.emplace_back(make_generic_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv", layout::generic));
-        pipelines.emplace_back(make_generic_pipeline("shaders/minimal.vert.spv", "shaders/minimal.frag.spv", layout::minimal));
+        pipelines.emplace_back(make_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv", layout::generic));
+        pipelines.emplace_back(make_pipeline("shaders/minimal.vert.spv", "shaders/minimal.frag.spv", layout::minimal));
     }
 
     template <>
