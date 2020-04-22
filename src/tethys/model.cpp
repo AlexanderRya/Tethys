@@ -1,6 +1,6 @@
 #include <tethys/renderer/renderer.hpp>
 #include <tethys/constants.hpp>
-#include <tethys/model.hpp>
+//#include <tethys/model.hpp>
 
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>

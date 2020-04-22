@@ -15,7 +15,7 @@
 #include <tethys/texture.hpp>
 #include <tethys/acquire.hpp>
 #include <tethys/handle.hpp>
-#include <tethys/model.hpp>
+//#include <tethys/model.hpp>
 #include <tethys/types.hpp>
 #include <tethys/mesh.hpp>
 
@@ -46,7 +46,7 @@ namespace tethys::renderer {
 
     static std::vector<Texture> textures{};
 
-    static std::vector<Model> models{};
+    //static std::vector<Model> models{};
 
     static api::Buffer<Camera> camera_buffer{};
     static api::Buffer<glm::mat4> transform_buffer{};
@@ -122,8 +122,7 @@ namespace tethys::renderer {
         minimal_set.update(info);
     }
 
-    template <>
-    Handle<Mesh> upload<Mesh>(std::vector<Vertex>&& geometry, std::vector<u32>&& indices) {
+    Handle<Mesh> write_geometry(std::vector<Vertex>&& geometry, std::vector<u32>&& indices) {
         usize vbo_index, ibo_index;
 
         if (!free_vertex_buffers.empty()) {
@@ -147,8 +146,7 @@ namespace tethys::renderer {
         return Handle<Mesh>{ vbo_index, ibo_index };
     }
 
-    template <>
-    Handle<Texture> upload<Texture>(const char* path) {
+    Handle<Texture> upload_texture(const char* path) {
         textures.emplace_back(load_texture(path));
 
         std::vector<vk::DescriptorImageInfo> images{};
@@ -169,12 +167,12 @@ namespace tethys::renderer {
         return Handle<Texture>{ textures.size() - 1 };
     }
 
-    template <>
+    /*template <>
     Handle<Model> upload<Model>(const char* path) {
         models.emplace_back(load_model(path));
 
         return Handle<Model>{ models.size() - 1 };
-    }
+    }*/
 
     static void update_transforms(const RenderData& data) {
         auto& current = transform_buffer[current_frame];
@@ -255,7 +253,7 @@ namespace tethys::renderer {
         }
     }
 
-    void unload(Handle<Mesh>&& mesh) {
+    void unload_geometry(Handle<Mesh>&& mesh) {
         if (mesh.vbo_index < vertex_buffers.size()) {
             std::swap(vertex_buffers[mesh.vbo_index], vertex_buffers.emplace_back());
             api::destroy_buffer(vertex_buffers.back().buffer);
@@ -329,7 +327,7 @@ namespace tethys::renderer {
         command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
     }
 
-    void draw(const RenderData& data) {
+    /*void draw(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
         update_transforms(data);
@@ -370,6 +368,46 @@ namespace tethys::renderer {
                 command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
                 command_buffer.draw(vbo.size, 1, 0, 0, ctx.dispatcher);
             }
+        }
+    }*/
+
+    void draw(const RenderData& data) {
+        auto& command_buffer = command_buffers[image_index];
+
+        update_transforms(data);
+        update_camera(data.camera);
+        update_point_lights(data.point_lights);
+        update_directional_lights(data.directional_lights);
+
+        for (usize i = 0; i < data.draw_commands.size(); ++i) {
+            auto& draw = data.draw_commands[i];
+            auto& vbo = vertex_buffers[draw.mesh.vbo_index];
+            auto& ibo = index_buffers[draw.mesh.ibo_index];
+
+            u32 indices[]{
+                static_cast<u32>(i),
+                static_cast<u32>(0),
+                static_cast<u32>(0),
+                static_cast<u32>(0)
+            };
+
+            if (draw.material.shader == shader::generic) {
+                command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
+                std::array<vk::DescriptorSet, 2> sets{
+                    minimal_set[current_frame].handle(),
+                    generic_set[current_frame].handle()
+                };
+                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
+                command_buffer.pushConstants<const u32*>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
+            } else if (draw.material.shader == shader::minimal) {
+                command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, ctx.dispatcher);
+                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, ctx.dispatcher);
+                command_buffer.pushConstants<const u32*>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
+            }
+
+            command_buffer.bindIndexBuffer(ibo.buffer.handle, static_cast<vk::DeviceSize>(0), vk::IndexType::eUint32, ctx.dispatcher);
+            command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
+            command_buffer.draw(vbo.size, 1, 0, 0, ctx.dispatcher);
         }
     }
 

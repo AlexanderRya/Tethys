@@ -11,9 +11,9 @@
 
 namespace tethys {
     struct DrawCommand{
-        Handle<Model> model{};
+        Handle<Mesh> mesh{};
         glm::mat4 transform{};
-        u32 shader{};
+        Material material{};
     };
 
     struct RenderData {
