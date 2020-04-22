@@ -1,13 +1,15 @@
 #include <tethys/renderer/renderer.hpp>
 #include <tethys/constants.hpp>
-//#include <tethys/model.hpp>
+#include <tethys/model.hpp>
 
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
 namespace tethys {
-    static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type) {
+    std::unordered_map<std::string, Handle<Texture>> loaded_textures;
+
+    static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::filesystem::path& model_path) {
         using namespace std::string_literals;
         if (!material->GetTextureCount(type)) {
             return Handle<Texture>{ texture::white };
@@ -15,10 +17,16 @@ namespace tethys {
 
         aiString str;
         material->GetTexture(type, 0, &str);
-        return renderer::upload<Texture>(("../resources/models/nanosuit/"s + str.C_Str()).c_str()); // Temporary lol
+        std::string path{ model_path / str.C_Str() };
+
+        if (loaded_textures.contains(path)) {
+            return loaded_textures[path];
+        }
+
+        return loaded_textures[path] = renderer::upload_texture(path.c_str());
     }
 
-    static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh) {
+    static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::filesystem::path& model_path) {
         Model::SubMesh sub_mesh{};
         std::vector<Vertex> geometry{};
         std::vector<u32> indices{};
@@ -28,16 +36,16 @@ namespace tethys {
             Vertex vertex{};
 
             vertex.pos.x = mesh->mVertices[i].x;
-            vertex.pos.x = mesh->mVertices[i].y;
-            vertex.pos.x = mesh->mVertices[i].z;
+            vertex.pos.y = mesh->mVertices[i].y;
+            vertex.pos.z = mesh->mVertices[i].z;
 
             vertex.norms.x = mesh->mNormals[i].x;
-            vertex.norms.x = mesh->mNormals[i].y;
-            vertex.norms.x = mesh->mNormals[i].z;
+            vertex.norms.y = mesh->mNormals[i].y;
+            vertex.norms.z = mesh->mNormals[i].z;
 
             if (*mesh->mTextureCoords) {
                 vertex.uvs.x = (*mesh->mTextureCoords)[i].x;
-                vertex.uvs.x = (*mesh->mTextureCoords)[i].y;
+                vertex.uvs.y = (*mesh->mTextureCoords)[i].y;
             }
 
             vertex.tangent.x = mesh->mTangents[i].x;
@@ -51,38 +59,36 @@ namespace tethys {
             geometry.emplace_back(vertex);
         }
 
+
         for (usize i = 0; i < mesh->mNumFaces; i++) {
             aiFace& face = mesh->mFaces[i];
-            for(unsigned int j = 0; j < face.mNumIndices; j++)
+            for(unsigned int j = 0; j < face.mNumIndices; j++) {
                 indices.push_back(face.mIndices[j]);
+            }
         }
 
         auto& material = scene->mMaterials[mesh->mMaterialIndex];
 
-        sub_mesh.mesh = renderer::upload<Mesh>(std::move(geometry), std::move(indices));
-        sub_mesh.diffuse = try_load_texture(material, aiTextureType_DIFFUSE);
-        sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR);
-        sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT);
+        sub_mesh.mesh = renderer::write_geometry(geometry, indices);
+        sub_mesh.diffuse = try_load_texture(material, aiTextureType_DIFFUSE, model_path);
+        sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
+        sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
         return sub_mesh;
     }
 
-    static std::vector<Model::SubMesh> process_node(const aiScene* scene, const aiNode* node) {
-        std::vector<Model::SubMesh> meshes;
-
-        for(unsigned int i = 0; i < node->mNumMeshes; i++) {
+    static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::filesystem::path& model_path) {
+        for (usize i = 0; i < node->mNumMeshes; i++) {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(load_mesh(scene, mesh));
+            meshes.push_back(load_mesh(scene, mesh, model_path));
         }
 
-        for(unsigned int i = 0; i < node->mNumChildren; i++) {
-            process_node(scene, node->mChildren[i]);
+        for (usize i = 0; i < node->mNumChildren; i++) {
+            process_node(scene, node->mChildren[i], meshes, model_path);
         }
-
-        return meshes;
     }
 
-    Model load_model(const char* path) {
+    Model load_model(const std::filesystem::path& path) {
         Model model;
         Assimp::Importer importer;
 
@@ -92,7 +98,7 @@ namespace tethys {
             throw std::runtime_error("Failed to load model");
         }
 
-        model.submeshes = process_node(scene, scene->mRootNode);
+        process_node(scene, scene->mRootNode, model.submeshes, path.parent_path());
 
         return model;
     }

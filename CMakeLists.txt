@@ -9,6 +9,7 @@ find_package(Vulkan REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_subdirectory(external/assimp)
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
@@ -53,7 +54,8 @@ set(TETHYS_HEADERS
         "include/tethys/material.hpp"
         "include/tethys/directional_light.hpp"
         "include/tethys/acquire.hpp"
-        "include/tethys/api/index_buffer.hpp")
+        "include/tethys/api/index_buffer.hpp"
+        "include/tethys/model.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/instance.cpp"
@@ -79,7 +81,8 @@ set(TETHYS_SOURCES
         "src/tethys/api/sampler.cpp"
         "src/tethys/texture.cpp"
         "src/tethys/api/stb_image.cpp"
-        "src/tethys/api/index_buffer.cpp")
+        "src/tethys/api/index_buffer.cpp"
+        "src/tethys/model.cpp")
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}
@@ -94,7 +97,7 @@ target_include_directories(Tethys PUBLIC
         external/VulkanMemoryAllocator/src)
 
 if (UNIX)
-    target_compile_options(Tethys PUBLIC -std=c++20 -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    target_compile_options(Tethys PUBLIC -std=c++20 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
 endif()
 
 if (WIN32)
@@ -111,7 +114,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(Tethys PUBLIC TETHYS_DEBUG)
 endif()
 
-target_link_libraries(Tethys PUBLIC glfw)
+target_link_libraries(Tethys PUBLIC glfw assimp dl)
 
 file(GLOB TETHYS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 foreach(SHADER ${TETHYS_SHADERS})

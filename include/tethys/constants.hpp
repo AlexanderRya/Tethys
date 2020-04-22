@@ -2,6 +2,7 @@
 #define TETHYS_CONSTANTS_HPP
 
 #include <tethys/forwards.hpp>
+#include <tethys/handle.hpp>
 #include <tethys/types.hpp>
 
 namespace tethys {
@@ -24,6 +25,10 @@ namespace tethys {
         constexpr inline u32 generic = 0;
         constexpr inline u32 minimal = 1;
     } // namespace tethys::shader
+
+    namespace texture {
+        inline Handle<Texture> white{ 0 };
+    } // namespace tethys::texture
 
     namespace api {
         constexpr inline u32 frames_in_flight = 2;

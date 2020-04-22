@@ -50,15 +50,15 @@ void main() {
     vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
 
-    for (uint i = 0; i < directional_lights.length(); ++i) {
+    /*for (uint i = 0; i < directional_lights.length(); ++i) {
         color = apply_directional_light(directional_lights[i], color, diffuse, specular, norms, view_dir);
     }
 
     for (uint i = 0; i < point_lights.length(); ++i) {
         color = apply_point_light(point_lights[i], color, diffuse, specular, norms, view_dir);
-    }
+    }*/
 
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(diffuse, 1.0);
 }
 
 vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 diffuse, vec3 specular, vec3 normal, vec3 view_dir) {

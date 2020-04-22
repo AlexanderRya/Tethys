@@ -5,24 +5,25 @@
 #include <tethys/material.hpp>
 #include <tethys/camera.hpp>
 #include <tethys/handle.hpp>
+#include <tethys/model.hpp>
 #include <tethys/mesh.hpp>
 
 #include <glm/mat4x4.hpp>
 
 namespace tethys {
     struct DrawCommand {
-        Handle<Mesh> mesh;
-        glm::mat4 transform;
-        Material material;
+        Handle<Model> model{};
+        glm::mat4 transform{};
+        u32 shader{};
     };
 
     struct RenderData {
-        std::vector<DrawCommand> draw_commands;
+        std::vector<DrawCommand> draw_commands{};
 
-        std::vector<PointLight> point_lights;
-        std::vector<DirectionalLight> directional_lights;
+        std::vector<PointLight> point_lights{};
+        std::vector<DirectionalLight> directional_lights{};
 
-        Camera camera; // Just one for now
+        Camera camera{}; // Just one for now
     };
 } // namespace tethys
 

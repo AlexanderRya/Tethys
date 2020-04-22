@@ -20,12 +20,15 @@ namespace vk {
 
 namespace tethys {
     struct Mesh;
+    struct Model;
     struct Vertex;
     struct Texture;
     struct PipelineLayout;
     struct PointLight;
     struct DirectionalLight;
     struct RenderData;
+    template <typename>
+    struct Handle;
 } // namespace tethys
 
 namespace tethys::api {

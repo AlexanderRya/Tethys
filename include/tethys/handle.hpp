@@ -7,13 +7,13 @@
 namespace tethys {
     template <typename Ty>
     struct Handle {
-        usize index;
+        usize index{};
     };
 
     template <>
     struct Handle<Mesh> {
-        usize vbo_index;
-        usize ibo_index;
+        usize vbo_index{};
+        usize ibo_index{};
     };
 } // namespace tethys
 

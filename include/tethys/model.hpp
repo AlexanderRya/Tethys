@@ -7,6 +7,7 @@
 #include <tethys/mesh.hpp>
 
 #include <vector>
+#include <filesystem>
 
 namespace tethys {
     struct Model {
@@ -21,7 +22,7 @@ namespace tethys {
         std::vector<SubMesh> submeshes;
     };
 
-    [[nodiscard]] Model load_model(const char*);
+    [[nodiscard]] Model load_model(const std::filesystem::path&);
 } // namespace tethys
 
 #endif //TETHYS_MODEL_HPP

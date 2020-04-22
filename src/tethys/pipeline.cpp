@@ -30,7 +30,7 @@ namespace tethys {
                 layout_bindings[1].binding = binding::transform;
                 layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
 
-                layout_bindings[2].descriptorCount = 128;
+                layout_bindings[2].descriptorCount = 1024;
                 layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
                 layout_bindings[2].binding = binding::texture;
                 layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;

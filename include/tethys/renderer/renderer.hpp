@@ -7,14 +7,16 @@
 
 #include <glm/vec4.hpp>
 
+#include <filesystem>
 #include <vector>
 
 namespace tethys::renderer {
     void initialise();
 
     [[nodiscard]] Handle<Mesh> write_geometry(const std::vector<Vertex>&, const std::vector<u32>&);
+    [[nodiscard]] Handle<Texture> upload_texture(const u8, const u8, const u8, const u8);
     [[nodiscard]] Handle<Texture> upload_texture(const char*);
-    [[nodiscard]] Handle<Texture> upload_texture(const glm::u8vec4);
+    [[nodiscard]] Handle<Model> upload_model(std::filesystem::path);
     void unload_geometry(Handle<Mesh>&&);
 
     void start();
