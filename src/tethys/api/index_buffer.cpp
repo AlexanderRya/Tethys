@@ -4,7 +4,7 @@
 #include <tethys/logger.hpp>
 
 namespace tethys::api {
-    IndexBuffer make_index_buffer(std::vector<u32>&& indices) {
+    IndexBuffer make_index_buffer(const std::vector<u32>& indices) {
         StaticBuffer temp_buffer;
         // Allocate staging buffer
         temp_buffer = make_buffer(

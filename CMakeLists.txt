@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.5)
+cmake_minimum_required(VERSION 3.14)
 project(Tethys)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -9,7 +9,6 @@ find_package(Vulkan REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
-#add_subdirectory(external/assimp)
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
@@ -54,7 +53,6 @@ set(TETHYS_HEADERS
         "include/tethys/material.hpp"
         "include/tethys/directional_light.hpp"
         "include/tethys/acquire.hpp"
-        #[["include/tethys/model.hpp"]]
         "include/tethys/api/index_buffer.hpp")
 
 set(TETHYS_SOURCES
@@ -81,7 +79,6 @@ set(TETHYS_SOURCES
         "src/tethys/api/sampler.cpp"
         "src/tethys/texture.cpp"
         "src/tethys/api/stb_image.cpp"
-        #[["src/tethys/model.cpp"]]
         "src/tethys/api/index_buffer.cpp")
 
 add_library(Tethys STATIC
@@ -94,42 +91,33 @@ target_include_directories(Tethys PUBLIC
         external/glm
         external/glfw/include
         ${Vulkan_INCLUDE_DIRS}
-        external/assimp/include
         external/VulkanMemoryAllocator/src)
 
 if (UNIX)
-    target_compile_options(Tethys PUBLIC -std=c++2a -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    target_compile_options(Tethys PUBLIC -std=c++20 -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
 endif()
 
-set(TETHYS_COMPILE_DEFINITIONS ${TETHYS_COMPILE_DEFINITIONS} VK_ENABLE_BETA_EXTENSIONS)
-
 if (WIN32)
-    set(TETHYS_COMPILE_DEFINITIONS ${TETHYS_COMPILE_DEFINITIONS} _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+    target_compile_definitions(Tethys PUBLIC _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
 if (UNIX)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        set(TETHYS_COMPILE_DEFINITIONS ${TETHYS_COMPILE_DEFINITIONS} _GLIBCXX_DEBUG)
+        target_compile_definitions(Tethys PUBLIC _GLIBCXX_DEBUG)
     endif()
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(TETHYS_COMPILE_DEFINITIONS ${TETHYS_COMPILE_DEFINITIONS} TETHYS_DEBUG)
+    target_compile_definitions(Tethys PUBLIC TETHYS_DEBUG)
 endif()
 
-target_compile_definitions(Tethys PRIVATE ${TETHYS_COMPILE_DEFINITIONS})
-
-if (UNIX)
-    target_link_libraries(Tethys PUBLIC glfw #[[assimp]] dl)
-else()
-    target_link_libraries(Tethys PUBLIC glfw #[[assimp]])
-endif()
+target_link_libraries(Tethys PUBLIC glfw)
 
 file(GLOB TETHYS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 foreach(SHADER ${TETHYS_SHADERS})
-    get_filename_component(SHADER_FILENAME ${SHADER} NAME)
+    get_filename_component(SHADER_FNAME ${SHADER} NAME)
     add_custom_command(
             TARGET Tethys
-            COMMAND echo Compiling shader ${SHADER_FILENAME} &&
-            glslc --target-env=vulkan1.1 ${SHADER} "-o${CMAKE_BINARY_DIR}/shaders/${SHADER_FILENAME}.spv")
+            COMMAND echo Compiling shader ${SHADER_FNAME} &&
+            glslc --target-env=vulkan1.1 ${SHADER} "-o${CMAKE_BINARY_DIR}/shaders/${SHADER_FNAME}.spv")
 endforeach()

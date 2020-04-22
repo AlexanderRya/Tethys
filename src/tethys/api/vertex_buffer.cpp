@@ -1,11 +1,11 @@
-#include <tethys/api/vertex_buffer.hpp>
 #include <tethys/api/static_buffer.hpp>
+#include <tethys/api/vertex_buffer.hpp>
 #include <tethys/api/context.hpp>
 #include <tethys/vertex.hpp>
 #include <tethys/logger.hpp>
 
 namespace tethys::api {
-    VertexBuffer make_vertex_buffer(std::vector<Vertex>&& vertices) {
+    VertexBuffer make_vertex_buffer(const std::vector<Vertex>& vertices) {
         StaticBuffer temp_buffer;
         // Allocate staging buffer
         temp_buffer = make_buffer(

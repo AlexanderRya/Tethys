@@ -26,9 +26,6 @@ namespace tethys {
     struct PointLight;
     struct DirectionalLight;
     struct RenderData;
-    //struct Model;
-    template <typename>
-    struct Handle;
 } // namespace tethys
 
 namespace tethys::api {

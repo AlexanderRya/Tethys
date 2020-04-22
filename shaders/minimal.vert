@@ -18,8 +18,8 @@ layout (set = 0, binding = 1) buffer readonly Transform {
 };
 
 layout (push_constant) uniform Indices {
-    int transform_index;
-    int material_index;
+    uint transform_index;
+    uint material_index;
 };
 
 void main() {

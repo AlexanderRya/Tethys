@@ -129,7 +129,7 @@ namespace tethys {
 
         /* Minimal pipeline layout */ {
             vk::PushConstantRange range{}; {
-                range.size = 4 * sizeof(u32);
+                range.size = 2 * sizeof(u32);
                 range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
                 range.offset = 0;
             }

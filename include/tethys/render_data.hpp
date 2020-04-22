@@ -10,19 +10,19 @@
 #include <glm/mat4x4.hpp>
 
 namespace tethys {
-    struct DrawCommand{
-        Handle<Mesh> mesh{};
-        glm::mat4 transform{};
-        Material material{};
+    struct DrawCommand {
+        Handle<Mesh> mesh;
+        glm::mat4 transform;
+        Material material;
     };
 
     struct RenderData {
-        std::vector<DrawCommand> draw_commands{};
+        std::vector<DrawCommand> draw_commands;
 
-        std::vector<PointLight> point_lights{};
-        std::vector<DirectionalLight> directional_lights{};
+        std::vector<PointLight> point_lights;
+        std::vector<DirectionalLight> directional_lights;
 
-        Camera camera{}; // Just one for now
+        Camera camera; // Just one for now
     };
 } // namespace tethys
 

@@ -24,7 +24,7 @@ namespace tethys::api {
         return 0;
     }
 
-    [[nodiscard]] static std::vector<const char*> get_required_extensions() {
+     std::vector<const char*> get_required_extensions() {
         u32 count = 0;
 
         auto required_extensions = glfwGetRequiredInstanceExtensions(&count);
@@ -45,8 +45,6 @@ namespace tethys::api {
         if (enabled_extensions.size() != count) {
             throw std::runtime_error("Required extension not supported.");
         }
-
-        enabled_extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #ifdef TETHYS_DEBUG
         enabled_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif

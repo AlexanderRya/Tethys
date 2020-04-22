@@ -4,7 +4,7 @@
 #include <tethys/logger.hpp>
 
 namespace tethys::api {
-    [[nodiscard]] static vk::PhysicalDevice get_physical_device() {
+     vk::PhysicalDevice get_physical_device() {
         auto physical_devices = ctx.instance.enumeratePhysicalDevices(ctx.dispatcher);
 
         for (const auto& device : physical_devices) {
@@ -15,13 +15,13 @@ namespace tethys::api {
                  device_properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu ||
                  device_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu) &&
 
-                 device_features.shaderSampledImageArrayDynamicIndexing &&
-                 device_features.samplerAnisotropy &&
-                 device_features.multiDrawIndirect) {
+                device_features.shaderSampledImageArrayDynamicIndexing &&
+                device_features.samplerAnisotropy &&
+                device_features.multiDrawIndirect) {
 
-                auto major = VK_VERSION_MAJOR(device_properties.apiVersion);
-                auto minor = VK_VERSION_MINOR(device_properties.apiVersion);
-                auto patch = VK_VERSION_PATCH(device_properties.apiVersion);
+                auto major = device_properties.apiVersion >> 22u;
+                auto minor = device_properties.apiVersion >> 12u & 0x3ffu;
+                auto patch = device_properties.apiVersion & 0xfffu;
 
                 logger::info("Selected physical device: ", device_properties.deviceName);
                 logger::info("Vulkan version: ", major, ".", minor, ".", patch);
@@ -32,7 +32,7 @@ namespace tethys::api {
         throw std::runtime_error("No suitable physical device available");
     }
 
-    [[nodiscard]] static u32 get_queue_family(const vk::SurfaceKHR& surface, const vk::PhysicalDevice& physical_device, const vk::DispatchLoaderDynamic& dispatcher) {
+     u32 get_queue_family(const vk::SurfaceKHR& surface, const vk::PhysicalDevice& physical_device, const vk::DispatchLoaderDynamic& dispatcher) {
         auto queue_family_properties = physical_device.getQueueFamilyProperties({}, dispatcher);
 
         for (u32 i = 0; i < queue_family_properties.size(); ++i) {
@@ -45,28 +45,20 @@ namespace tethys::api {
         throw std::runtime_error("Failed to find a queue family");
     }
 
-    [[nodiscard]] static vk::Device get_device(const u32 queue_family, const vk::PhysicalDevice& physical_device, const vk::DispatchLoaderDynamic& dispatcher) {
+     vk::Device get_device(const u32 queue_family, const vk::PhysicalDevice& physical_device, const vk::DispatchLoaderDynamic& dispatcher) {
         auto extensions = physical_device.enumerateDeviceExtensionProperties(nullptr, {}, dispatcher);
 
-        constexpr std::array enabled_exts{
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_KHR_RAY_TRACING_EXTENSION_NAME,
-            VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-            VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-            VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME
-        };
+        constexpr const char* enabled_exts[]{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-        if (std::find_if(extensions.begin(), extensions.end(), [&enabled_exts](const vk::ExtensionProperties& properties) {
-            return std::any_of(enabled_exts.begin(), enabled_exts.end(), [&properties](const std::string_view name) {
-                return name == properties.extensionName;
-            });
+        if (std::find_if(extensions.begin(), extensions.end(), [](const vk::ExtensionProperties& properties) {
+            return std::strcmp(properties.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0;
         }) != extensions.end()) {
-            float priority = 1.0f;
+            float priorities[]{ 1.0f };
 
             vk::DeviceQueueCreateInfo queue_create_info{}; {
                 queue_create_info.queueCount = 1;
-                queue_create_info.pQueuePriorities = &priority;
                 queue_create_info.queueFamilyIndex = queue_family;
+                queue_create_info.pQueuePriorities = priorities;
             }
 
             vk::PhysicalDeviceFeatures features{}; {
@@ -81,15 +73,10 @@ namespace tethys::api {
                 descriptor_indexing_features.runtimeDescriptorArray = true;
             }
 
-            vk::PhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{}; {
-                ray_tracing_features.pNext = &descriptor_indexing_features;
-                ray_tracing_features.rayTracing = true;
-            }
-
             vk::DeviceCreateInfo device_create_info{}; {
-                device_create_info.pNext = &ray_tracing_features;
-                device_create_info.ppEnabledExtensionNames = enabled_exts.data();
-                device_create_info.enabledExtensionCount = enabled_exts.size();
+                device_create_info.pNext = &descriptor_indexing_features;
+                device_create_info.ppEnabledExtensionNames = enabled_exts;
+                device_create_info.enabledExtensionCount = 1;
                 device_create_info.pQueueCreateInfos = &queue_create_info;
                 device_create_info.queueCreateInfoCount = 1;
                 device_create_info.pEnabledFeatures = &features;
@@ -97,8 +84,12 @@ namespace tethys::api {
 
             return physical_device.createDevice(device_create_info, nullptr, dispatcher);
         } else {
-            throw std::runtime_error("Selected physical device does not support required extension");
+            throw std::runtime_error("Selected physical device does not support a swapchain");
         }
+    }
+
+     vk::Queue get_queue(const vk::Device& device, const u32 queue_family, const vk::DispatchLoaderDynamic& dispatcher) {
+        return device.getQueue(queue_family, 0, dispatcher);
     }
 
     Device make_device() {
@@ -107,7 +98,7 @@ namespace tethys::api {
         device.physical = get_physical_device();
         device.queue_family = get_queue_family(ctx.surface, device.physical, ctx.dispatcher);
         device.logical = get_device(device.queue_family, device.physical, ctx.dispatcher);
-        device.queue = device.logical.getQueue(device.queue_family, 0, ctx.dispatcher);
+        device.queue = get_queue(device.logical, device.queue_family, ctx.dispatcher);
 
         return device;
     }

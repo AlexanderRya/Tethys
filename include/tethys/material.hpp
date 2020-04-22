@@ -6,8 +6,8 @@
 
 namespace tethys {
     struct Material {
-        u32 shader;
         Handle<Texture> texture;
+        u32 shader;
     };
 } // namespace tethys
 

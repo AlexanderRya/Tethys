@@ -2,19 +2,19 @@
 #define TETHYS_RENDERER_HPP
 
 #include <tethys/forwards.hpp>
-#include <tethys/vertex.hpp>
 #include <tethys/handle.hpp>
-#include <tethys/types.hpp>
 #include <tethys/mesh.hpp>
+
+#include <glm/vec4.hpp>
 
 #include <vector>
 
 namespace tethys::renderer {
     void initialise();
 
-    [[nodiscard]] Handle<Mesh> write_geometry(std::vector<Vertex>&&, std::vector<u32>&&);
+    [[nodiscard]] Handle<Mesh> write_geometry(const std::vector<Vertex>&, const std::vector<u32>&);
     [[nodiscard]] Handle<Texture> upload_texture(const char*);
-
+    [[nodiscard]] Handle<Texture> upload_texture(const glm::u8vec4);
     void unload_geometry(Handle<Mesh>&&);
 
     void start();

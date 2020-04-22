@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 
 namespace tethys::api {
-    static void load_vulkan_module() {
+     static void load_vulkan_module() {
         auto module = util::load_module(util::vulkan_module);
 
         logger::info("Vulkan module: ", util::vulkan_module, " loaded at address: ", module);
@@ -27,7 +27,7 @@ namespace tethys::api {
         util::close_module(module);
     }
 
-    static void load_vma() {
+     static void load_vma() {
         logger::info("Initializing Vulkan Memory Allocator.");
 
         ctx.vma_dispatcher.vkAllocateMemory = ctx.dispatcher.vkAllocateMemory;
@@ -54,7 +54,7 @@ namespace tethys::api {
         ctx.vma_dispatcher.vkUnmapMemory = ctx.dispatcher.vkUnmapMemory;
     }
 
-    [[nodiscard]] static VmaAllocator make_allocator() {
+     [[nodiscard]] static VmaAllocator make_allocator() {
         VmaAllocatorCreateInfo allocator_create_info{}; {
             allocator_create_info.pVulkanFunctions = &ctx.vma_dispatcher;
             allocator_create_info.instance = static_cast<VkInstance>(ctx.instance);

@@ -21,10 +21,10 @@ layout (set = 0, binding = 1) buffer readonly Transform {
 };
 
 layout (push_constant) uniform Indices {
-    int transform_index;
-    int diffuse_index;
-    int specular_index;
-    int normal_index;
+    uint transform_index;
+    uint diffuse_index;
+    uint specular_index;
+    uint normal_index;
 };
 
 void main() {

@@ -1,14 +1,14 @@
-#include <tethys/window/window.hpp>
-#include <tethys/api/swapchain.hpp>
 #include <tethys/api/context.hpp>
+#include <tethys/api/swapchain.hpp>
 #include <tethys/api/image.hpp>
+#include <tethys/window/window.hpp>
 #include <tethys/logger.hpp>
 #include <tethys/types.hpp>
 
 #include <vulkan/vulkan.hpp>
 
 namespace tethys::api {
-    [[nodiscard]] static u32 get_image_count(const vk::SurfaceCapabilitiesKHR& capabilities) {
+     u32 get_image_count(const vk::SurfaceCapabilitiesKHR& capabilities) {
         auto count = capabilities.minImageCount + 1;
 
         if (capabilities.maxImageCount > 0 && count > capabilities.maxImageCount) {
@@ -20,7 +20,7 @@ namespace tethys::api {
         return count;
     }
 
-    [[nodiscard]] static vk::Extent2D get_extent(const vk::SurfaceCapabilitiesKHR& capabilities) {
+     vk::Extent2D get_extent(const vk::SurfaceCapabilitiesKHR& capabilities) {
         if (capabilities.currentExtent.width != UINT32_MAX) {
 
             return capabilities.currentExtent;
@@ -34,7 +34,7 @@ namespace tethys::api {
         }
     }
 
-    [[nodiscard]] static vk::SurfaceFormatKHR get_format() {
+     vk::SurfaceFormatKHR get_format() {
         auto surface_formats = ctx.device.physical.getSurfaceFormatsKHR(ctx.surface, {}, ctx.dispatcher);
 
         vk::SurfaceFormatKHR format = surface_formats[0];
@@ -55,7 +55,7 @@ namespace tethys::api {
         return format;
     }
 
-    [[nodiscard]] static vk::PresentModeKHR get_present_mode() {
+     vk::PresentModeKHR get_present_mode() {
         for (const auto& mode : ctx.device.physical.getSurfacePresentModesKHR(ctx.surface, {}, ctx.dispatcher)) {
             if (mode == vk::PresentModeKHR::eImmediate) {
                 logger::info("Swapchain details: present mode: vk::PresentModeKHR::", vk::to_string(mode));
@@ -98,7 +98,7 @@ namespace tethys::api {
         swapchain.image_views.reserve(swapchain.image_count);
 
         for (const auto& image : swapchain.images) {
-            swapchain.image_views.emplace_back(api::make_image_view(image, swapchain.format.format, vk::ImageAspectFlagBits::eColor));
+            swapchain.image_views.emplace_back(api::make_image_view( image, swapchain.format.format, vk::ImageAspectFlagBits::eColor));
         }
 
         logger::info("Swapchain images successfully created");

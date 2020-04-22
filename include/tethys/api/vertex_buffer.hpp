@@ -11,8 +11,7 @@ namespace tethys::api {
         StaticBuffer buffer{};
         usize size{};
     };
-
-    [[nodiscard]] VertexBuffer make_vertex_buffer(std::vector<Vertex>&&);
+    [[nodiscard]] VertexBuffer make_vertex_buffer(const std::vector<Vertex>&);
 } // namespace tethys::api
 
 #endif //TETHYS_VERTEX_BUFFER_HPP

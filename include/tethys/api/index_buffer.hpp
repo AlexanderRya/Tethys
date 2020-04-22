@@ -13,7 +13,7 @@ namespace tethys::api {
         usize size{};
     };
 
-    [[nodiscard]] IndexBuffer make_index_buffer(std::vector<u32>&&);
+    [[nodiscard]] IndexBuffer make_index_buffer(const std::vector<u32>&);
 } // namespace tethys::api
 
 #endif //TETHYS_INDEX_BUFFER_HPP

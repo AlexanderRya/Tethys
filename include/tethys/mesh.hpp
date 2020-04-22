@@ -8,6 +8,7 @@
 namespace tethys {
     struct Mesh {
         std::vector<Vertex> geometry;
+        std::vector<u32> indices;
     };
 } // namespace tethys
 

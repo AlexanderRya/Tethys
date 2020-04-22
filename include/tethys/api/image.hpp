@@ -23,10 +23,6 @@ namespace tethys::api {
         };
 
         vk::Image handle{};
-        vk::Format format{};
-        vk::ImageTiling tiling{};
-        i32 width{};
-        i32 height{};
         VmaAllocation allocation{};
     };
 
