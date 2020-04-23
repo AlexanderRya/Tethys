@@ -51,9 +51,9 @@ namespace tethys {
             vertex.norms.y = mesh->mNormals[i].y;
             vertex.norms.z = mesh->mNormals[i].z;
 
-            if (*mesh->mTextureCoords) {
-                vertex.uvs.x = (*mesh->mTextureCoords)[i].x;
-                vertex.uvs.y = (*mesh->mTextureCoords)[i].y;
+            if (mesh->mTextureCoords[0]) {
+                vertex.uvs.x = mesh->mTextureCoords[0][i].x;
+                vertex.uvs.y = mesh->mTextureCoords[0][i].y;
             }
 
             vertex.tangent.x = mesh->mTangents[i].x;
@@ -68,9 +68,11 @@ namespace tethys {
         }
 
 
+        indices.reserve(mesh->mNumFaces * 3);
+
         for (usize i = 0; i < mesh->mNumFaces; i++) {
             aiFace& face = mesh->mFaces[i];
-            for(unsigned int j = 0; j < face.mNumIndices; j++) {
+            for (usize j = 0; j < face.mNumIndices; j++) {
                 indices.push_back(face.mIndices[j]);
             }
         }
@@ -109,5 +111,18 @@ namespace tethys {
         process_node(scene, scene->mRootNode, model.submeshes, path.parent_path());
 
         return model;
+    }
+
+    Model load_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse = {}, const char* specular = {}, const char* normal = {}) {
+        return Model{
+            .submeshes = {
+                Model::SubMesh{
+                    .mesh = renderer::write_geometry(vertices, indices),
+                    .diffuse = diffuse ? renderer::upload_texture(diffuse) : texture::white,
+                    .specular = specular ? renderer::upload_texture(specular) : texture::black,
+                    .normal = normal ? renderer::upload_texture(normal) : texture::black,
+                }
+            }
+        };
     }
 } // namespace tethys

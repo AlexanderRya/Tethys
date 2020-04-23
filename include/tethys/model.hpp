@@ -23,6 +23,7 @@ namespace tethys {
     };
 
     [[nodiscard]] Model load_model(const std::filesystem::path&);
+    [[nodiscard]] Model load_model(const std::vector<Vertex>&, const std::vector<u32>&, const char*, const char*, const char*);
 } // namespace tethys
 
 #endif //TETHYS_MODEL_HPP
