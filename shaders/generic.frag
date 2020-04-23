@@ -56,9 +56,9 @@ void main() {
     vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
 
-    /*for (uint i = 0; i < directional_lights.length(); ++i) {
+    for (uint i = 0; i < directional_lights.length(); ++i) {
         result += apply_directional_light(directional_lights[i], color, specular, norms, view_dir);
-    }*/
+    }
 
     for (uint i = 0; i < point_lights.length(); ++i) {
         result += apply_point_light(point_lights[i], color, specular, norms, view_dir);
@@ -75,7 +75,7 @@ vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal,
 
     // Specular
     vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 16);
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
 
     // Attenuation
     float distance = length(light.position - frag_pos);
