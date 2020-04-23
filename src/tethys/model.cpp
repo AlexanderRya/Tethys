@@ -6,18 +6,21 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
+#include <unordered_map>
+
 namespace tethys {
-    std::unordered_map<std::string, Handle<Texture>> loaded_textures;
+    static std::unordered_map<std::string, Handle<Texture>> loaded_textures;
+    static std::unordered_map<std::string, Model::SubMesh> loaded_meshes;
 
     static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::filesystem::path& model_path) {
         using namespace std::string_literals;
         if (!material->GetTextureCount(type)) {
-            return Handle<Texture>{ texture::white };
+            return Handle<Texture>{ texture::black };
         }
 
         aiString str;
         material->GetTexture(type, 0, &str);
-        std::string path{ model_path / str.C_Str() };
+        std::string path = (model_path / str.C_Str()).generic_string();
 
         if (loaded_textures.find(path) != loaded_textures.end()) {
             return loaded_textures[path];
@@ -27,6 +30,11 @@ namespace tethys {
     }
 
     static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::filesystem::path& model_path) {
+        std::string mesh_name{ mesh->mName.C_Str() };
+        if (loaded_meshes.find(mesh_name) != loaded_meshes.end()) {
+            return loaded_meshes[mesh_name];
+        }
+
         Model::SubMesh sub_mesh{};
         std::vector<Vertex> geometry{};
         std::vector<u32> indices{};
@@ -74,7 +82,7 @@ namespace tethys {
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
         sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
-        return sub_mesh;
+        return loaded_meshes[mesh_name] = sub_mesh;
     }
 
     static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::filesystem::path& model_path) {
@@ -92,7 +100,7 @@ namespace tethys {
         Model model;
         Assimp::Importer importer;
 
-        auto scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+        auto scene = importer.ReadFile(path.generic_string(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             throw std::runtime_error("Failed to load model");

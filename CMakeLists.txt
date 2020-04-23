@@ -20,6 +20,8 @@ add_subdirectory(external/assimp)
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
+set(CMAKE_CXX_STANDARD 17)
+
 set(VMA_HEADERS
         "external/VulkanMemoryAllocator/src/vk_mem_alloc.h")
 
@@ -104,10 +106,14 @@ target_include_directories(Tethys PUBLIC
         external/assimp/include
         external/VulkanMemoryAllocator/src)
 
-target_compile_options(assimp PRIVATE "-w")
-
 if (UNIX)
-    target_compile_options(Tethys PUBLIC -std=c++17 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+        target_compile_options(Tethys PUBLIC -std=c++17 -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    else()
+        target_compile_options(Tethys PUBLIC -std=c++17 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    endif()
+else()
+    target_compile_options(Tethys PRIVATE "/W0")
 endif()
 
 if (WIN32)

@@ -28,6 +28,7 @@ namespace tethys {
 
     namespace texture {
         inline Handle<Texture> white{ 0 };
+        inline Handle<Texture> black{ 1 };
     } // namespace tethys::texture
 
     namespace api {

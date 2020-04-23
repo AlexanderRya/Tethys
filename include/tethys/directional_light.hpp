@@ -4,10 +4,12 @@
 #include <glm/vec3.hpp>
 
 namespace tethys {
-    struct alignas(16) DirectionalLight {
-        glm::vec3 direction;
-        glm::vec3 color;
+    struct DirectionalLight {
+        alignas(16) glm::vec3 direction;
+        alignas(16) glm::vec3 color;
     };
+
+    static_assert(sizeof(DirectionalLight) == static_cast<usize>(32), "Nope, doesn't work!");
 } // namespace tethys
 
 #endif //TETHYS_DIRECTIONAL_LIGHT_HPP

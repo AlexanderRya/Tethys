@@ -55,8 +55,8 @@ namespace tethys::renderer {
     static api::DescriptorSet generic_set{};
     static api::DescriptorSet minimal_set{};
 
-    static Pipeline* generic;
-    static Pipeline* minimal;
+    static Pipeline generic;
+    static Pipeline minimal;
 
     static void update_textures() {
         std::vector<vk::DescriptorImageInfo> image_info{};
@@ -97,8 +97,8 @@ namespace tethys::renderer {
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         directional_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
 
-        generic = &acquire<Pipeline>(shader::generic);
-        minimal = &acquire<Pipeline>(shader::minimal);
+        generic = acquire<Pipeline>(shader::generic);
+        minimal = acquire<Pipeline>(shader::minimal);
 
         generic_set.create(acquire<vk::DescriptorSetLayout>(layout::generic));
         minimal_set.create(acquire<vk::DescriptorSetLayout>(layout::minimal));
@@ -127,11 +127,13 @@ namespace tethys::renderer {
 
         generic_set.update(generic_update);
 
-        u8 white[]{
-            255, 255, 255, 255
-        };
+        std::array<u8, 4> white = { 255 };
 
-        textures.emplace_back(load_texture(white, 1, 1, 4));
+        textures.emplace_back(load_texture(white.data(), 1, 1, 4));
+
+        std::array<u8, 4> black = { 0 };
+
+        textures.emplace_back(load_texture(black.data(), 1, 1, 4));
         update_textures();
     }
 
@@ -358,8 +360,6 @@ namespace tethys::renderer {
             auto& draw = data.draw_commands[i];
             auto& model = models[draw.model.index];
 
-            std::vector<u32> indices{};
-
             for (const auto& submesh : model.submeshes) {
                 auto& vbo = vertex_buffers[submesh.mesh.vbo_index];
                 auto& ibo = index_buffers[submesh.mesh.ibo_index];
@@ -370,28 +370,28 @@ namespace tethys::renderer {
                         generic_set[current_frame].handle()
                     };
 
-                    indices = {
+                    std::array indices{
                         static_cast<u32>(i),
                         static_cast<u32>(submesh.diffuse.index),
                         static_cast<u32>(submesh.specular.index),
                         static_cast<u32>(submesh.normal.index)
                     };
 
-                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic->handle, ctx.dispatcher);
-                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic->layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
-                    command_buffer.pushConstants<u32>(generic->layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
+                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
+                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
+                    command_buffer.pushConstants<u32>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, ctx.dispatcher);
                 } else if (draw.shader == shader::minimal) {
-                    indices = {
+                    std::array indices{
                         static_cast<u32>(i),
                         static_cast<u32>(submesh.diffuse.index)
                     };
 
-                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal->handle, ctx.dispatcher);
-                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal->layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, ctx.dispatcher);
-                    command_buffer.pushConstants<u32>(minimal->layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, static_cast<vk::DeviceSize>(0), indices, ctx.dispatcher);
+                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, ctx.dispatcher);
+                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, ctx.dispatcher);
+                    command_buffer.pushConstants<u32>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, ctx.dispatcher);
                 }
 
-                command_buffer.bindIndexBuffer(ibo.buffer.handle, static_cast<vk::DeviceSize>(0), vk::IndexType::eUint32, ctx.dispatcher);
+                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
                 command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
                 command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
             }
