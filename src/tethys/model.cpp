@@ -19,7 +19,7 @@ namespace tethys {
         material->GetTexture(type, 0, &str);
         std::string path{ model_path / str.C_Str() };
 
-        if (loaded_textures.contains(path)) {
+        if (loaded_textures.find(path) != loaded_textures.end()) {
             return loaded_textures[path];
         }
 

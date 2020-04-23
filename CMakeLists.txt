@@ -1,13 +1,20 @@
 cmake_minimum_required(VERSION 3.14)
 project(Tethys)
 
+find_package(Vulkan REQUIRED)
+
+# GLFW stuff
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-find_package(Vulkan REQUIRED)
-
-set(CMAKE_CXX_STANDARD 20)
+# Assimp stuff
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON)
+set(ASSIMP_BUILD_TESTS OFF)
+set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(external/assimp)
 add_subdirectory(external/glfw)
@@ -94,27 +101,35 @@ target_include_directories(Tethys PUBLIC
         external/glm
         external/glfw/include
         ${Vulkan_INCLUDE_DIRS}
+        external/assimp/include
         external/VulkanMemoryAllocator/src)
 
+target_compile_options(assimp PRIVATE "-w")
+
 if (UNIX)
-    target_compile_options(Tethys PUBLIC -std=c++20 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+    target_compile_options(Tethys PUBLIC -std=c++17 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
 endif()
 
 if (WIN32)
-    target_compile_definitions(Tethys PUBLIC _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+    set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS) # Goddamnit windows
 endif()
 
 if (UNIX)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        target_compile_definitions(Tethys PUBLIC _GLIBCXX_DEBUG)
+        set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} _GLIBCXX_DEBUG)
     endif()
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    target_compile_definitions(Tethys PUBLIC TETHYS_DEBUG)
+    set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} TETHYS_DEBUG)
 endif()
 
-target_link_libraries(Tethys PUBLIC glfw assimp dl)
+target_compile_definitions(Tethys PUBLIC ${TETHYS_DEFINITIONS})
+if (UNIX)
+    target_link_libraries(Tethys PUBLIC glfw assimp dl)
+else()
+    target_link_libraries(Tethys PUBLIC glfw assimp)
+endif()
 
 file(GLOB TETHYS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 foreach(SHADER ${TETHYS_SHADERS})
