@@ -48,23 +48,25 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 
 void main() {
     vec3 result = vec3(1.0);
-    vec3 color = texture(textures[diffuse_index], uvs).rgb;
+    vec4 color = texture(textures[diffuse_index], uvs).rgba;
+    vec3 diffuse = color.rgb;
+    float alpha = color.a;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
 
-    result = color * vec3(0.1);
+    result = diffuse * vec3(0.1);
 
     vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
 
     for (uint i = 0; i < directional_lights.length(); ++i) {
-        result += apply_directional_light(directional_lights[i], color, specular, norms, view_dir);
+        result += apply_directional_light(directional_lights[i], diffuse, specular, norms, view_dir);
     }
 
     for (uint i = 0; i < point_lights.length(); ++i) {
-        result += apply_point_light(point_lights[i], color, specular, norms, view_dir);
+        result += apply_point_light(point_lights[i], diffuse, specular, norms, view_dir);
     }
 
-    frag_color = vec4(result, 1.0f);
+    frag_color = vec4(result, 1.0);
 }
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir) {
@@ -74,8 +76,8 @@ vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal,
     float diff = max(dot(normal, light_dir), 0.0);
 
     // Specular
-    vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+    vec3 halfway_dir = normalize(light_dir + view_dir);
+    float spec = pow(max(dot(normal, halfway_dir), 0.0), 32);
 
     // Attenuation
     float distance = length(light.position - frag_pos);
@@ -95,8 +97,8 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
     float diff = max(dot(normal, light_dir), 0.0);
 
     // Specular
-    vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+    vec3 halfway_dir = normalize(light_dir + view_dir);
+    float spec = pow(max(dot(normal, halfway_dir), 0.0), 32);
 
     // Combine
     vec3 result_diffuse = light.color * diff * color;

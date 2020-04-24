@@ -9,13 +9,16 @@ namespace tethys::api {
             info.addressModeU = vk::SamplerAddressMode::eRepeat;
             info.addressModeV = vk::SamplerAddressMode::eRepeat;
             info.addressModeW = vk::SamplerAddressMode::eRepeat;
-            info.borderColor = vk::BorderColor::eIntOpaqueBlack;
             info.anisotropyEnable = true;
             info.maxAnisotropy = 16;
-            info.compareEnable = false;
-            info.compareOp = {};
-            info.mipmapMode = {};
+            info.borderColor = vk::BorderColor::eIntOpaqueBlack;
             info.unnormalizedCoordinates = false;
+            info.compareEnable = false;
+            info.compareOp = vk::CompareOp::eAlways;
+            info.mipmapMode = vk::SamplerMipmapMode::eLinear;
+            info.minLod = 0;
+            info.maxLod = 16;
+            info.mipLodBias = 0;
         }
 
         return ctx.device.logical.createSampler(info, nullptr, ctx.dispatcher);

@@ -127,11 +127,11 @@ namespace tethys::renderer {
 
         generic_set.update(generic_update);
 
-        std::array<u8, 4> white = { 255 };
+        std::array<u8, 4> white = { 255, 255, 255, 255 };
 
         textures.emplace_back(load_texture(white.data(), 1, 1, 4));
 
-        std::array<u8, 4> black = { 0 };
+        std::array<u8, 4> black{};
 
         textures.emplace_back(load_texture(black.data(), 1, 1, 4));
         update_textures();
@@ -171,6 +171,12 @@ namespace tethys::renderer {
 
     Handle<Model> upload_model(const std::string& path) {
         models.emplace_back(load_model(path));
+
+        return Handle<Model>{ models.size() - 1 };
+    }
+
+    Handle<Model> upload_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse, const char* specular, const char* normal) {
+        models.emplace_back(load_model(vertices, indices, diffuse, specular, normal));
 
         return Handle<Model>{ models.size() - 1 };
     }

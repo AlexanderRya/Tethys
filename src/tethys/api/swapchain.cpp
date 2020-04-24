@@ -98,27 +98,45 @@ namespace tethys::api {
         swapchain.image_views.reserve(swapchain.image_count);
 
         for (const auto& image : swapchain.images) {
-            swapchain.image_views.emplace_back(api::make_image_view( image, swapchain.format.format, vk::ImageAspectFlagBits::eColor));
+            swapchain.image_views.emplace_back(api::make_image_view(image, swapchain.format.format, vk::ImageAspectFlagBits::eColor, 1));
         }
 
         logger::info("Swapchain images successfully created");
     }
 
     static void make_depth_image(Swapchain& swapchain) {
-        api::Image::CreateInfo create_info{}; {
+        Image::CreateInfo create_info{}; {
             create_info.format = vk::Format::eD32SfloatS8Uint;
             create_info.tiling = vk::ImageTiling::eOptimal;
             create_info.usage_flags = vk::ImageUsageFlagBits::eDepthStencilAttachment;
             create_info.memory_usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;
             create_info.height = swapchain.extent.height;
             create_info.width = swapchain.extent.width;
+            create_info.mips = 1;
+            create_info.samples = ctx.device.max_samples;
         }
 
         swapchain.depth_image = api::make_image(create_info);
-        swapchain.depth_view = api::make_image_view(swapchain.depth_image.handle, vk::Format::eD32SfloatS8Uint, vk::ImageAspectFlagBits::eDepth);
+        swapchain.depth_view = api::make_image_view(swapchain.depth_image.handle, vk::Format::eD32SfloatS8Uint, vk::ImageAspectFlagBits::eDepth, 1);
 
-        api::transition_image_layout(swapchain.depth_image.handle, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+        api::transition_image_layout(swapchain.depth_image.handle, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
     }
+
+    static void make_msaa_image(Swapchain& swapchain) {
+        Image::CreateInfo create_info{}; {
+            create_info.format = swapchain.format.format;
+            create_info.tiling = vk::ImageTiling::eOptimal;
+            create_info.usage_flags = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment;
+            create_info.memory_usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;
+            create_info.height = swapchain.extent.height;
+            create_info.width = swapchain.extent.width;
+            create_info.mips = 1;
+            create_info.samples = ctx.device.max_samples;
+        }
+
+        swapchain.msaa_image = api::make_image(create_info);
+        swapchain.msaa_view = api::make_image_view(swapchain.msaa_image.handle, swapchain.format.format, vk::ImageAspectFlagBits::eColor, 1);
+     }
 
     Swapchain make_swapchain() {
         auto capabilities = ctx.device.physical.getSurfaceCapabilitiesKHR(ctx.surface, ctx.dispatcher);
@@ -136,6 +154,7 @@ namespace tethys::api {
         create_images(swapchain);
 
         make_depth_image(swapchain);
+        make_msaa_image(swapchain);
 
         return swapchain;
     }

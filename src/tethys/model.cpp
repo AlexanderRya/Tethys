@@ -10,7 +10,6 @@
 
 namespace tethys {
     static std::unordered_map<std::string, Handle<Texture>> loaded_textures;
-    static std::unordered_map<std::string, Model::SubMesh> loaded_meshes;
 
     static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::filesystem::path& model_path) {
         using namespace std::string_literals;
@@ -30,11 +29,6 @@ namespace tethys {
     }
 
     static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::filesystem::path& model_path) {
-        std::string mesh_name{ mesh->mName.C_Str() };
-        if (loaded_meshes.find(mesh_name) != loaded_meshes.end()) {
-            return loaded_meshes[mesh_name];
-        }
-
         Model::SubMesh sub_mesh{};
         std::vector<Vertex> geometry{};
         std::vector<u32> indices{};
@@ -84,7 +78,7 @@ namespace tethys {
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
         sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
-        return loaded_meshes[mesh_name] = sub_mesh;
+        return sub_mesh;
     }
 
     static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::filesystem::path& model_path) {
@@ -113,14 +107,14 @@ namespace tethys {
         return model;
     }
 
-    Model load_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse = {}, const char* specular = {}, const char* normal = {}) {
+    Model load_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse, const char* specular, const char* normal) {
         return Model{
             .submeshes = {
                 Model::SubMesh{
                     .mesh = renderer::write_geometry(vertices, indices),
-                    .diffuse = diffuse ? renderer::upload_texture(diffuse) : texture::white,
-                    .specular = specular ? renderer::upload_texture(specular) : texture::black,
-                    .normal = normal ? renderer::upload_texture(normal) : texture::black,
+                    .diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse) : texture::white,
+                    .specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular) : texture::black,
+                    .normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal) : texture::black
                 }
             }
         };

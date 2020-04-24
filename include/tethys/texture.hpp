@@ -11,6 +11,7 @@ namespace tethys {
     struct Texture {
         api::Image image{};
         vk::ImageView view{};
+        u32 mips{};
 
         [[nodiscard]] vk::DescriptorImageInfo info() const;
     };

@@ -14,11 +14,12 @@ namespace tethys::api {
             framebuffer_create_info.layers = 1;
         }
 
-        std::array<vk::ImageView, 2> attachments{};
+        std::array<vk::ImageView, 3> attachments{};
 
         for (const auto& image_view : ctx.swapchain.image_views) {
-            attachments[0] = image_view;
+            attachments[0] = ctx.swapchain.msaa_view;
             attachments[1] = ctx.swapchain.depth_view;
+            attachments[2] = image_view;
 
             framebuffer_create_info.attachmentCount = attachments.size();
             framebuffer_create_info.pAttachments = attachments.data();

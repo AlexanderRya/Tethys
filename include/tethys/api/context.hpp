@@ -14,6 +14,7 @@ namespace tethys::api {
         vk::Device logical{};
         vk::Queue queue{};
         u32 queue_family{};
+        vk::SampleCountFlagBits max_samples{};
     };
 
     struct Swapchain {
@@ -30,6 +31,9 @@ namespace tethys::api {
 
         api::Image depth_image{};
         vk::ImageView depth_view{};
+
+        api::Image msaa_image{};
+        vk::ImageView msaa_view{};
     };
 
     extern struct Context {

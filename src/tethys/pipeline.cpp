@@ -250,7 +250,7 @@ namespace tethys {
             multisampling_state_info.alphaToCoverageEnable = false;
             multisampling_state_info.sampleShadingEnable = false;
             multisampling_state_info.alphaToOneEnable = false;
-            multisampling_state_info.rasterizationSamples = vk::SampleCountFlagBits::e1;
+            multisampling_state_info.rasterizationSamples = ctx.device.max_samples;
             multisampling_state_info.minSampleShading = 1.0f;
             multisampling_state_info.pSampleMask = nullptr;
         }
