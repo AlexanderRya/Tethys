@@ -91,7 +91,8 @@ set(TETHYS_SOURCES
         "src/tethys/texture.cpp"
         "src/tethys/api/stb_image.cpp"
         "src/tethys/api/index_buffer.cpp"
-        "src/tethys/model.cpp" src/tethys/color_space.cpp)
+        "src/tethys/model.cpp"
+        "src/tethys/color_space.cpp")
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}
@@ -146,3 +147,8 @@ foreach(SHADER ${TETHYS_SHADERS})
             COMMAND echo Compiling shader ${SHADER_FNAME} &&
             glslc --target-env=vulkan1.1 ${SHADER} "-o${CMAKE_BINARY_DIR}/shaders/${SHADER_FNAME}.spv")
 endforeach()
+
+add_executable(TethysTestApp test_app.cpp)
+
+target_include_directories(TethysTestApp PRIVATE include)
+target_link_libraries(TethysTestApp PRIVATE Tethys)

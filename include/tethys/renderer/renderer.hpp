@@ -17,7 +17,7 @@ namespace tethys::renderer {
     [[nodiscard]] Handle<Texture> upload_texture(const u8, const u8, const u8, const u8, const ColorSpace);
     [[nodiscard]] Handle<Texture> upload_texture(const char*, const ColorSpace);
     [[nodiscard]] Handle<Model> upload_model(const std::string&);
-    [[nodiscard]] Handle<Model> upload_model(const std::vector<Vertex>&, const std::vector<u32>&, const char*, const char*, const char*);
+    [[nodiscard]] Handle<Model> upload_model(const std::vector<Vertex>&, const std::vector<u32>&, const char* = nullptr, const char* = nullptr, const char* = nullptr);
     void unload_geometry(Handle<Mesh>&&);
 
     void start();

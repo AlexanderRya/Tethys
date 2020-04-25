@@ -321,7 +321,7 @@ namespace tethys::renderer {
         command_buffer.begin(begin_info, ctx.dispatcher);
 
         std::array<vk::ClearValue, 2> clear_values{}; {
-            clear_values[0].color = vk::ClearColorValue{ std::array{ 0.01f, 0.01f, 0.01f, 0.0f } };
+            clear_values[0].color = vk::ClearColorValue{ std::array{ 0.001f, 0.001f, 0.001f, 0.0f } };
             clear_values[1].depthStencil = vk::ClearDepthStencilValue{ { 1.0f, 0 } };
         }
 
