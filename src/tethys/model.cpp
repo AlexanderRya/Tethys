@@ -1,11 +1,12 @@
 #include <tethys/renderer/renderer.hpp>
-#include <tethys/color_space.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/model.hpp>
 
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+
+#include <vulkan/vulkan.hpp>
 
 #include <unordered_map>
 
@@ -27,7 +28,7 @@ namespace tethys {
             return loaded_textures[path];
         }
 
-        return loaded_textures[path] = renderer::upload_texture(path.c_str(), type == aiTextureType_DIFFUSE ? ColorSpace::eR8G8B8A8Srgb : ColorSpace::eR8G8B8A8Unorm);
+        return loaded_textures[path] = renderer::upload_texture(path.c_str(), type == aiTextureType_DIFFUSE ? vk::Format::eR8G8B8A8Srgb : vk::Format::eR8G8B8A8Unorm);
     }
 
     static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::filesystem::path& model_path) {
@@ -112,9 +113,9 @@ namespace tethys {
     Model load_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse, const char* specular, const char* normal) {
         Model::SubMesh submesh{}; {
             submesh.mesh = renderer::write_geometry(vertices, indices);
-            submesh.diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, ColorSpace::eR8G8B8A8Srgb) : texture::white;
-            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, ColorSpace::eR8G8B8A8Unorm) : texture::black;
-            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, ColorSpace::eR8G8B8A8Unorm) : texture::black;
+            submesh.diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, vk::Format::eR8G8B8A8Srgb) : texture::white;
+            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : texture::black;
+            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, vk::Format::eR8G8B8A8Unorm) : texture::black;
         }
 
         return Model{ {

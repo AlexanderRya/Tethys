@@ -5,7 +5,6 @@
 
 namespace tethys {
     // Defined for types:
-    // tethys::Pipeline
     // tethys::PipelineLayout
     // vk::DescriptorSetLayout
 

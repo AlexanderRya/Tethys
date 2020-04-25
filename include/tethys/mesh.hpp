@@ -6,10 +6,7 @@
 #include <vector>
 
 namespace tethys {
-    struct Mesh {
-        std::vector<Vertex> geometry;
-        std::vector<u32> indices;
-    };
+    struct Mesh {}; // :thonk:
 } // namespace tethys
 
 #endif //TETHYS_MESH_HPP

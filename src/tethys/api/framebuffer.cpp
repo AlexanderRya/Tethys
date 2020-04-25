@@ -3,12 +3,12 @@
 #include <tethys/logger.hpp>
 
 namespace tethys::api {
-    std::vector<vk::Framebuffer> make_default_framebuffers() {
+    std::vector<vk::Framebuffer> make_default_framebuffers(const vk::RenderPass default_render_pass) {
         std::vector<vk::Framebuffer> framebuffers{};
         framebuffers.reserve(ctx.swapchain.image_count);
 
         vk::FramebufferCreateInfo framebuffer_create_info{}; {
-            framebuffer_create_info.renderPass = ctx.default_render_pass;
+            framebuffer_create_info.renderPass = default_render_pass;
             framebuffer_create_info.height = ctx.swapchain.extent.height;
             framebuffer_create_info.width = ctx.swapchain.extent.width;
             framebuffer_create_info.layers = 1;

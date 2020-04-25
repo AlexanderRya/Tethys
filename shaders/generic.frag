@@ -51,7 +51,7 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 void main() {
     vec3 result = vec3(1.0);
     vec4 color = texture(textures[diffuse_index], uvs).rgba;
-    vec3 diffuse = color.rgb;
+    vec3 diffuse = pow(color.rgb, vec3(2.2));
     float alpha = color.a;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
 
@@ -83,7 +83,7 @@ vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal,
 
     // Attenuation
     float distance = length(light.position - frag_pos);
-    float attenuation = 1.0 / (light.falloff.constant + light.falloff.linear * distance + light.falloff.quadratic * (distance * distance));
+    float attenuation = 1.0 / (light.falloff.constant + (light.falloff.linear * distance) + (light.falloff.quadratic * (distance * distance)));
 
     // Combine
     vec3 result_diffuse = light.color * diff * color;

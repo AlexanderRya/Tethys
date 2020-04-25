@@ -5,10 +5,11 @@
 #include <tethys/api/vertex_buffer.hpp>
 #include <tethys/api/static_buffer.hpp>
 #include <tethys/api/index_buffer.hpp>
+#include <tethys/api/render_pass.hpp>
+#include <tethys/api/framebuffer.hpp>
 #include <tethys/point_light.hpp>
 #include <tethys/render_data.hpp>
 #include <tethys/api/context.hpp>
-#include <tethys/color_space.hpp>
 #include <tethys/api/buffer.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/pipeline.hpp>
@@ -26,6 +27,9 @@
 
 namespace tethys::renderer {
     using namespace api;
+
+    static vk::RenderPass default_render_pass{};
+    static std::vector<vk::Framebuffer> default_framebuffers{};
 
     static std::vector<vk::Semaphore> image_available{};
     static std::vector<vk::Semaphore> render_finished{};
@@ -75,6 +79,8 @@ namespace tethys::renderer {
     }
 
     void initialise() {
+        default_render_pass = api::make_default_render_pass();
+        default_framebuffers = api::make_default_framebuffers(default_render_pass);
         command_buffers = api::make_rendering_command_buffers();
 
         vk::SemaphoreCreateInfo semaphore_create_info{};
@@ -89,15 +95,32 @@ namespace tethys::renderer {
 
         in_flight.resize(frames_in_flight, nullptr);
 
-        load_all_builtin_shaders();
+        load_set_layouts();
+        load_pipeline_layouts();
+
+        Pipeline::CreateInfo generic_info{}; {
+            generic_info.vertex = "shaders/generic.vert.spv";
+            generic_info.fragment = "shaders/generic.frag.spv";
+            generic_info.subpass_idx = 0;
+            generic_info.render_pass = default_render_pass;
+            generic_info.layout_idx = layout::generic;
+        }
+
+        generic = make_pipeline(generic_info);
+
+        Pipeline::CreateInfo minimal_info{}; {
+            minimal_info.vertex = "shaders/minimal.vert.spv";
+            minimal_info.fragment = "shaders/minimal.frag.spv";
+            minimal_info.subpass_idx = 0;
+            minimal_info.render_pass = default_render_pass;
+            minimal_info.layout_idx = layout::minimal;
+        }
+        minimal = make_pipeline(minimal_info);
 
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         directional_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
-
-        generic = acquire<Pipeline>(shader::generic);
-        minimal = acquire<Pipeline>(shader::minimal);
 
         generic_set.create(acquire<vk::DescriptorSetLayout>(layout::generic));
         minimal_set.create(acquire<vk::DescriptorSetLayout>(layout::minimal));
@@ -160,8 +183,8 @@ namespace tethys::renderer {
         return Handle<Mesh>{ vbo_index, ibo_index };
     }
 
-    Handle<Texture> upload_texture(const char* path, const ColorSpace color_space) {
-        textures.emplace_back(load_texture(path, to_vk_enum(color_space)));
+    Handle<Texture> upload_texture(const char* path, const vk::Format color_space) {
+        textures.emplace_back(load_texture(path, color_space));
 
         update_textures();
 
@@ -180,12 +203,12 @@ namespace tethys::renderer {
         return Handle<Model>{ models.size() - 1 };
     }
 
-    Handle<Texture> upload_texture(const u8 r, const u8 g, const u8 b, const u8 a, const ColorSpace color_space) {
+    Handle<Texture> upload_texture(const u8 r, const u8 g, const u8 b, const u8 a, const vk::Format color_space) {
         u8 color[]{
             r, g, b ,a
         };
 
-        textures.emplace_back(load_texture(color, 1, 1, 4, to_vk_enum(color_space)));
+        textures.emplace_back(load_texture(color, 1, 1, 4, color_space));
 
         update_textures();
 
@@ -327,8 +350,8 @@ namespace tethys::renderer {
 
         vk::RenderPassBeginInfo render_pass_begin_info{}; {
             render_pass_begin_info.renderArea.extent = ctx.swapchain.extent;
-            render_pass_begin_info.framebuffer = ctx.default_framebuffers[image_index];
-            render_pass_begin_info.renderPass = ctx.default_render_pass;
+            render_pass_begin_info.framebuffer = default_framebuffers[image_index];
+            render_pass_begin_info.renderPass = default_render_pass;
             render_pass_begin_info.clearValueCount = clear_values.size();
             render_pass_begin_info.pClearValues = clear_values.data();
         }

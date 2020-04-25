@@ -97,8 +97,6 @@ namespace tethys::api {
         ctx.allocator = make_allocator();
         ctx.swapchain = make_swapchain();
         ctx.descriptor_pool = make_descriptor_pool();
-        ctx.default_render_pass = make_default_render_pass();
-        ctx.default_framebuffers = make_default_framebuffers();
         ctx.default_sampler = make_default_sampler();
 
         logger::info("Vulkan initialization sequence completed successfully");

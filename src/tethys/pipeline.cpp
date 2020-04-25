@@ -13,9 +13,8 @@ namespace tethys {
 
     static std::vector<vk::DescriptorSetLayout> set_layouts;
     static std::vector<PipelineLayout> pipeline_layouts;
-    static std::vector<Pipeline> pipelines;
 
-    static void load_set_layouts() {
+    void load_set_layouts() {
         set_layouts.resize(2);
 
         /* Minimal set layout */ {
@@ -78,30 +77,7 @@ namespace tethys {
         }
     }
 
-    [[nodiscard]] static vk::ShaderModule load_module(const char* path) {
-        using namespace std::string_literals;
-
-        std::ifstream in(path, std::fstream::binary);
-
-        if (!in.is_open()) {
-            throw std::runtime_error("Error, \""s + path + "\" file not found.");
-        }
-
-        std::string spv{ std::istreambuf_iterator<char>{ in }, {} };
-
-        vk::ShaderModuleCreateInfo create_info{}; {
-            create_info.codeSize = spv.size();
-            create_info.pCode = reinterpret_cast<const u32*>(spv.data());
-        }
-
-        auto module = ctx.device.logical.createShaderModule(create_info, nullptr, ctx.dispatcher);
-
-        logger::info("Module \""s + path + "\" successfully loaded");
-
-        return module;
-    }
-
-    static void load_pipeline_layouts() {
+    void load_pipeline_layouts() {
         pipeline_layouts.resize(2);
 
         /* Generic pipeline layout */ {
@@ -146,10 +122,41 @@ namespace tethys {
         }
     }
 
-    [[nodiscard]] static Pipeline make_pipeline(const char* vertex, const char* fragment, const u32 layout_idx) {
+    [[nodiscard]] static vk::ShaderModule load_module(const std::filesystem::path& path) {
+        std::ifstream in(path, std::fstream::binary);
+
+        if (!in.is_open()) {
+            throw std::runtime_error("Error, \"" + path.generic_string() + "\" file not found.");
+        }
+
+        std::string spv{ std::istreambuf_iterator<char>{ in }, {} };
+
+        vk::ShaderModuleCreateInfo create_info{}; {
+            create_info.codeSize = spv.size();
+            create_info.pCode = reinterpret_cast<const u32*>(spv.data());
+        }
+
+        auto module = ctx.device.logical.createShaderModule(create_info, nullptr, ctx.dispatcher);
+
+        logger::info("Module \"" + path.generic_string() + "\" successfully loaded");
+
+        return module;
+    }
+
+    template <>
+    PipelineLayout& acquire<PipelineLayout&>(const u32 idx) {
+        return pipeline_layouts[idx];
+    }
+
+    template <>
+    vk::DescriptorSetLayout& acquire<vk::DescriptorSetLayout>(const u32 idx) {
+        return set_layouts[idx];
+    }
+
+    Pipeline make_pipeline(const Pipeline::CreateInfo& info) {
         std::array<vk::ShaderModule, 2> modules{}; {
-            modules[0] = load_module(vertex);
-            modules[1] = load_module(fragment);
+            modules[0] = load_module(info.vertex);
+            modules[1] = load_module(info.fragment);
         }
 
         std::array<vk::PipelineShaderStageCreateInfo, 2> stages{}; {
@@ -305,9 +312,9 @@ namespace tethys {
             pipeline_info.pDepthStencilState = &depth_stencil_info;
             pipeline_info.pColorBlendState = &color_blend_info;
             pipeline_info.pDynamicState = &dynamic_state_create_info;
-            pipeline_info.layout = pipeline_layouts[layout_idx].pipeline;
-            pipeline_info.renderPass = ctx.default_render_pass;
-            pipeline_info.subpass = 0;
+            pipeline_info.layout = pipeline_layouts[info.layout_idx].pipeline;
+            pipeline_info.renderPass = info.render_pass;
+            pipeline_info.subpass = info.subpass_idx;
             pipeline_info.basePipelineHandle = nullptr;
             pipeline_info.basePipelineIndex = -1;
         }
@@ -315,7 +322,7 @@ namespace tethys {
         Pipeline pipeline{};
 
         pipeline.handle = ctx.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, ctx.dispatcher);
-        pipeline.layout = pipeline_layouts[layout_idx];
+        pipeline.layout = pipeline_layouts[info.layout_idx];
 
         logger::info("Pipeline successfully created");
 
@@ -324,24 +331,5 @@ namespace tethys {
         }
 
         return pipeline;
-    }
-
-    void load_all_builtin_shaders() {
-        load_set_layouts();
-        load_pipeline_layouts();
-
-        pipelines.reserve(2);
-        pipelines.emplace_back(make_pipeline("shaders/generic.vert.spv", "shaders/generic.frag.spv", layout::generic));
-        pipelines.emplace_back(make_pipeline("shaders/minimal.vert.spv", "shaders/minimal.frag.spv", layout::minimal));
-    }
-
-    template <>
-    Pipeline& acquire<Pipeline>(const u32 idx) {
-        return pipelines[idx];
-    }
-
-    template <>
-    vk::DescriptorSetLayout& acquire<vk::DescriptorSetLayout>(const u32 idx) {
-        return set_layouts[idx];
     }
 } // namespace tethys
