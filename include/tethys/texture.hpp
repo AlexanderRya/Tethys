@@ -16,8 +16,8 @@ namespace tethys {
         [[nodiscard]] vk::DescriptorImageInfo info() const;
     };
 
-    [[nodiscard]] Texture load_texture(const char*);
-    [[nodiscard]] Texture load_texture(const u8*, const u32, const u32, const u32);
+    [[nodiscard]] Texture load_texture(const char*, const vk::Format);
+    [[nodiscard]] Texture load_texture(const u8*, const u32, const u32, const u32, const vk::Format);
 } // namespace tethys
 
 #endif //TETHYS_TEXTURE_HPP

@@ -106,7 +106,7 @@ namespace tethys {
 
         /* Generic pipeline layout */ {
             vk::PushConstantRange range{}; {
-                range.size = 4 * sizeof(u32);
+                range.size = 6 * sizeof(u32);
                 range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
                 range.offset = 0;
             }
@@ -251,7 +251,7 @@ namespace tethys {
             multisampling_state_info.sampleShadingEnable = false;
             multisampling_state_info.alphaToOneEnable = false;
             multisampling_state_info.rasterizationSamples = ctx.device.max_samples;
-            multisampling_state_info.minSampleShading = 1.0f;
+            multisampling_state_info.minSampleShading = 0.2f;
             multisampling_state_info.pSampleMask = nullptr;
         }
 

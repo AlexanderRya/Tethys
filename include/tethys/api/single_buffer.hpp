@@ -22,6 +22,7 @@ namespace tethys::api {
         void write(const std::vector<Ty>&);
         void deallocate();
 
+        [[nodiscard]] void* buf() const;
         [[nodiscard]] usize size() const;
         [[nodiscard]] vk::DescriptorBufferInfo info() const;
     };
@@ -81,6 +82,11 @@ namespace tethys::api {
         }
 
         return buffer_info;
+    }
+
+    template <typename Ty>
+    void* SingleBuffer<Ty>::buf() const {
+        return mapped;
     }
 } // namespace tethys::api
 

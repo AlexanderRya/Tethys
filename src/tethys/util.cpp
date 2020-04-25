@@ -45,22 +45,14 @@ namespace tethys::util {
     }
 
     void print(const std::string& val) {
-#if defined(__linux__)
-        write(1, val.c_str(), val.size());
-#else
-        auto stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        WriteFile(stdout_handle, val.c_str(), val.size(), nullptr, nullptr);
-#endif
+        std::printf("%s", val.c_str());
     }
 
     void print(const char* str) {
-        print(std::string(str));
+        std::printf("%s", str);
     }
 
     void print(const void* addr) {
-        std::string str(std::snprintf(nullptr, 0, "%p", addr), '\0');
-        std::snprintf(str.data(), str.size(), "%p", addr);
-
-        print(str);
+        std::printf("%p", addr);
     }
 } // namespace tethys::util

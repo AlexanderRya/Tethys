@@ -41,6 +41,8 @@ layout (push_constant) uniform Indices {
     uint diffuse_index;
     uint specular_index;
     uint normal_index;
+    uint point_lights_count;
+    uint directional_lights_count;
 };
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
@@ -53,17 +55,17 @@ void main() {
     float alpha = color.a;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
 
-    result = diffuse * vec3(0.1);
+    result = diffuse * vec3(0.1); // Ambient
 
     vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
 
-    for (uint i = 0; i < directional_lights.length(); ++i) {
-        result += apply_directional_light(directional_lights[i], diffuse, specular, norms, view_dir);
+    for (uint i = 0; i < point_lights_count; ++i) {
+        result += apply_point_light(point_lights[i], diffuse, specular, norms, view_dir);
     }
 
-    for (uint i = 0; i < point_lights.length(); ++i) {
-        result += apply_point_light(point_lights[i], diffuse, specular, norms, view_dir);
+    for (uint i = 0; i < directional_lights_count; ++i) {
+        result += apply_directional_light(directional_lights[i], diffuse, specular, norms, view_dir);
     }
 
     frag_color = vec4(result, 1.0);

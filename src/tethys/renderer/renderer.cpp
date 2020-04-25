@@ -8,9 +8,9 @@
 #include <tethys/point_light.hpp>
 #include <tethys/render_data.hpp>
 #include <tethys/api/context.hpp>
+#include <tethys/color_space.hpp>
 #include <tethys/api/buffer.hpp>
 #include <tethys/constants.hpp>
-#include <tethys/forwards.hpp>
 #include <tethys/pipeline.hpp>
 #include <tethys/texture.hpp>
 #include <tethys/acquire.hpp>
@@ -19,7 +19,6 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 
 #include <vector>
@@ -129,11 +128,11 @@ namespace tethys::renderer {
 
         std::array<u8, 4> white = { 255, 255, 255, 255 };
 
-        textures.emplace_back(load_texture(white.data(), 1, 1, 4));
+        textures.emplace_back(load_texture(white.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
 
         std::array<u8, 4> black{};
 
-        textures.emplace_back(load_texture(black.data(), 1, 1, 4));
+        textures.emplace_back(load_texture(black.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
         update_textures();
     }
 
@@ -161,8 +160,8 @@ namespace tethys::renderer {
         return Handle<Mesh>{ vbo_index, ibo_index };
     }
 
-    Handle<Texture> upload_texture(const char* path) {
-        textures.emplace_back(load_texture(path));
+    Handle<Texture> upload_texture(const char* path, const ColorSpace color_space) {
+        textures.emplace_back(load_texture(path, to_vk_enum(color_space)));
 
         update_textures();
 
@@ -181,12 +180,12 @@ namespace tethys::renderer {
         return Handle<Model>{ models.size() - 1 };
     }
 
-    Handle<Texture> upload_texture(const u8 r, const u8 g, const u8 b, const u8 a) {
+    Handle<Texture> upload_texture(const u8 r, const u8 g, const u8 b, const u8 a, const ColorSpace color_space) {
         u8 color[]{
             r, g, b ,a
         };
 
-        textures.emplace_back(load_texture(color, 1, 1, 4));
+        textures.emplace_back(load_texture(color, 1, 1, 4, to_vk_enum(color_space)));
 
         update_textures();
 
@@ -380,7 +379,9 @@ namespace tethys::renderer {
                         static_cast<u32>(i),
                         static_cast<u32>(submesh.diffuse.index),
                         static_cast<u32>(submesh.specular.index),
-                        static_cast<u32>(submesh.normal.index)
+                        static_cast<u32>(submesh.normal.index),
+                        static_cast<u32>(data.point_lights.size()),
+                        static_cast<u32>(data.directional_lights.size())
                     };
 
                     command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);

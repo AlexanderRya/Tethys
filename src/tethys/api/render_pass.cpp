@@ -71,7 +71,7 @@ namespace tethys::api {
             subpass_dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
         }
 
-        std::array<vk::AttachmentDescription, 3> attachments {
+        std::array<vk::AttachmentDescription, 3> attachments{
             color_description,
             depth_description,
             color_resolve_description

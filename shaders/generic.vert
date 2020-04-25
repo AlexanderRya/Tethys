@@ -25,6 +25,8 @@ layout (push_constant) uniform Indices {
     uint diffuse_index;
     uint specular_index;
     uint normal_index;
+    uint point_lights_count;
+    uint directional_lights_count;
 };
 
 void main() {

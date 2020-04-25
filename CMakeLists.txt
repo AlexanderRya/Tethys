@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(Tethys)
 
 find_package(Vulkan REQUIRED)
@@ -64,7 +64,7 @@ set(TETHYS_HEADERS
         "include/tethys/directional_light.hpp"
         "include/tethys/acquire.hpp"
         "include/tethys/api/index_buffer.hpp"
-        "include/tethys/model.hpp")
+        "include/tethys/model.hpp" include/tethys/color_space.hpp)
 
 set(TETHYS_SOURCES
         "src/tethys/api/instance.cpp"
@@ -91,7 +91,7 @@ set(TETHYS_SOURCES
         "src/tethys/texture.cpp"
         "src/tethys/api/stb_image.cpp"
         "src/tethys/api/index_buffer.cpp"
-        "src/tethys/model.cpp")
+        "src/tethys/model.cpp" src/tethys/color_space.cpp)
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}
@@ -108,12 +108,12 @@ target_include_directories(Tethys PUBLIC
 
 if (UNIX)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        target_compile_options(Tethys PUBLIC -std=c++17 -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+        target_compile_options(Tethys PUBLIC -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
     else()
-        target_compile_options(Tethys PUBLIC -std=c++17 -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
+        target_compile_options(Tethys PUBLIC -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
     endif()
 else()
-    target_compile_options(Tethys PRIVATE "/W0")
+    target_compile_options(Tethys PUBLIC "/W0 /MP")
 endif()
 
 set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} VK_ENABLE_BETA_EXTENSIONS)
@@ -122,17 +122,16 @@ if (WIN32)
     set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS) # Goddamnit windows
 endif()
 
-if (UNIX)
-    if (CMAKE_BUILD_TYPE MATCHES Debug)
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    if (UNIX)
         set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} _GLIBCXX_DEBUG)
     endif()
-endif()
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} TETHYS_DEBUG)
 endif()
 
 target_compile_definitions(Tethys PUBLIC ${TETHYS_DEFINITIONS})
+
 if (UNIX)
     target_link_libraries(Tethys PUBLIC glfw assimp dl)
 else()

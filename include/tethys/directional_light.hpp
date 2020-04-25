@@ -8,8 +8,6 @@ namespace tethys {
         alignas(16) glm::vec3 direction;
         alignas(16) glm::vec3 color;
     };
-
-    static_assert(sizeof(DirectionalLight) == static_cast<usize>(32), "Nope, doesn't work!");
 } // namespace tethys
 
 #endif //TETHYS_DIRECTIONAL_LIGHT_HPP

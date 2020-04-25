@@ -88,7 +88,7 @@ namespace tethys::api {
 
         if (std::find_if(extensions.begin(), extensions.end(), [&enabled_exts](const vk::ExtensionProperties& properties) {
             return std::any_of(enabled_exts.begin(), enabled_exts.end(), [&properties](const char* name) {
-                return std::strcmp(name, properties.extensionName);
+                return std::strcmp(name, properties.extensionName) == 0;
             });
         }) != extensions.end()) {
             float priorities[]{ 1.0f };

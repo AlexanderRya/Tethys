@@ -1,4 +1,5 @@
 #include <tethys/renderer/renderer.hpp>
+#include <tethys/color_space.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/model.hpp>
 
@@ -13,8 +14,9 @@ namespace tethys {
 
     static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::filesystem::path& model_path) {
         using namespace std::string_literals;
+
         if (!material->GetTextureCount(type)) {
-            return Handle<Texture>{ texture::black };
+            return type == aiTextureType_DIFFUSE ? texture::white : texture::black;
         }
 
         aiString str;
@@ -25,7 +27,7 @@ namespace tethys {
             return loaded_textures[path];
         }
 
-        return loaded_textures[path] = renderer::upload_texture(path.c_str());
+        return loaded_textures[path] = renderer::upload_texture(path.c_str(), type == aiTextureType_DIFFUSE ? ColorSpace::eR8G8B8A8Srgb : ColorSpace::eR8G8B8A8Unorm);
     }
 
     static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::filesystem::path& model_path) {
@@ -108,15 +110,15 @@ namespace tethys {
     }
 
     Model load_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse, const char* specular, const char* normal) {
-        return Model{
-            .submeshes = {
-                Model::SubMesh{
-                    .mesh = renderer::write_geometry(vertices, indices),
-                    .diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse) : texture::white,
-                    .specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular) : texture::black,
-                    .normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal) : texture::black
-                }
-            }
-        };
+        Model::SubMesh submesh{}; {
+            submesh.mesh = renderer::write_geometry(vertices, indices);
+            submesh.diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, ColorSpace::eR8G8B8A8Srgb) : texture::white;
+            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, ColorSpace::eR8G8B8A8Unorm) : texture::black;
+            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, ColorSpace::eR8G8B8A8Unorm) : texture::black;
+        }
+
+        return Model{ {
+            submesh
+        } };
     }
 } // namespace tethys

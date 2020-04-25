@@ -16,6 +16,7 @@ namespace vk {
     class Semaphore;
     class Sampler;
     class Pipeline;
+    enum class Format;
 } // namespace vk
 
 namespace tethys {
@@ -29,6 +30,7 @@ namespace tethys {
     struct RenderData;
     template <typename>
     struct Handle;
+    enum class ColorSpace;
 } // namespace tethys
 
 namespace tethys::api {

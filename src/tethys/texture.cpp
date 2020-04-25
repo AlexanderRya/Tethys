@@ -107,7 +107,7 @@ namespace tethys {
         end_transient(command_buffer);
     }
 
-    Texture load_texture(const char* path) {
+    Texture load_texture(const char* path, const vk::Format format) {
         using namespace std::string_literals;
 
         if (!std::ifstream(path).is_open()) {
@@ -119,13 +119,13 @@ namespace tethys {
         logger::info("Loading texture: "s + path);
 
         auto data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
-        auto texture = load_texture(data, width, height, 4);
+        auto texture = load_texture(data, width, height, 4, format);
         stbi_image_free(data);
 
         return texture;
     }
 
-    Texture load_texture(const u8* data, const u32 width, const u32 height, const u32 channels) {
+    Texture load_texture(const u8* data, const u32 width, const u32 height, const u32 channels, const vk::Format format) {
         if (!data) {
             throw std::runtime_error("Error, can't load texture without data");
         }
@@ -156,7 +156,7 @@ namespace tethys {
             create_info.mips = texture.mips;
             create_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             create_info.usage_flags = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
-            create_info.format = vk::Format::eR8G8B8A8Srgb;
+            create_info.format = format;
             create_info.tiling = vk::ImageTiling::eOptimal;
             create_info.samples = vk::SampleCountFlagBits::e1;
         }
@@ -167,7 +167,7 @@ namespace tethys {
         api::copy_buffer_to_image(staging.handle, texture.image.handle, width, height);
         generate_mipmaps(texture);
 
-        texture.view = api::make_image_view(texture.image.handle, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor, texture.mips);
+        texture.view = api::make_image_view(texture.image.handle, format, vk::ImageAspectFlagBits::eColor, texture.mips);
 
         logger::info("Successfully loaded texture, "
                      "width: ", width,
