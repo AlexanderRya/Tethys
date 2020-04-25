@@ -64,7 +64,8 @@ set(TETHYS_HEADERS
         "include/tethys/directional_light.hpp"
         "include/tethys/acquire.hpp"
         "include/tethys/api/index_buffer.hpp"
-        "include/tethys/model.hpp" include/tethys/color_space.hpp)
+        "include/tethys/model.hpp"
+        "include/tethys/color_space.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/instance.cpp"
@@ -113,8 +114,9 @@ if (UNIX)
     else()
         target_compile_options(Tethys PUBLIC -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
     endif()
-else()
-    target_compile_options(Tethys PUBLIC "/W0 /MP")
+else() # ffs windows
+    target_compile_options(Tethys PRIVATE "/W0")
+    target_compile_options(assimp PRIVATE "/W0")
 endif()
 
 set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} VK_ENABLE_BETA_EXTENSIONS)
