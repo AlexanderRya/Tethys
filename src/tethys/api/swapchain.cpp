@@ -126,7 +126,7 @@ namespace tethys::api {
         Offscreen offscreen{};
 
         Image::CreateInfo color_image_info{}; {
-            color_image_info.format = vk::Format::eR8G8B8A8Srgb;
+            color_image_info.format = vk::Format::eB8G8R8A8Srgb;
             color_image_info.width = ctx.swapchain.extent.width;
             color_image_info.height = ctx.swapchain.extent.height;
             color_image_info.usage_flags = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
@@ -138,7 +138,7 @@ namespace tethys::api {
 
         offscreen.image = api::make_image(color_image_info);
 
-        offscreen.image_view = api::make_image_view(offscreen.image.handle, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
+        offscreen.image_view = api::make_image_view(offscreen.image.handle, vk::Format::eB8G8R8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
 
         Image::CreateInfo depth_image_info{}; {
             depth_image_info.format = vk::Format::eD24UnormS8Uint;
@@ -156,7 +156,7 @@ namespace tethys::api {
         api::transition_image_layout(offscreen.depth_image.handle, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 
         Image::CreateInfo msaa_image_info{}; {
-            msaa_image_info.format = vk::Format::eR8G8B8A8Srgb;
+            msaa_image_info.format = vk::Format::eB8G8R8A8Srgb;
             msaa_image_info.width = ctx.swapchain.extent.width;
             msaa_image_info.height = ctx.swapchain.extent.height;
             msaa_image_info.usage_flags = vk::ImageUsageFlagBits::eColorAttachment;
@@ -167,7 +167,7 @@ namespace tethys::api {
         }
 
         offscreen.msaa_image = api::make_image(msaa_image_info);
-        offscreen.msaa_view = api::make_image_view(offscreen.msaa_image.handle, vk::Format::eR8G8B8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
+        offscreen.msaa_view = api::make_image_view(offscreen.msaa_image.handle, vk::Format::eB8G8R8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
 
         return offscreen;
     }
