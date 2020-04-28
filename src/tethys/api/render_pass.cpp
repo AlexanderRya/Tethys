@@ -5,9 +5,9 @@
 #include <vulkan/vulkan.hpp>
 
 namespace tethys::api {
-    vk::RenderPass make_default_render_pass() {
+    vk::RenderPass make_offscreen_render_pass() {
         vk::AttachmentDescription color_description{}; {
-            color_description.format = ctx.swapchain.format.format;
+            color_description.format = ctx.offscreen.msaa_image.format;
             color_description.samples = ctx.device.max_samples;
             color_description.loadOp = vk::AttachmentLoadOp::eClear;
             color_description.storeOp = vk::AttachmentStoreOp::eStore;
@@ -23,7 +23,7 @@ namespace tethys::api {
         }
 
         vk::AttachmentDescription depth_description{}; {
-            depth_description.format = vk::Format::eD32SfloatS8Uint;
+            depth_description.format = ctx.offscreen.depth_image.format;
             depth_description.samples = ctx.device.max_samples;
             depth_description.loadOp = vk::AttachmentLoadOp::eClear;
             depth_description.storeOp = vk::AttachmentStoreOp::eDontCare;
@@ -39,14 +39,14 @@ namespace tethys::api {
         }
 
         vk::AttachmentDescription color_resolve_description{}; {
-            color_resolve_description.format = ctx.swapchain.format.format;
+            color_resolve_description.format = ctx.offscreen.image.format;
             color_resolve_description.samples = vk::SampleCountFlagBits::e1;
             color_resolve_description.loadOp = vk::AttachmentLoadOp::eDontCare;
             color_resolve_description.storeOp = vk::AttachmentStoreOp::eStore;
             color_resolve_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
             color_resolve_description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
             color_resolve_description.initialLayout = vk::ImageLayout::eUndefined;
-            color_resolve_description.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+            color_resolve_description.finalLayout = vk::ImageLayout::eTransferSrcOptimal;
         }
 
         vk::AttachmentReference color_resolve_attachment{}; {

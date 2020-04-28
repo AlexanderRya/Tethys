@@ -28,6 +28,11 @@ namespace tethys::api {
 
         std::vector<vk::Image> images{};
         std::vector<vk::ImageView> image_views{};
+    };
+
+    struct Offscreen {
+        api::Image image{};
+        vk::ImageView image_view{};
 
         api::Image depth_image{};
         vk::ImageView depth_view{};
@@ -44,6 +49,7 @@ namespace tethys::api {
         vk::DebugUtilsMessengerEXT validation{};
         vk::SurfaceKHR surface{};
         Device device{};
+        Offscreen offscreen{};
         Swapchain swapchain{};
         vk::CommandPool command_pool{};
         vk::CommandPool transient_pool{};

@@ -20,9 +20,7 @@ namespace tethys::renderer {
     [[nodiscard]] Handle<Model> upload_model(const std::vector<Vertex>&, const std::vector<u32>&, const char* = nullptr, const char* = nullptr, const char* = nullptr);
     void unload_geometry(Handle<Mesh>&&);
 
-    void start();
     void draw(const RenderData&);
-    void end();
     void submit();
 } // namespace tethys::renderer
 

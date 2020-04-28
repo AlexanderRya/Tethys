@@ -2,33 +2,31 @@
 #include <tethys/api/context.hpp>
 #include <tethys/logger.hpp>
 
+#include <vulkan/vulkan.hpp>
+
 namespace tethys::api {
-    std::vector<vk::Framebuffer> make_default_framebuffers(const vk::RenderPass default_render_pass) {
-        std::vector<vk::Framebuffer> framebuffers{};
-        framebuffers.reserve(ctx.swapchain.image_count);
+    vk::Framebuffer make_offscreen_framebuffer(const vk::RenderPass offscreen_render_pass) {
+        vk::Framebuffer framebuffer{};
+
+        std::array<vk::ImageView, 3> attachments{}; {
+            attachments[0] = ctx.offscreen.msaa_view;
+            attachments[1] = ctx.offscreen.depth_view;
+            attachments[2] = ctx.offscreen.image_view;
+        }
 
         vk::FramebufferCreateInfo framebuffer_create_info{}; {
-            framebuffer_create_info.renderPass = default_render_pass;
-            framebuffer_create_info.height = ctx.swapchain.extent.height;
-            framebuffer_create_info.width = ctx.swapchain.extent.width;
+            framebuffer_create_info.renderPass = offscreen_render_pass;
+            framebuffer_create_info.height = ctx.offscreen.image.height;
+            framebuffer_create_info.width = ctx.offscreen.image.width;
             framebuffer_create_info.layers = 1;
-        }
-
-        std::array<vk::ImageView, 3> attachments{};
-
-        for (const auto& image_view : ctx.swapchain.image_views) {
-            attachments[0] = ctx.swapchain.msaa_view;
-            attachments[1] = ctx.swapchain.depth_view;
-            attachments[2] = image_view;
-
             framebuffer_create_info.attachmentCount = attachments.size();
             framebuffer_create_info.pAttachments = attachments.data();
-
-            framebuffers.emplace_back(ctx.device.logical.createFramebuffer(framebuffer_create_info, nullptr, ctx.dispatcher));
         }
 
-        logger::info("Framebuffers successfully created with default renderpass");
+        framebuffer = ctx.device.logical.createFramebuffer(framebuffer_create_info, nullptr, ctx.dispatcher);
 
-        return framebuffers;
+        logger::info("Framebuffer successfully created with offscreen renderpass");
+
+        return framebuffer;
     }
 } // namespace tethys::api

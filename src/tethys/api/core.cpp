@@ -96,6 +96,7 @@ namespace tethys::api {
         ctx.transient_pool = make_transient_pool();
         ctx.allocator = make_allocator();
         ctx.swapchain = make_swapchain();
+        ctx.offscreen = make_offscreen_target();
         ctx.descriptor_pool = make_descriptor_pool();
         ctx.default_sampler = make_default_sampler();
 

@@ -41,9 +41,7 @@ int main() {
             };
         }
 
-        tethys::renderer::start();
         tethys::renderer::draw(data);
-        tethys::renderer::end();
         tethys::renderer::submit();
 
         tethys::window::poll();

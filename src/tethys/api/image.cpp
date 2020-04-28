@@ -130,6 +130,11 @@ namespace tethys::api {
                     destination_stage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
                 } break;
 
+                case vk::ImageLayout::ePresentSrcKHR: {
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
+                    destination_stage = vk::PipelineStageFlagBits::eAllGraphics;
+                } break;
+
                 default: {
                     throw std::runtime_error("Unsupported transition");
                 }

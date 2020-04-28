@@ -28,8 +28,8 @@
 namespace tethys::renderer {
     using namespace api;
 
-    static vk::RenderPass default_render_pass{};
-    static std::vector<vk::Framebuffer> default_framebuffers{};
+    static vk::RenderPass offscreen_render_pass{};
+    static vk::Framebuffer offscreen_framebuffer{};
 
     static std::vector<vk::Semaphore> image_available{};
     static std::vector<vk::Semaphore> render_finished{};
@@ -79,8 +79,8 @@ namespace tethys::renderer {
     }
 
     void initialise() {
-        default_render_pass = api::make_default_render_pass();
-        default_framebuffers = api::make_default_framebuffers(default_render_pass);
+        offscreen_render_pass = api::make_offscreen_render_pass();
+        offscreen_framebuffer = api::make_offscreen_framebuffer(offscreen_render_pass);
         command_buffers = api::make_rendering_command_buffers();
 
         vk::SemaphoreCreateInfo semaphore_create_info{};
@@ -102,7 +102,7 @@ namespace tethys::renderer {
             generic_info.vertex = "shaders/generic.vert.spv";
             generic_info.fragment = "shaders/generic.frag.spv";
             generic_info.subpass_idx = 0;
-            generic_info.render_pass = default_render_pass;
+            generic_info.render_pass = offscreen_render_pass;
             generic_info.layout_idx = layout::generic;
         }
 
@@ -112,7 +112,7 @@ namespace tethys::renderer {
             minimal_info.vertex = "shaders/minimal.vert.spv";
             minimal_info.fragment = "shaders/minimal.frag.spv";
             minimal_info.subpass_idx = 0;
-            minimal_info.render_pass = default_render_pass;
+            minimal_info.render_pass = offscreen_render_pass;
             minimal_info.layout_idx = layout::minimal;
         }
         minimal = make_pipeline(minimal_info);
@@ -318,7 +318,7 @@ namespace tethys::renderer {
         }
     }
 
-    static void acquire() {
+    void draw(const RenderData& data) {
         image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, image_available[current_frame], nullptr, ctx.dispatcher).value;
 
         if (!in_flight[current_frame]) {
@@ -330,10 +330,6 @@ namespace tethys::renderer {
         }
 
         ctx.device.logical.waitForFences(in_flight[current_frame], true, -1, ctx.dispatcher);
-    }
-
-    void start() {
-        acquire();
 
         auto& command_buffer = command_buffers[image_index];
 
@@ -350,8 +346,8 @@ namespace tethys::renderer {
 
         vk::RenderPassBeginInfo render_pass_begin_info{}; {
             render_pass_begin_info.renderArea.extent = ctx.swapchain.extent;
-            render_pass_begin_info.framebuffer = default_framebuffers[image_index];
-            render_pass_begin_info.renderPass = default_render_pass;
+            render_pass_begin_info.framebuffer = offscreen_framebuffer;
+            render_pass_begin_info.renderPass = offscreen_render_pass;
             render_pass_begin_info.clearValueCount = clear_values.size();
             render_pass_begin_info.pClearValues = clear_values.data();
         }
@@ -374,10 +370,6 @@ namespace tethys::renderer {
         command_buffer.setScissor(0, scissor, ctx.dispatcher);
 
         command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
-    }
-
-    void draw(const RenderData& data) {
-        auto& command_buffer = command_buffers[image_index];
 
         update_transforms(data);
         update_camera(data.camera);
@@ -426,12 +418,77 @@ namespace tethys::renderer {
                 command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
             }
         }
-    }
-
-    void end() {
-        auto& command_buffer = command_buffers[image_index];
 
         command_buffer.endRenderPass(ctx.dispatcher);
+
+        vk::ImageCopy copy{}; {
+            copy.extent.width = ctx.swapchain.extent.width;
+            copy.extent.height = ctx.swapchain.extent.height;
+            copy.extent.depth = 1;
+            copy.srcOffset = vk::Offset3D{};
+            copy.dstOffset = vk::Offset3D{};
+            copy.srcSubresource.baseArrayLayer = 0;
+            copy.srcSubresource.layerCount = 1;
+            copy.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            copy.srcSubresource.mipLevel = 0;
+            copy.dstSubresource.baseArrayLayer = 0;
+            copy.dstSubresource.layerCount = 1;
+            copy.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            copy.dstSubresource.mipLevel = 0;
+        }
+
+        vk::ImageMemoryBarrier copy_barrier{}; {
+            copy_barrier.image = ctx.swapchain.images[image_index];
+            copy_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            copy_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            copy_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            copy_barrier.subresourceRange.baseArrayLayer = 0;
+            copy_barrier.subresourceRange.layerCount = 1;
+            copy_barrier.subresourceRange.levelCount = 1;
+            copy_barrier.subresourceRange.baseMipLevel = 0;
+            copy_barrier.oldLayout = vk::ImageLayout::eUndefined;
+            copy_barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+            copy_barrier.srcAccessMask = {};
+            copy_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+        }
+
+        command_buffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTopOfPipe,
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::DependencyFlagBits{},
+            nullptr,
+            nullptr,
+            copy_barrier,
+            ctx.dispatcher);
+
+        command_buffer.copyImage(
+            ctx.offscreen.image.handle, vk::ImageLayout::eTransferSrcOptimal,
+            ctx.swapchain.images[image_index], vk::ImageLayout::eTransferDstOptimal,
+            copy, ctx.dispatcher);
+
+        vk::ImageMemoryBarrier present_barrier{}; {
+            present_barrier.image = ctx.swapchain.images[image_index];
+            present_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            present_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            present_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            present_barrier.subresourceRange.baseArrayLayer = 0;
+            present_barrier.subresourceRange.layerCount = 1;
+            present_barrier.subresourceRange.levelCount = 1;
+            present_barrier.subresourceRange.baseMipLevel = 0;
+            present_barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+            present_barrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
+            present_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+            present_barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
+        }
+
+        command_buffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eAllGraphics,
+            vk::DependencyFlagBits{},
+            nullptr,
+            nullptr,
+            present_barrier,
+            ctx.dispatcher);
 
         command_buffer.end(ctx.dispatcher);
     }
