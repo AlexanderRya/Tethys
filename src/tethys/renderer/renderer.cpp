@@ -453,7 +453,7 @@ namespace tethys::renderer {
         }
 
         command_buffer.pipelineBarrier(
-            vk::PipelineStageFlagBits::eTopOfPipe,
+            vk::PipelineStageFlagBits::eColorAttachmentOutput,
             vk::PipelineStageFlagBits::eTransfer,
             vk::DependencyFlagBits{},
             nullptr,
@@ -478,12 +478,12 @@ namespace tethys::renderer {
             present_barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
             present_barrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
             present_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-            present_barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
+            present_barrier.dstAccessMask = {};
         }
 
         command_buffer.pipelineBarrier(
             vk::PipelineStageFlagBits::eTransfer,
-            vk::PipelineStageFlagBits::eAllGraphics,
+            vk::PipelineStageFlagBits::eBottomOfPipe,
             vk::DependencyFlagBits{},
             nullptr,
             nullptr,
