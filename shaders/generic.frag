@@ -51,7 +51,7 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 void main() {
     vec3 result = vec3(1.0);
     vec4 color = texture(textures[diffuse_index], uvs).rgba;
-    vec3 diffuse = pow(color.rgb, vec3(2.2));
+    vec3 diffuse = color.rgb;
     float alpha = color.a;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
 
