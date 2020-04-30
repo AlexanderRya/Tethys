@@ -103,7 +103,7 @@ namespace tethys::api {
             depth_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
             depth_description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
             depth_description.initialLayout = vk::ImageLayout::eUndefined;
-            depth_description.finalLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+            depth_description.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         }
 
         vk::AttachmentReference depth_attachment{}; {

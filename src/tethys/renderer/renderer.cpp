@@ -221,7 +221,7 @@ namespace tethys::renderer {
 
         api::SingleUpdateImageInfo shadow_map_info{}; {
             shadow_map_info.image.imageView = shadow_depth.view;
-            shadow_map_info.image.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+            shadow_map_info.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             shadow_map_info.image.sampler = ctx.default_sampler;
             shadow_map_info.binding = binding::shadow_map;
             shadow_map_info.type = vk::DescriptorType::eCombinedImageSampler;
@@ -392,9 +392,9 @@ namespace tethys::renderer {
         auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
 
         auto light_view = glm::lookAt(
-            data.directional_lights[0].direction,
+            glm::vec3(-2.0f, 4.0f, -1.0f),
             glm::vec3(0.0f),
-            glm::vec3(0.0f, 1.0f,  0.0f));
+            glm::vec3(0.0f, 1.0f, 0.0f));
 
         auto light_pv = light_proj * light_view;
 
