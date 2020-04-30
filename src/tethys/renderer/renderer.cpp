@@ -221,7 +221,7 @@ namespace tethys::renderer {
 
         api::SingleUpdateImageInfo shadow_map_info{}; {
             shadow_map_info.image.imageView = shadow_depth.view;
-            shadow_map_info.image.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+            shadow_map_info.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             shadow_map_info.image.sampler = ctx.default_sampler;
             shadow_map_info.binding = binding::shadow_map;
             shadow_map_info.type = vk::DescriptorType::eCombinedImageSampler;
@@ -389,21 +389,20 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj =
-            glm::ortho(
-                -10.0f, 10.0f,
-                -10.0f, 10.0f,
-                 1.0f, 5.5f);
+        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
 
         auto light_view = glm::lookAt(
             data.directional_lights[0].direction,
-            glm::vec3( 0.0f),
-            glm::vec3( 0.0f, 1.0f,  0.0f));
+            glm::vec3(0.0f),
+            glm::vec3(0.0f, 1.0f,  0.0f));
 
         auto light_pv = light_proj * light_view;
 
         light_pv_buffer.write(light_pv);
         light_space_buffer.write(light_pv);
+
+        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, ctx.dispatcher);
+        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, ctx.dispatcher);
 
         for (usize i = 0; i < data.draw_commands.size(); ++i) {
             auto& draw = data.draw_commands[i];
@@ -417,8 +416,6 @@ namespace tethys::renderer {
                     static_cast<u32>(i)
                 };
 
-                command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, ctx.dispatcher);
-                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, ctx.dispatcher);
                 command_buffer.pushConstants<u32>(shadow.layout.pipeline, vk::ShaderStageFlagBits::eVertex, 0, indices, ctx.dispatcher);
                 command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
                 command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
