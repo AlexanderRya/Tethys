@@ -221,7 +221,7 @@ namespace tethys::renderer {
 
         api::SingleUpdateImageInfo shadow_map_info{}; {
             shadow_map_info.image.imageView = shadow_depth.view;
-            shadow_map_info.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            shadow_map_info.image.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
             shadow_map_info.image.sampler = ctx.default_sampler;
             shadow_map_info.binding = binding::shadow_map;
             shadow_map_info.type = vk::DescriptorType::eCombinedImageSampler;
