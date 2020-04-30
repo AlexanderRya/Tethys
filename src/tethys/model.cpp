@@ -13,7 +13,7 @@
 namespace tethys {
     static std::unordered_map<std::string, Handle<Texture>> loaded_textures;
 
-    static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::filesystem::path& model_path) {
+    static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::string& model_path) {
         using namespace std::string_literals;
 
         if (!material->GetTextureCount(type)) {
@@ -22,7 +22,7 @@ namespace tethys {
 
         aiString str;
         material->GetTexture(type, 0, &str);
-        std::string path = (model_path / str.C_Str()).generic_string();
+        std::string path = model_path + "/" + str.C_Str();
 
         if (loaded_textures.find(path) != loaded_textures.end()) {
             return loaded_textures[path];
@@ -31,7 +31,7 @@ namespace tethys {
         return loaded_textures[path] = renderer::upload_texture(path.c_str(), type == aiTextureType_DIFFUSE ? vk::Format::eR8G8B8A8Srgb : vk::Format::eR8G8B8A8Unorm);
     }
 
-    static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::filesystem::path& model_path) {
+    static Model::SubMesh load_mesh(const aiScene* scene, const aiMesh* mesh, const std::string& model_path) {
         Model::SubMesh sub_mesh{};
         std::vector<Vertex> geometry{};
         std::vector<u32> indices{};
@@ -84,7 +84,7 @@ namespace tethys {
         return sub_mesh;
     }
 
-    static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::filesystem::path& model_path) {
+    static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::string& model_path) {
         for (usize i = 0; i < node->mNumMeshes; i++) {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(load_mesh(scene, mesh, model_path));
@@ -95,17 +95,17 @@ namespace tethys {
         }
     }
 
-    Model load_model(const std::filesystem::path& path) {
+    Model load_model(const std::string& path) {
         Model model;
         Assimp::Importer importer;
 
-        auto scene = importer.ReadFile(path.generic_string(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+        auto scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             throw std::runtime_error("Failed to load model");
         }
 
-        process_node(scene, scene->mRootNode, model.submeshes, path.parent_path());
+        process_node(scene, scene->mRootNode, model.submeshes, path.substr(0, path.find_last_of('/')));
 
         return model;
     }

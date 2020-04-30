@@ -37,6 +37,8 @@ namespace tethys::api {
     struct Context;
     struct Device;
     struct Swapchain;
+    struct Offscreen;
+    struct ShadowDepth;
     struct StaticBuffer;
     class DescriptorSet;
     struct Image;

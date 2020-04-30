@@ -43,6 +43,12 @@ namespace tethys::api {
         }
     }
 
+    void DescriptorSet::update(const SingleUpdateImageInfo& info) {
+        for (auto& descriptor_set : descriptor_sets) {
+            descriptor_set.update(info);
+        }
+    }
+
     SingleDescriptorSet& DescriptorSet::operator [](const usize idx) {
         return descriptor_sets[idx];
     }

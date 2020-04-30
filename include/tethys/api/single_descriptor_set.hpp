@@ -21,6 +21,12 @@ namespace tethys::api {
         u64 binding{};
     };
 
+    struct SingleUpdateImageInfo {
+        vk::DescriptorImageInfo image{};
+        vk::DescriptorType type{};
+        u64 binding{};
+    };
+
     class SingleDescriptorSet {
         vk::DescriptorSet descriptor_set{};
     public:
@@ -28,6 +34,7 @@ namespace tethys::api {
         void update(const SingleUpdateBufferInfo&);
         void update(const std::vector<SingleUpdateBufferInfo>&);
         void update(const UpdateImageInfo&);
+        void update(const SingleUpdateImageInfo&);
 
         [[nodiscard]] vk::DescriptorSet handle() const;
     };

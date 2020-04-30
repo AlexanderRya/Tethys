@@ -26,6 +26,7 @@ namespace tethys::api {
         void update(const UpdateBufferInfo&);
         void update(const std::vector<UpdateBufferInfo>&);
         void update(const UpdateImageInfo&);
+        void update(const SingleUpdateImageInfo&);
 
         [[nodiscard]] SingleDescriptorSet& operator [](const usize);
         [[nodiscard]] const SingleDescriptorSet& operator [](const usize) const;

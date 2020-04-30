@@ -16,11 +16,15 @@ namespace tethys {
 
     struct Pipeline {
         struct CreateInfo {
-            std::filesystem::path vertex{};
-            std::filesystem::path fragment{};
+            std::string vertex{};
+            std::string fragment{};
+
             u32 layout_idx{};
             u32 subpass_idx{};
+
             vk::RenderPass render_pass{};
+            vk::SampleCountFlagBits samples{};
+            std::vector<vk::DynamicState> dynamic_states{};
         };
 
         vk::Pipeline handle{};

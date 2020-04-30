@@ -8,10 +8,12 @@ namespace tethys::api {
     template <typename Ty>
     class Buffer {
         std::array<SingleBuffer<Ty>, frames_in_flight> buffers;
+
+        void allocate(const usize);
     public:
         Buffer() = default;
+
         void create(const vk::BufferUsageFlags);
-        void allocate(const usize);
         void write(const Ty&);
         void write(const std::vector<Ty>&);
         void deallocate();

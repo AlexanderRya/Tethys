@@ -1,10 +1,11 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout (location = 0) in vec2 uvs;
+layout (location = 0) in vec3 frag_pos;
 layout (location = 1) in vec3 normals;
-layout (location = 2) in vec3 frag_pos;
+layout (location = 2) in vec2 uvs;
 layout (location = 3) in vec3 view_pos;
+layout (location = 4) in vec4 light_space_pos;
 
 layout (location = 0) out vec4 frag_color;
 
@@ -27,12 +28,13 @@ struct DirectionalLight {
 };
 
 layout (set = 0, binding = 2) uniform sampler2D[] textures;
+layout (set = 1, binding = 0) uniform sampler2D shadow_map;
 
-layout (std140, set = 1, binding = 0) buffer readonly PointLights {
+layout (std140, set = 1, binding = 1) buffer readonly PointLights {
     PointLight[] point_lights;
 };
 
-layout (std140, set = 1, binding = 1) buffer readonly DirectionalLights {
+layout (std140, set = 1, binding = 2) buffer readonly DirectionalLights {
     DirectionalLight[] directional_lights;
 };
 
@@ -47,12 +49,13 @@ layout (push_constant) uniform Indices {
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
 vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
+float calculate_shadows();
 
 void main() {
     vec3 result = vec3(1.0);
     vec4 color = texture(textures[diffuse_index], uvs).rgba;
     vec3 diffuse = color.rgb;
-    float alpha = color.a;
+
     vec3 specular = texture(textures[specular_index], uvs).rgb;
 
     result = diffuse * vec3(0.1); // Ambient
@@ -106,5 +109,12 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
     vec3 result_diffuse = light.color * diff * color;
     vec3 result_specular = light.color * spec * specular;
 
-    return result_diffuse + result_specular;
+    return (1.0 - calculate_shadows()) * (result_diffuse + result_specular);
+}
+
+float calculate_shadows() {
+    vec3 proj_coords = ((light_space_pos.xyz / light_space_pos.w) * 0.5) - 0.5;
+    float closest_depth = texture(shadow_map, proj_coords.xy).r;
+    float current_depth = proj_coords.z;
+    return current_depth > closest_depth ? 1.0 : 0.0;
 }

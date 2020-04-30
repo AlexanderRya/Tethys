@@ -4,6 +4,7 @@
 #include <tethys/directional_light.hpp>
 #include <tethys/api/vertex_buffer.hpp>
 #include <tethys/api/static_buffer.hpp>
+#include <tethys/api/render_target.hpp>
 #include <tethys/api/index_buffer.hpp>
 #include <tethys/api/render_pass.hpp>
 #include <tethys/api/framebuffer.hpp>
@@ -20,6 +21,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 
 #include <vector>
@@ -30,6 +32,9 @@ namespace tethys::renderer {
 
     static vk::RenderPass offscreen_render_pass{};
     static vk::Framebuffer offscreen_framebuffer{};
+
+    static vk::RenderPass shadow_depth_render_pass{};
+    static vk::Framebuffer shadow_depth_framebuffer{};
 
     static std::vector<vk::Semaphore> image_available{};
     static std::vector<vk::Semaphore> render_finished{};
@@ -46,20 +51,28 @@ namespace tethys::renderer {
     static std::stack<usize> free_index_buffers{};
     static std::vector<api::IndexBuffer> index_buffers{};
 
-    static std::vector<Texture> textures{};
+    static Offscreen offscreen{};
+    static ShadowDepth shadow_depth{};
 
+    static std::vector<Texture> textures{};
     static std::vector<Model> models{};
 
+    // Part of set 0
     static api::Buffer<Camera> camera_buffer{};
+    static api::Buffer<glm::mat4> light_pv_buffer{};
     static api::Buffer<glm::mat4> transform_buffer{};
+    // Part of set 1
     static api::Buffer<PointLight> point_light_buffer{};
     static api::Buffer<DirectionalLight> directional_light_buffer{};
+    static api::Buffer<glm::mat4> light_space_buffer{};
 
     static api::DescriptorSet generic_set{};
     static api::DescriptorSet minimal_set{};
+    static api::DescriptorSet shadow_set{};
 
     static Pipeline generic;
     static Pipeline minimal;
+    static Pipeline shadow;
 
     static void update_textures() {
         std::vector<vk::DescriptorImageInfo> image_info{};
@@ -79,8 +92,14 @@ namespace tethys::renderer {
     }
 
     void initialise() {
-        offscreen_render_pass = api::make_offscreen_render_pass();
-        offscreen_framebuffer = api::make_offscreen_framebuffer(offscreen_render_pass);
+        offscreen = api::make_offscreen_target();
+        offscreen_render_pass = api::make_offscreen_render_pass(offscreen);
+        offscreen_framebuffer = api::make_offscreen_framebuffer(offscreen, offscreen_render_pass);
+
+        shadow_depth = api::make_shadow_depth_target();
+        shadow_depth_render_pass = api::make_shadow_depth_render_pass(shadow_depth);
+        shadow_depth_framebuffer = api::make_shadow_depth_framebuffer(shadow_depth, shadow_depth_render_pass);
+
         command_buffers = api::make_rendering_command_buffers();
 
         vk::SemaphoreCreateInfo semaphore_create_info{};
@@ -102,10 +121,14 @@ namespace tethys::renderer {
             generic_info.vertex = "shaders/generic.vert.spv";
             generic_info.fragment = "shaders/generic.frag.spv";
             generic_info.subpass_idx = 0;
-            generic_info.render_pass = offscreen_render_pass;
             generic_info.layout_idx = layout::generic;
+            generic_info.render_pass = offscreen_render_pass;
+            generic_info.samples = ctx.device.max_samples;
+            generic_info.dynamic_states = {
+                vk::DynamicState::eViewport,
+                vk::DynamicState::eScissor
+            };
         }
-
         generic = make_pipeline(generic_info);
 
         Pipeline::CreateInfo minimal_info{}; {
@@ -114,16 +137,39 @@ namespace tethys::renderer {
             minimal_info.subpass_idx = 0;
             minimal_info.render_pass = offscreen_render_pass;
             minimal_info.layout_idx = layout::minimal;
+            minimal_info.samples = ctx.device.max_samples;
+            minimal_info.dynamic_states = {
+                vk::DynamicState::eViewport,
+                vk::DynamicState::eScissor
+            };
         }
         minimal = make_pipeline(minimal_info);
+
+        Pipeline::CreateInfo shadow_info{}; {
+            shadow_info.vertex = "shaders/shadow.vert.spv";
+            shadow_info.fragment = "shaders/shadow.frag.spv";
+            shadow_info.subpass_idx = 0;
+            shadow_info.render_pass = shadow_depth_render_pass;
+            shadow_info.layout_idx = layout::shadow;
+            shadow_info.samples = vk::SampleCountFlagBits::e1;
+            shadow_info.dynamic_states = {
+                vk::DynamicState::eViewport,
+                vk::DynamicState::eScissor,
+                vk::DynamicState::eDepthBias
+            };
+        }
+        shadow = make_pipeline(shadow_info);
 
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         directional_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
+        light_space_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
+        light_pv_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
 
         generic_set.create(acquire<vk::DescriptorSetLayout>(layout::generic));
         minimal_set.create(acquire<vk::DescriptorSetLayout>(layout::minimal));
+        shadow_set.create(acquire<vk::DescriptorSetLayout>(layout::shadow));
 
         std::vector<api::UpdateBufferInfo> minimal_update(2); {
             minimal_update[0].binding = binding::camera;
@@ -137,7 +183,19 @@ namespace tethys::renderer {
 
         minimal_set.update(minimal_update);
 
-        std::vector<api::UpdateBufferInfo> generic_update(2); {
+        std::vector<api::UpdateBufferInfo> shadow_update(2); {
+            shadow_update[0].binding = binding::camera;
+            shadow_update[0].type = vk::DescriptorType::eUniformBuffer;
+            shadow_update[0].buffers = light_pv_buffer.info();
+
+            shadow_update[1].binding = binding::transform;
+            shadow_update[1].type = vk::DescriptorType::eStorageBuffer;
+            shadow_update[1].buffers = transform_buffer.info();
+        }
+
+        shadow_set.update(shadow_update);
+
+        std::vector<api::UpdateBufferInfo> generic_update(3); {
             generic_update[0].binding = binding::point_light;
             generic_update[0].type = vk::DescriptorType::eStorageBuffer;
             generic_update[0].buffers = point_light_buffer.info();
@@ -145,18 +203,31 @@ namespace tethys::renderer {
             generic_update[1].binding = binding::directional_light;
             generic_update[1].type = vk::DescriptorType::eStorageBuffer;
             generic_update[1].buffers = directional_light_buffer.info();
+
+            generic_update[2].binding = binding::light_space;
+            generic_update[2].type = vk::DescriptorType::eUniformBuffer;
+            generic_update[2].buffers = light_space_buffer.info();
         }
 
         generic_set.update(generic_update);
 
         std::array<u8, 4> white = { 255, 255, 255, 255 };
-
         textures.emplace_back(load_texture(white.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
 
         std::array<u8, 4> black{};
-
         textures.emplace_back(load_texture(black.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
+
         update_textures();
+
+        api::SingleUpdateImageInfo shadow_map_info{}; {
+            shadow_map_info.image.imageView = shadow_depth.view;
+            shadow_map_info.image.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+            shadow_map_info.image.sampler = ctx.default_sampler;
+            shadow_map_info.binding = binding::shadow_map;
+            shadow_map_info.type = vk::DescriptorType::eCombinedImageSampler;
+        }
+
+        generic_set.update(shadow_map_info);
     }
 
     Handle<Mesh> write_geometry(const std::vector<Vertex>& geometry, const std::vector<u32>& indices) {
@@ -185,9 +256,7 @@ namespace tethys::renderer {
 
     Handle<Texture> upload_texture(const char* path, const vk::Format color_space) {
         textures.emplace_back(load_texture(path, color_space));
-
         update_textures();
-
         return Handle<Texture>{ textures.size() - 1 };
     }
 
@@ -209,9 +278,7 @@ namespace tethys::renderer {
         };
 
         textures.emplace_back(load_texture(color, 1, 1, 4, color_space));
-
         update_textures();
-
         return Handle<Texture>{ textures.size() - 1 };
     }
 
@@ -237,6 +304,7 @@ namespace tethys::renderer {
             }
 
             minimal_set[current_frame].update(info);
+            shadow_set[current_frame].update(info);
         }
     }
 
@@ -318,63 +386,49 @@ namespace tethys::renderer {
         }
     }
 
-    void draw(const RenderData& data) {
-        image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, image_available[current_frame], nullptr, ctx.dispatcher).value;
-
-        if (!in_flight[current_frame]) {
-            vk::FenceCreateInfo fence_create_info{}; {
-                fence_create_info.flags = vk::FenceCreateFlagBits::eSignaled;
-            }
-
-            in_flight[current_frame] = ctx.device.logical.createFence(fence_create_info, nullptr, ctx.dispatcher);
-        }
-
-        ctx.device.logical.waitForFences(in_flight[current_frame], true, -1, ctx.dispatcher);
-
+    static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        vk::CommandBufferBeginInfo begin_info{}; {
-            begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        auto light_proj =
+            glm::ortho(
+                -10.0f, 10.0f,
+                -10.0f, 10.0f,
+                 1.0f, 5.5f);
+
+        auto light_view = glm::lookAt(
+            data.directional_lights[0].direction,
+            glm::vec3( 0.0f),
+            glm::vec3( 0.0f, 1.0f,  0.0f));
+
+        auto light_pv = light_proj * light_view;
+
+        light_pv_buffer.write(light_pv);
+        light_space_buffer.write(light_pv);
+
+        for (usize i = 0; i < data.draw_commands.size(); ++i) {
+            auto& draw = data.draw_commands[i];
+            auto& model = models[draw.model.index];
+
+            for (const auto& submesh : model.submeshes) {
+                auto& vbo = vertex_buffers[submesh.mesh.vbo_index];
+                auto& ibo = index_buffers[submesh.mesh.ibo_index];
+
+                std::array indices{
+                    static_cast<u32>(i)
+                };
+
+                command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, ctx.dispatcher);
+                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, ctx.dispatcher);
+                command_buffer.pushConstants<u32>(shadow.layout.pipeline, vk::ShaderStageFlagBits::eVertex, 0, indices, ctx.dispatcher);
+                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
+                command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
+                command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
+            }
         }
+    }
 
-        command_buffer.begin(begin_info, ctx.dispatcher);
-
-        std::array<vk::ClearValue, 2> clear_values{}; {
-            clear_values[0].color = vk::ClearColorValue{ std::array{ 0.001f, 0.001f, 0.001f, 0.0f } };
-            clear_values[1].depthStencil = vk::ClearDepthStencilValue{ { 1.0f, 0 } };
-        }
-
-        vk::RenderPassBeginInfo render_pass_begin_info{}; {
-            render_pass_begin_info.renderArea.extent = ctx.swapchain.extent;
-            render_pass_begin_info.framebuffer = offscreen_framebuffer;
-            render_pass_begin_info.renderPass = offscreen_render_pass;
-            render_pass_begin_info.clearValueCount = clear_values.size();
-            render_pass_begin_info.pClearValues = clear_values.data();
-        }
-
-        vk::Viewport viewport{}; {
-            viewport.width = ctx.swapchain.extent.width;
-            viewport.height = ctx.swapchain.extent.height;
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-        }
-
-        vk::Rect2D scissor{}; {
-            scissor.extent = ctx.swapchain.extent;
-            scissor.offset = { { 0, 0 } };
-        }
-
-        command_buffer.setViewport(0, viewport, ctx.dispatcher);
-        command_buffer.setScissor(0, scissor, ctx.dispatcher);
-
-        command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
-
-        update_transforms(data);
-        update_camera(data.camera);
-        update_point_lights(data.point_lights);
-        update_directional_lights(data.directional_lights);
+    static void final_draw_pass(const RenderData& data) {
+        auto& command_buffer = command_buffers[image_index];
 
         for (usize i = 0; i < data.draw_commands.size(); ++i) {
             auto& draw = data.draw_commands[i];
@@ -418,8 +472,10 @@ namespace tethys::renderer {
                 command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
             }
         }
+    }
 
-        command_buffer.endRenderPass(ctx.dispatcher);
+    static void copy_to_swapchain() {
+        auto& command_buffer = command_buffers[image_index];
 
         vk::ImageCopy copy{}; {
             copy.extent.width = ctx.swapchain.extent.width;
@@ -462,7 +518,7 @@ namespace tethys::renderer {
             ctx.dispatcher);
 
         command_buffer.copyImage(
-            ctx.offscreen.image.handle, vk::ImageLayout::eTransferSrcOptimal,
+            offscreen.image.handle, vk::ImageLayout::eTransferSrcOptimal,
             ctx.swapchain.images[image_index], vk::ImageLayout::eTransferDstOptimal,
             copy, ctx.dispatcher);
 
@@ -489,6 +545,109 @@ namespace tethys::renderer {
             nullptr,
             present_barrier,
             ctx.dispatcher);
+    }
+
+
+    void draw(const RenderData& data) {
+        image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, image_available[current_frame], nullptr, ctx.dispatcher).value;
+
+        if (!in_flight[current_frame]) {
+            vk::FenceCreateInfo fence_create_info{}; {
+                fence_create_info.flags = vk::FenceCreateFlagBits::eSignaled;
+            }
+
+            in_flight[current_frame] = ctx.device.logical.createFence(fence_create_info, nullptr, ctx.dispatcher);
+        }
+
+        ctx.device.logical.waitForFences(in_flight[current_frame], true, -1, ctx.dispatcher);
+
+        auto& command_buffer = command_buffers[image_index];
+
+        vk::CommandBufferBeginInfo begin_info{}; {
+            begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        }
+
+        command_buffer.begin(begin_info, ctx.dispatcher);
+
+        update_transforms(data);
+        update_camera(data.camera);
+        update_point_lights(data.point_lights);
+        update_directional_lights(data.directional_lights);
+
+        /* Shadow pass */ {
+            vk::ClearValue clear{};
+            clear.depthStencil = vk::ClearDepthStencilValue{ { 1.0f, 0 } };
+
+            vk::RenderPassBeginInfo render_pass_begin_info{}; {
+                render_pass_begin_info.renderArea.extent.width = shadow_depth.image.width;
+                render_pass_begin_info.renderArea.extent.height = shadow_depth.image.height;
+                render_pass_begin_info.framebuffer = shadow_depth_framebuffer;
+                render_pass_begin_info.renderPass = shadow_depth_render_pass;
+                render_pass_begin_info.clearValueCount = 1;
+                render_pass_begin_info.pClearValues = &clear;
+            }
+
+            vk::Viewport viewport{}; {
+                viewport.width = shadow_depth.image.width;
+                viewport.height = -shadow_depth.image.height;
+                viewport.x = 0;
+                viewport.y = -viewport.height;
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+            }
+
+            vk::Rect2D scissor{}; {
+                scissor.extent.width = shadow_depth.image.width;
+                scissor.extent.height = shadow_depth.image.height;
+                scissor.offset = { { 0, 0 } };
+            }
+
+            command_buffer.setViewport(0, viewport, ctx.dispatcher);
+            command_buffer.setScissor(0, scissor, ctx.dispatcher);
+            command_buffer.setDepthBias(1.25f, 0.0f, 1.75f, ctx.dispatcher);
+
+            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
+            shadow_depth_draw_pass(data);
+            command_buffer.endRenderPass(ctx.dispatcher);
+        }
+
+        /* Final color pass */ {
+            std::array<vk::ClearValue, 2> clear_values{}; {
+                clear_values[0].color = vk::ClearColorValue{ std::array{ 0.01f, 0.01f, 0.01f, 0.0f } };
+                clear_values[1].depthStencil = vk::ClearDepthStencilValue{ { 1.0f, 0 } };
+            }
+
+            vk::RenderPassBeginInfo render_pass_begin_info{}; {
+                render_pass_begin_info.renderArea.extent = ctx.swapchain.extent;
+                render_pass_begin_info.framebuffer = offscreen_framebuffer;
+                render_pass_begin_info.renderPass = offscreen_render_pass;
+                render_pass_begin_info.clearValueCount = clear_values.size();
+                render_pass_begin_info.pClearValues = clear_values.data();
+            }
+
+            vk::Viewport viewport{}; {
+                viewport.width = static_cast<float>(ctx.swapchain.extent.width);
+                viewport.height = -static_cast<float>(ctx.swapchain.extent.height);
+                viewport.x = 0;
+                viewport.y = -viewport.height;
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+            }
+
+            vk::Rect2D scissor{}; {
+                scissor.extent = ctx.swapchain.extent;
+                scissor.offset = { { 0, 0 } };
+            }
+
+            command_buffer.setViewport(0, viewport, ctx.dispatcher);
+            command_buffer.setScissor(0, scissor, ctx.dispatcher);
+
+            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
+            final_draw_pass(data);
+            command_buffer.endRenderPass(ctx.dispatcher);
+        }
+
+        copy_to_swapchain();
 
         command_buffer.end(ctx.dispatcher);
     }

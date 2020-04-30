@@ -14,10 +14,11 @@ namespace tethys::api {
         StaticBuffer buffer{};
         void* mapped{};
 
+        void allocate(const usize);
     public:
         SingleBuffer() = default;
-        void create(const vk::BufferUsageFlags);
-        void allocate(const usize);
+
+        void create(const vk::BufferUsageFlags&);
         void write(const Ty&);
         void write(const std::vector<Ty>&);
         void deallocate();
@@ -28,11 +29,16 @@ namespace tethys::api {
     };
 
     template <typename Ty>
-    void SingleBuffer<Ty>::create(const vk::BufferUsageFlags flags) {
+    void SingleBuffer<Ty>::create(const vk::BufferUsageFlags& flags) {
+        static_assert(std::is_default_constructible_v<Ty>, "Type isn't default constructible.");
+
         current_capacity = 16;
         current_size = 0;
+
         buffer = make_buffer(current_capacity * sizeof(Ty), flags, VMA_MEMORY_USAGE_CPU_TO_GPU, VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT);
         vmaMapMemory(ctx.allocator, buffer.allocation, &mapped);
+
+        write(Ty{});
     }
 
     template <typename Ty>
@@ -45,6 +51,7 @@ namespace tethys::api {
     template <typename Ty>
     void SingleBuffer<Ty>::write(const Ty& obj) {
         static_assert(std::is_trivially_copyable_v<Ty>, "Type is not trivially copyable!");
+
         current_size = 1;
 
         std::memcpy(mapped, &obj, sizeof(Ty));
@@ -53,6 +60,7 @@ namespace tethys::api {
     template <typename Ty>
     void SingleBuffer<Ty>::write(const std::vector<Ty>& objs) {
         static_assert(std::is_trivially_copyable_v<Ty>, "Type is not trivially copyable!");
+
         if (objs.size() > current_capacity) {
             deallocate();
             allocate(objs.capacity());
@@ -77,8 +85,8 @@ namespace tethys::api {
     vk::DescriptorBufferInfo SingleBuffer<Ty>::info() const {
         vk::DescriptorBufferInfo buffer_info{}; {
             buffer_info.buffer = buffer.handle;
-            buffer_info.range = current_size ? current_size * sizeof(Ty) : VK_WHOLE_SIZE;
-            buffer_info.offset = 0ull;
+            buffer_info.range = current_size * sizeof(Ty);
+            buffer_info.offset = 0;
         }
 
         return buffer_info;

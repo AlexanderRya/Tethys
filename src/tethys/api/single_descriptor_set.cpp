@@ -61,6 +61,21 @@ namespace tethys::api {
         ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
     }
 
+    void SingleDescriptorSet::update(const SingleUpdateImageInfo& info) {
+        vk::WriteDescriptorSet write{}; {
+            write.descriptorCount = 1;
+            write.pImageInfo = &info.image;
+            write.pTexelBufferView = nullptr;
+            write.pBufferInfo = nullptr;
+            write.dstSet = descriptor_set;
+            write.dstBinding = info.binding;
+            write.dstArrayElement = 0;
+            write.descriptorType = info.type;
+        }
+
+        ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
+    }
+
     vk::DescriptorSet SingleDescriptorSet::handle() const {
         return descriptor_set;
     }

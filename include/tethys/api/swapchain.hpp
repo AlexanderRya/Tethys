@@ -12,7 +12,6 @@
 
 namespace tethys::api {
     [[nodiscard]] Swapchain make_swapchain();
-    [[nodiscard]] Offscreen make_offscreen_target();
 } // namespace tethys::api
 
 #endif //TETHYS_SWAPCHAIN_HPP

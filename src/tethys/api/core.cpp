@@ -3,11 +3,11 @@
 #include <tethys/api/framebuffer.hpp>
 #include <tethys/api/render_pass.hpp>
 #include <tethys/api/swapchain.hpp>
+#include <tethys/window/window.hpp>
 #include <tethys/api/instance.hpp>
 #include <tethys/api/sampler.hpp>
 #include <tethys/api/context.hpp>
 #include <tethys/api/device.hpp>
-#include <tethys/window/window.hpp>
 #include <tethys/logger.hpp>
 #include <tethys/util.hpp>
 
@@ -96,7 +96,6 @@ namespace tethys::api {
         ctx.transient_pool = make_transient_pool();
         ctx.allocator = make_allocator();
         ctx.swapchain = make_swapchain();
-        ctx.offscreen = make_offscreen_target();
         ctx.descriptor_pool = make_descriptor_pool();
         ctx.default_sampler = make_default_sampler();
 

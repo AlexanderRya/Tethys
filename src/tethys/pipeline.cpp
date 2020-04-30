@@ -15,7 +15,7 @@ namespace tethys {
     static std::vector<PipelineLayout> pipeline_layouts;
 
     void load_set_layouts() {
-        set_layouts.resize(2);
+        set_layouts.resize(3);
 
         /* Minimal set layout */ {
             std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings{}; {
@@ -56,7 +56,7 @@ namespace tethys {
         }
 
         /* Generic set layout */ {
-            std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings{}; {
+            std::array<vk::DescriptorSetLayoutBinding, 4> layout_bindings{}; {
                 layout_bindings[0].descriptorCount = 1;
                 layout_bindings[0].descriptorType = vk::DescriptorType::eStorageBuffer;
                 layout_bindings[0].binding = binding::point_light;
@@ -66,6 +66,16 @@ namespace tethys {
                 layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
                 layout_bindings[1].binding = binding::directional_light;
                 layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+                layout_bindings[2].descriptorCount = 1;
+                layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+                layout_bindings[2].binding = binding::shadow_map;
+                layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+                layout_bindings[3].descriptorCount = 1;
+                layout_bindings[3].descriptorType = vk::DescriptorType::eUniformBuffer;
+                layout_bindings[3].binding = binding::light_space;
+                layout_bindings[3].stageFlags = vk::ShaderStageFlagBits::eVertex;
             }
 
             vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
@@ -75,10 +85,49 @@ namespace tethys {
 
             set_layouts[layout::generic] = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);
         }
+
+        /* Shadow set layout */ {
+            std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings{}; {
+                layout_bindings[0].descriptorCount = 1;
+                layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+                layout_bindings[0].binding = binding::camera;
+                layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+                layout_bindings[1].descriptorCount = 1;
+                layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
+                layout_bindings[1].binding = binding::transform;
+                layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
+            }
+
+            vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
+                set_layout_create_info.bindingCount = layout_bindings.size();
+                set_layout_create_info.pBindings = layout_bindings.data();
+            }
+
+            set_layouts[layout::shadow] = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);
+        }
     }
 
     void load_pipeline_layouts() {
-        pipeline_layouts.resize(2);
+        pipeline_layouts.resize(3);
+
+        /* Shadow pipeline layout */ {
+            vk::PushConstantRange range{}; {
+                range.size = sizeof(u32);
+                range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+                range.offset = 0;
+            }
+
+            vk::PipelineLayoutCreateInfo layout_create_info{}; {
+                layout_create_info.setLayoutCount = 1;
+                layout_create_info.pSetLayouts = &set_layouts[layout::shadow];
+                layout_create_info.pushConstantRangeCount = 1;
+                layout_create_info.pPushConstantRanges = &range;
+            }
+
+            pipeline_layouts[layout::shadow].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+            pipeline_layouts[layout::shadow].sets = { set_layouts[layout::shadow] };
+        }
 
         /* Generic pipeline layout */ {
             vk::PushConstantRange range{}; {
@@ -122,11 +171,11 @@ namespace tethys {
         }
     }
 
-    [[nodiscard]] static vk::ShaderModule load_module(const std::filesystem::path& path) {
+    [[nodiscard]] static vk::ShaderModule load_module(const std::string& path) {
         std::ifstream in(path, std::fstream::binary);
 
         if (!in.is_open()) {
-            throw std::runtime_error("Error, \"" + path.generic_string() + "\" file not found.");
+            throw std::runtime_error("Error, \"" + path + "\" file not found.");
         }
 
         std::string spv{ std::istreambuf_iterator<char>{ in }, {} };
@@ -138,7 +187,7 @@ namespace tethys {
 
         auto module = ctx.device.logical.createShaderModule(create_info, nullptr, ctx.dispatcher);
 
-        logger::info("Module \"" + path.generic_string() + "\" successfully loaded");
+        logger::info("Module \"" + path + "\" successfully loaded");
 
         return module;
     }
@@ -181,11 +230,9 @@ namespace tethys {
             }
         }
 
-        constexpr std::array dynamic_states{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
-
         vk::PipelineDynamicStateCreateInfo dynamic_state_create_info{}; {
-            dynamic_state_create_info.dynamicStateCount = dynamic_states.size();
-            dynamic_state_create_info.pDynamicStates = dynamic_states.data();
+            dynamic_state_create_info.dynamicStateCount = info.dynamic_states.size();
+            dynamic_state_create_info.pDynamicStates = info.dynamic_states.data();
         }
 
         vk::VertexInputBindingDescription vertex_binding{}; {
@@ -253,11 +300,15 @@ namespace tethys {
             rasterizer_state_info.frontFace = vk::FrontFace::eCounterClockwise;
         }
 
+        if (info.samples > ctx.device.max_samples) {
+            throw std::runtime_error("Invalid number of samples requested in pipeline creation.");
+        }
+
         vk::PipelineMultisampleStateCreateInfo multisampling_state_info{}; {
             multisampling_state_info.alphaToCoverageEnable = false;
-            multisampling_state_info.sampleShadingEnable = false;
+            multisampling_state_info.sampleShadingEnable = true;
             multisampling_state_info.alphaToOneEnable = false;
-            multisampling_state_info.rasterizationSamples = ctx.device.max_samples;
+            multisampling_state_info.rasterizationSamples = info.samples;
             multisampling_state_info.minSampleShading = 0.2f;
             multisampling_state_info.pSampleMask = nullptr;
         }
