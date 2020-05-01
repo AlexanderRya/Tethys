@@ -42,7 +42,6 @@ namespace tethys::api {
         vk::CommandPool command_pool{};
         vk::CommandPool transient_pool{};
         vk::DescriptorPool descriptor_pool{};
-        vk::Sampler default_sampler{};
     } ctx;
 } // namespace tethys::api
 

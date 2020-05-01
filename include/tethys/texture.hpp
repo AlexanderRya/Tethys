@@ -13,7 +13,7 @@ namespace tethys {
         vk::ImageView view{};
         u32 mips{};
 
-        [[nodiscard]] vk::DescriptorImageInfo info() const;
+        [[nodiscard]] vk::DescriptorImageInfo info(const api::SamplerType&) const;
     };
 
     [[nodiscard]] Texture load_texture(const char*, const vk::Format);

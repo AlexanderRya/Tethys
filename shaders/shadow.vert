@@ -14,7 +14,7 @@ layout (set = 0, binding = 1) buffer readonly Transform {
     mat4[] transforms;
 };
 
-layout (push_constant) uniform Indices {
+layout (push_constant) uniform Constants {
     uint transform_index;
 };
 

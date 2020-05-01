@@ -24,6 +24,7 @@ namespace tethys {
 
             vk::RenderPass render_pass{};
             vk::SampleCountFlagBits samples{};
+            vk::CullModeFlagBits cull{};
             std::vector<vk::DynamicState> dynamic_states{};
         };
 

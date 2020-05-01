@@ -292,12 +292,12 @@ namespace tethys {
 
         vk::PipelineRasterizationStateCreateInfo rasterizer_state_info{}; {
             rasterizer_state_info.lineWidth = 1.0f;
-            rasterizer_state_info.depthBiasEnable = false;
+            rasterizer_state_info.depthBiasEnable = true;
             rasterizer_state_info.depthClampEnable = false;
             rasterizer_state_info.rasterizerDiscardEnable = false;
             rasterizer_state_info.polygonMode = vk::PolygonMode::eFill;
-            rasterizer_state_info.cullMode = vk::CullModeFlagBits::eNone;
-            rasterizer_state_info.frontFace = vk::FrontFace::eCounterClockwise;
+            rasterizer_state_info.cullMode = info.cull;
+            rasterizer_state_info.frontFace = vk::FrontFace::eClockwise;
         }
 
         if (info.samples > ctx.device.max_samples) {
@@ -317,7 +317,7 @@ namespace tethys {
             depth_stencil_info.stencilTestEnable = false;
             depth_stencil_info.depthTestEnable = true;
             depth_stencil_info.depthWriteEnable = true;
-            depth_stencil_info.depthCompareOp = vk::CompareOp::eLess;
+            depth_stencil_info.depthCompareOp = vk::CompareOp::eLessOrEqual;
             depth_stencil_info.depthBoundsTestEnable = false;
             depth_stencil_info.minDepthBounds = 0.0f;
             depth_stencil_info.maxDepthBounds = 1.0f;

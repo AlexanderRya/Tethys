@@ -8,6 +8,7 @@
 #include <tethys/api/index_buffer.hpp>
 #include <tethys/api/render_pass.hpp>
 #include <tethys/api/framebuffer.hpp>
+#include <tethys/api/sampler.hpp>
 #include <tethys/point_light.hpp>
 #include <tethys/render_data.hpp>
 #include <tethys/api/context.hpp>
@@ -59,7 +60,6 @@ namespace tethys::renderer {
 
     // Part of set 0
     static api::Buffer<Camera> camera_buffer{};
-    static api::Buffer<glm::mat4> light_pv_buffer{};
     static api::Buffer<glm::mat4> transform_buffer{};
     // Part of set 1
     static api::Buffer<PointLight> point_light_buffer{};
@@ -79,7 +79,7 @@ namespace tethys::renderer {
         image_info.reserve(textures.size());
 
         for (const auto& texture : textures) {
-            image_info.emplace_back(texture.info());
+            image_info.emplace_back(texture.info(SamplerType::eDefault));
         }
 
         api::UpdateImageInfo info{}; {
@@ -124,6 +124,7 @@ namespace tethys::renderer {
             generic_info.layout_idx = layout::generic;
             generic_info.render_pass = offscreen_render_pass;
             generic_info.samples = ctx.device.max_samples;
+            generic_info.cull = vk::CullModeFlagBits::eNone;
             generic_info.dynamic_states = {
                 vk::DynamicState::eViewport,
                 vk::DynamicState::eScissor
@@ -138,6 +139,7 @@ namespace tethys::renderer {
             minimal_info.render_pass = offscreen_render_pass;
             minimal_info.layout_idx = layout::minimal;
             minimal_info.samples = ctx.device.max_samples;
+            generic_info.cull = vk::CullModeFlagBits::eNone;
             minimal_info.dynamic_states = {
                 vk::DynamicState::eViewport,
                 vk::DynamicState::eScissor
@@ -152,6 +154,7 @@ namespace tethys::renderer {
             shadow_info.render_pass = shadow_depth_render_pass;
             shadow_info.layout_idx = layout::shadow;
             shadow_info.samples = vk::SampleCountFlagBits::e1;
+            shadow_info.cull = vk::CullModeFlagBits::eFront;
             shadow_info.dynamic_states = {
                 vk::DynamicState::eViewport,
                 vk::DynamicState::eScissor,
@@ -165,7 +168,6 @@ namespace tethys::renderer {
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         directional_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         light_space_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
-        light_pv_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
 
         generic_set.create(acquire<vk::DescriptorSetLayout>(layout::generic));
         minimal_set.create(acquire<vk::DescriptorSetLayout>(layout::minimal));
@@ -186,7 +188,7 @@ namespace tethys::renderer {
         std::vector<api::UpdateBufferInfo> shadow_update(2); {
             shadow_update[0].binding = binding::camera;
             shadow_update[0].type = vk::DescriptorType::eUniformBuffer;
-            shadow_update[0].buffers = light_pv_buffer.info();
+            shadow_update[0].buffers = light_space_buffer.info();
 
             shadow_update[1].binding = binding::transform;
             shadow_update[1].type = vk::DescriptorType::eStorageBuffer;
@@ -222,7 +224,7 @@ namespace tethys::renderer {
         api::SingleUpdateImageInfo shadow_map_info{}; {
             shadow_map_info.image.imageView = shadow_depth.view;
             shadow_map_info.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            shadow_map_info.image.sampler = ctx.default_sampler;
+            shadow_map_info.image.sampler = sampler_from_type(SamplerType::eDepth);
             shadow_map_info.binding = binding::shadow_map;
             shadow_map_info.type = vk::DescriptorType::eCombinedImageSampler;
         }
@@ -389,16 +391,15 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+        auto light_proj = glm::perspective(glm::radians(60.0f), shadow_depth.image.width / static_cast<float>(shadow_depth.image.height), 0.2f, 100.0f);
 
         auto light_view = glm::lookAt(
-            glm::vec3(-2.0f, 4.0f, -1.0f),
+            data.point_lights[0].position,
             glm::vec3(0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f));
 
         auto light_pv = light_proj * light_view;
 
-        light_pv_buffer.write(light_pv);
         light_space_buffer.write(light_pv);
 
         command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, ctx.dispatcher);
@@ -495,8 +496,8 @@ namespace tethys::renderer {
             copy_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             copy_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             copy_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-            copy_barrier.subresourceRange.baseArrayLayer = 0;
             copy_barrier.subresourceRange.layerCount = 1;
+            copy_barrier.subresourceRange.baseArrayLayer = 0;
             copy_barrier.subresourceRange.levelCount = 1;
             copy_barrier.subresourceRange.baseMipLevel = 0;
             copy_barrier.oldLayout = vk::ImageLayout::eUndefined;
@@ -524,8 +525,8 @@ namespace tethys::renderer {
             present_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             present_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             present_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-            present_barrier.subresourceRange.baseArrayLayer = 0;
             present_barrier.subresourceRange.layerCount = 1;
+            present_barrier.subresourceRange.baseArrayLayer = 0;
             present_barrier.subresourceRange.levelCount = 1;
             present_barrier.subresourceRange.baseMipLevel = 0;
             present_barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;

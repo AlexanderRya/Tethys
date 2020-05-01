@@ -29,6 +29,7 @@ int main() {
     tethys::renderer::initialise();
 
     auto nanosuit = tethys::renderer::upload_model("../resources/models/nanosuit/nanosuit.obj");
+    auto cube = tethys::renderer::upload_model("../resources/models/cube/cube.obj");
 
     std::vector<tethys::Vertex> plane_vertices{{
         { {  25.0f, -0.5f,  25.0f }, { 0.0f, 1.0f, 0.0f }, { 25.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } },
@@ -77,7 +78,7 @@ int main() {
         float delta_time = frame_time - last_frame;
         last_frame = frame_time;
 
-        auto light_dir = glm::vec3(0.0f, 0.5f, -0.5f);
+        auto light_pos = glm::vec3(1.0f, 3.0f, 1.0f);
         auto projection = glm::perspective(glm::radians(60.f), 1280 / 720.f, 0.02f, 1000.f);
 
         data.camera.pv_mat = projection * camera.view();
@@ -86,20 +87,41 @@ int main() {
         data.draw_commands = {
             tethys::DrawCommand{
                 .model = nanosuit,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)), glm::vec3(0.2f)),
+                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, -1.0)), glm::vec3(0.1f)),
+                .shader = tethys::shader::generic
+            },
+            tethys::DrawCommand{
+                .model = cube,
+                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0)), glm::vec3(0.5f)),
+                .shader = tethys::shader::generic
+            },
+            tethys::DrawCommand{
+                .model = cube,
+                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 1.0)), glm::vec3(0.5f)),
+                .shader = tethys::shader::generic
+            },
+            tethys::DrawCommand{
+                .model = cube,
+                .transform = glm::scale(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 2.0)), glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))), glm::vec3(0.5f)),
                 .shader = tethys::shader::generic
             },
             tethys::DrawCommand{
                 .model = plane,
                 .transform = glm::mat4(1.0f),
                 .shader = tethys::shader::generic
-            },
+            }
         };
 
-        data.directional_lights = {
-            tethys::DirectionalLight{
-                .direction = light_dir,
-                .color = glm::vec3(1.0f)
+        data.point_lights = {
+            tethys::PointLight{
+                .position = light_pos,
+                .color = glm::vec3(1.0f),
+                .falloff = {
+                    .intensity = 1.6f,
+                    .constant = 1.0f,
+                    .linear = 0.14f,
+                    .quadratic = 0.07f
+                }
             }
         };
 

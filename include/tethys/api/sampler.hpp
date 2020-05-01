@@ -4,7 +4,13 @@
 #include <vulkan/vulkan.hpp>
 
 namespace tethys::api {
-    [[nodiscard]] vk::Sampler make_default_sampler();
+    enum class SamplerType {
+        eDefault,
+        eDepth
+    };
+
+    void make_samplers();
+    [[nodiscard]] vk::Sampler sampler_from_type(const SamplerType&);
 } // namespace tethys::api
 
 #endif //TETHYS_SAMPLER_HPP

@@ -30,7 +30,6 @@ namespace tethys {
     struct RenderData;
     template <typename>
     struct Handle;
-    enum class ColorSpace;
 } // namespace tethys
 
 namespace tethys::api {
@@ -46,6 +45,7 @@ namespace tethys::api {
     class Buffer;
     template <typename>
     class SingleBuffer;
+    enum class SamplerType;
 } // namespace tethys::api
 
 namespace tethys::window {

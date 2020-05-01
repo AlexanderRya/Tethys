@@ -1,13 +1,14 @@
 #include <tethys/api/command_buffer.hpp>
 #include <tethys/api/static_buffer.hpp>
 #include <tethys/api/context.hpp>
+#include <tethys/api/sampler.hpp>
 #include <tethys/texture.hpp>
+
 #include <tethys/logger.hpp>
 
 #include <stb_image.h>
 
 #include <vulkan/vulkan.hpp>
-
 #include <fstream>
 #include <string>
 #include <cmath>
@@ -177,9 +178,9 @@ namespace tethys {
         return texture;
     }
 
-    vk::DescriptorImageInfo Texture::info() const {
+    vk::DescriptorImageInfo Texture::info(const api::SamplerType& type) const {
         vk::DescriptorImageInfo image_info{}; {
-            image_info.sampler = ctx.default_sampler;
+            image_info.sampler = api::sampler_from_type(type);
             image_info.imageView = view;
             image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         }

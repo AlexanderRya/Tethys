@@ -7,7 +7,7 @@ layout (location = 0) out vec4 frag_color;
 
 layout (set = 0, binding = 2) uniform sampler2D[] textures;
 
-layout (push_constant) uniform Indices {
+layout (push_constant) uniform Constants {
     int transform_index;
     int material_index;
 };
