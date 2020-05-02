@@ -34,6 +34,7 @@ namespace tethys {
 
     void load_set_layouts();
     void load_pipeline_layouts();
+
     [[nodiscard]] Pipeline make_pipeline(const Pipeline::CreateInfo&);
 } // namespace tethys
 

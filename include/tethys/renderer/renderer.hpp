@@ -14,6 +14,7 @@
 namespace tethys::renderer {
     void initialise();
 
+    [[nodiscard]] Handle<Mesh> write_geometry(const Mesh&);
     [[nodiscard]] Handle<Mesh> write_geometry(const std::vector<Vertex>&, const std::vector<u32>&);
     [[nodiscard]] Handle<Texture> upload_texture(const u8, const u8, const u8, const u8, const vk::Format);
     [[nodiscard]] Handle<Texture> upload_texture(const char*, const vk::Format);

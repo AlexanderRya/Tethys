@@ -111,22 +111,22 @@ namespace tethys {
     void load_pipeline_layouts() {
         pipeline_layouts.resize(3);
 
-        /* Shadow pipeline layout */ {
+        /* Minimal pipeline layout */ {
             vk::PushConstantRange range{}; {
-                range.size = sizeof(u32);
-                range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+                range.size = 2 * sizeof(u32);
+                range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
                 range.offset = 0;
             }
 
             vk::PipelineLayoutCreateInfo layout_create_info{}; {
                 layout_create_info.setLayoutCount = 1;
-                layout_create_info.pSetLayouts = &set_layouts[layout::shadow];
+                layout_create_info.pSetLayouts = &set_layouts[layout::minimal];
                 layout_create_info.pushConstantRangeCount = 1;
                 layout_create_info.pPushConstantRanges = &range;
             }
 
-            pipeline_layouts[layout::shadow].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
-            pipeline_layouts[layout::shadow].sets = { set_layouts[layout::shadow] };
+            pipeline_layouts[layout::minimal].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+            pipeline_layouts[layout::minimal].sets = { set_layouts[layout::minimal] };
         }
 
         /* Generic pipeline layout */ {
@@ -152,22 +152,22 @@ namespace tethys {
             pipeline_layouts[layout::generic].sets = std::move(sets);
         }
 
-        /* Minimal pipeline layout */ {
+        /* Shadow pipeline layout */ {
             vk::PushConstantRange range{}; {
-                range.size = 2 * sizeof(u32);
-                range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+                range.size = sizeof(u32);
+                range.stageFlags = vk::ShaderStageFlagBits::eVertex;
                 range.offset = 0;
             }
 
             vk::PipelineLayoutCreateInfo layout_create_info{}; {
                 layout_create_info.setLayoutCount = 1;
-                layout_create_info.pSetLayouts = &set_layouts[layout::minimal];
+                layout_create_info.pSetLayouts = &set_layouts[layout::shadow];
                 layout_create_info.pushConstantRangeCount = 1;
                 layout_create_info.pPushConstantRanges = &range;
             }
 
-            pipeline_layouts[layout::minimal].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
-            pipeline_layouts[layout::minimal].sets = { set_layouts[layout::minimal] };
+            pipeline_layouts[layout::shadow].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+            pipeline_layouts[layout::shadow].sets = { set_layouts[layout::shadow] };
         }
     }
 

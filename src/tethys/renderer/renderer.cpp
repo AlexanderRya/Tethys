@@ -73,6 +73,9 @@ namespace tethys::renderer {
     static Pipeline generic;
     static Pipeline minimal;
     static Pipeline shadow;
+    static Pipeline debug;
+
+    static Handle<Mesh> debug_quad;
 
     static void update_textures() {
         std::vector<vk::DescriptorImageInfo> image_info{};
@@ -163,6 +166,23 @@ namespace tethys::renderer {
         }
         shadow = make_pipeline(shadow_info);
 
+        Pipeline::CreateInfo debug_info{}; {
+            debug_info.vertex = "shaders/debug.vert.spv";
+            debug_info.fragment = "shaders/debug.frag.spv";
+            debug_info.subpass_idx = 0;
+            debug_info.render_pass = offscreen_render_pass;
+            debug_info.layout_idx = layout::generic;
+            debug_info.samples = ctx.device.max_samples;
+            debug_info.cull = vk::CullModeFlagBits::eNone;
+            debug_info.dynamic_states = {
+                vk::DynamicState::eViewport,
+                vk::DynamicState::eScissor
+            };
+        }
+        debug = make_pipeline(debug_info);
+
+        debug_quad = write_geometry(generate_debug_quad());
+
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
@@ -221,15 +241,19 @@ namespace tethys::renderer {
 
         update_textures();
 
-        api::SingleUpdateImageInfo shadow_map_info{}; {
-            shadow_map_info.image.imageView = shadow_depth.view;
-            shadow_map_info.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            shadow_map_info.image.sampler = sampler_from_type(SamplerType::eDepth);
-            shadow_map_info.binding = binding::shadow_map;
-            shadow_map_info.type = vk::DescriptorType::eCombinedImageSampler;
+        api::SingleUpdateImageInfo shadow_map_update{}; {
+            shadow_map_update.image.imageView = shadow_depth.view;
+            shadow_map_update.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            shadow_map_update.image.sampler = sampler_from_type(SamplerType::eDepth);
+            shadow_map_update.binding = binding::shadow_map;
+            shadow_map_update.type = vk::DescriptorType::eCombinedImageSampler;
         }
 
-        generic_set.update(shadow_map_info);
+        generic_set.update(shadow_map_update);
+    }
+
+    Handle<Mesh> write_geometry(const Mesh& mesh) {
+        return write_geometry(mesh.vertices, mesh.indices);
     }
 
     Handle<Mesh> write_geometry(const std::vector<Vertex>& geometry, const std::vector<u32>& indices) {
@@ -391,7 +415,7 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::perspective(glm::radians(60.0f), shadow_depth.image.width / static_cast<float>(shadow_depth.image.height), 0.2f, 100.0f);
+        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -15.0f, 10.0f);
 
         auto light_view = glm::lookAt(
             data.point_lights[0].position,
@@ -470,6 +494,23 @@ namespace tethys::renderer {
                 command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
             }
         }
+
+        std::array<vk::DescriptorSet, 2> sets{
+            minimal_set[current_frame].handle(),
+            generic_set[current_frame].handle()
+        };
+
+        std::array<u32, 6> indices{};
+
+        auto& vbo = vertex_buffers[debug_quad.vbo_index];
+        auto& ibo = index_buffers[debug_quad.ibo_index];
+
+        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, debug.handle, ctx.dispatcher);
+        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, debug.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
+        command_buffer.pushConstants<u32>(debug.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, ctx.dispatcher);
+        command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
+        command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
+        command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
     }
 
     static void copy_to_swapchain() {

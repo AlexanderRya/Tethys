@@ -64,7 +64,8 @@ set(TETHYS_HEADERS
         "include/tethys/directional_light.hpp"
         "include/tethys/acquire.hpp"
         "include/tethys/api/index_buffer.hpp"
-        "include/tethys/model.hpp" include/tethys/api/render_target.hpp)
+        "include/tethys/model.hpp"
+        "include/tethys/api/render_target.hpp")
 
 set(TETHYS_SOURCES
         "src/tethys/api/instance.cpp"
@@ -91,7 +92,8 @@ set(TETHYS_SOURCES
         "src/tethys/texture.cpp"
         "src/tethys/api/stb_image.cpp"
         "src/tethys/api/index_buffer.cpp"
-        "src/tethys/model.cpp" src/tethys/api/render_target.cpp)
+        "src/tethys/model.cpp"
+        "src/tethys/api/render_target.cpp" src/tethys/mesh.cpp)
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}
@@ -139,14 +141,22 @@ else()
     target_link_libraries(Tethys PUBLIC glfw assimp)
 endif()
 
-file(GLOB TETHYS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
-foreach(SHADER ${TETHYS_SHADERS})
+file(GLOB SHADER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert" "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag")
+set(SHADER_OUTPUT_FILES "")
+foreach(SHADER ${SHADER_SOURCES})
     get_filename_component(SHADER_FNAME ${SHADER} NAME)
-    add_custom_command(
-            TARGET Tethys
-            COMMAND echo Compiling shader ${SHADER_FNAME} &&
-            glslc --target-env=vulkan1.1 ${SHADER} "-o${CMAKE_BINARY_DIR}/shaders/${SHADER_FNAME}.spv")
+    set(SHADER_OUTPUT ${CMAKE_BINARY_DIR}/shaders/${SHADER_FNAME}.spv)
+    list(APPEND SHADER_OUTPUT_FILES ${SHADER_OUTPUT})
+    add_custom_command(OUTPUT ${SHADER_OUTPUT}
+            COMMAND glslc --target-env=vulkan1.1 ${SHADER} "-o${SHADER_OUTPUT}"
+            DEPENDS ${SHADER})
 endforeach()
+
+add_custom_target(TethysShaders
+        ALL DEPENDS ${SHADER_OUTPUT_FILES}
+        COMMENT "Building shaders")
+
+add_dependencies(Tethys TethysShaders)
 
 add_executable(TethysTestApp
         camera_util.hpp

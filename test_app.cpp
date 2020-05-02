@@ -78,38 +78,74 @@ int main() {
         float delta_time = frame_time - last_frame;
         last_frame = frame_time;
 
-        auto light_pos = glm::vec3(1.0f, 3.0f, 1.0f);
-        auto projection = glm::perspective(glm::radians(60.f), 1280 / 720.f, 0.02f, 1000.f);
+        auto light_pos = glm::vec3(
+            std::sin(glfwGetTime()) * 6.0f,
+            5.0 + std::cos(glfwGetTime()),
+            std::cos(glfwGetTime()) * 4.0f);
+        auto projection = glm::perspective(glm::radians(60.f), 1280 / 720.f, 0.02f, 100.f);
 
         data.camera.pv_mat = projection * camera.view();
         data.camera.pos = glm::vec4(camera.cam_pos, 0.0f);
 
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+
+        tethys::DrawCommand d0{}; {
+            d0.model = cube;
+            d0.transform = model;
+            d0.shader = tethys::shader::generic;
+        }
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+
+        tethys::DrawCommand d1{}; {
+            d1.model = cube;
+            d1.transform = model;
+            d1.shader = tethys::shader::generic;
+        }
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+        model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        model = glm::scale(model, glm::vec3(0.25));
+
+        tethys::DrawCommand d2{}; {
+            d2.model = cube;
+            d2.transform = model;
+            d2.shader = tethys::shader::generic;
+        }
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, light_pos);
+        model = glm::scale(model, glm::vec3(0.2f));
+
+        tethys::DrawCommand d3{}; {
+            d3.model = cube;
+            d3.transform = model;
+            d3.shader = tethys::shader::minimal;
+        }
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(3.0f, -0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f));
+
+        tethys::DrawCommand d4{}; {
+            d4.model = nanosuit;
+            d4.transform = model;
+            d4.shader = tethys::shader::generic;
+        }
+
+        tethys::DrawCommand d5{}; {
+            d5.model = plane;
+            d5.transform = glm::mat4(1.0f);
+            d5.shader = tethys::shader::generic;
+        }
+
         data.draw_commands = {
-            tethys::DrawCommand{
-                .model = nanosuit,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, -1.0)), glm::vec3(0.1f)),
-                .shader = tethys::shader::generic
-            },
-            tethys::DrawCommand{
-                .model = cube,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0)), glm::vec3(0.5f)),
-                .shader = tethys::shader::generic
-            },
-            tethys::DrawCommand{
-                .model = cube,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 1.0)), glm::vec3(0.5f)),
-                .shader = tethys::shader::generic
-            },
-            tethys::DrawCommand{
-                .model = cube,
-                .transform = glm::scale(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 2.0)), glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))), glm::vec3(0.5f)),
-                .shader = tethys::shader::generic
-            },
-            tethys::DrawCommand{
-                .model = plane,
-                .transform = glm::mat4(1.0f),
-                .shader = tethys::shader::generic
-            }
+            d0, d1, d2, d3, d4, d5
         };
 
         data.point_lights = {

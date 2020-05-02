@@ -48,19 +48,20 @@ namespace tethys {
                 barrier,
                 ctx.dispatcher);
 
-            vk::ImageBlit blit{};
-            blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
-            blit.srcOffsets[1] = vk::Offset3D{ mip_width, mip_height, 1 };
-            blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-            blit.srcSubresource.mipLevel = i - 1;
-            blit.srcSubresource.baseArrayLayer = 0;
-            blit.srcSubresource.layerCount = 1;
-            blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
-            blit.dstOffsets[1] = vk::Offset3D{ mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1 };
-            blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-            blit.dstSubresource.mipLevel = i;
-            blit.dstSubresource.baseArrayLayer = 0;
-            blit.dstSubresource.layerCount = 1;
+            vk::ImageBlit blit{}; {
+                blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+                blit.srcOffsets[1] = vk::Offset3D{ mip_width, mip_height, 1 };
+                blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                blit.srcSubresource.mipLevel = i - 1;
+                blit.srcSubresource.baseArrayLayer = 0;
+                blit.srcSubresource.layerCount = 1;
+                blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+                blit.dstOffsets[1] = vk::Offset3D{ mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1 };
+                blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                blit.dstSubresource.mipLevel = i;
+                blit.dstSubresource.baseArrayLayer = 0;
+                blit.dstSubresource.layerCount = 1;
+            }
 
             command_buffer.blitImage(
                 texture.image.handle, vk::ImageLayout::eTransferSrcOptimal,
