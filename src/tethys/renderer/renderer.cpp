@@ -415,7 +415,7 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -15.0f, 10.0f);
+        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -7.0f, 7.5f);
 
         auto light_view = glm::lookAt(
             data.point_lights[0].position,

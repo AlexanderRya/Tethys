@@ -119,10 +119,11 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 
 float calculate_shadows() {
     vec3 proj_coords = (shadow_frag_pos.xyz / shadow_frag_pos.w) * 0.5 + 0.5;
+
     if (proj_coords.z > 1.0) {
         return 0.0;
-
     }
+
     float closest_depth = texture(shadow_map, proj_coords.xy).r;
     float current_depth = proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normalize(normals), normalize(point_lights[0].position - frag_pos))), 0.005);

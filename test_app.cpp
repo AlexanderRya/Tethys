@@ -78,10 +78,11 @@ int main() {
         float delta_time = frame_time - last_frame;
         last_frame = frame_time;
 
-        auto light_pos = glm::vec3(
+        auto light_pos = glm::vec3(-2.0f, 4.0f, -1.0f);
+        /*auto light_pos = glm::vec3(
             std::sin(glfwGetTime()) * 6.0f,
             5.0 + std::cos(glfwGetTime()),
-            std::cos(glfwGetTime()) * 4.0f);
+            std::cos(glfwGetTime()) * 4.0f);*/
         auto projection = glm::perspective(glm::radians(60.f), 1280 / 720.f, 0.02f, 100.f);
 
         data.camera.pv_mat = projection * camera.view();
@@ -129,7 +130,7 @@ int main() {
         }
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(3.0f, -0.5f, 0.0f));
+        model = glm::translate(model, glm::vec3(1.0f, -0.5f, 1.0f));
         model = glm::scale(model, glm::vec3(0.2f));
 
         tethys::DrawCommand d4{}; {
