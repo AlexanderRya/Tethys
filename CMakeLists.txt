@@ -20,7 +20,11 @@ add_subdirectory(external/assimp)
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
-set(CMAKE_CXX_STANDARD 17)
+if (UNIX)
+    set(CMAKE_CXX_STANDARD 17)
+else()
+    set(CMAKE_CXX_STANDARD 20)
+endif()
 
 set(VMA_HEADERS
         "external/VulkanMemoryAllocator/src/vk_mem_alloc.h")
@@ -114,9 +118,8 @@ if (UNIX)
     else()
         target_compile_options(Tethys PUBLIC -O3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
     endif()
-else() # ffs windows
-    target_compile_options(Tethys PRIVATE "/W0")
-    target_compile_options(assimp PRIVATE "/W0")
+else()
+    target_compile_options(Tethys PUBLIC /MP)
 endif()
 
 set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} VK_ENABLE_BETA_EXTENSIONS)
