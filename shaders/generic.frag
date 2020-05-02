@@ -57,11 +57,10 @@ float calculate_shadows();
 void main() {
     vec3 result = vec3(1.0);
     vec4 color = texture(textures[diffuse_index], uvs).rgba;
+    vec3 specular = texture(textures[specular_index], uvs).rgb;
     vec3 diffuse = color.rgb;
 
-    vec3 specular = texture(textures[specular_index], uvs).rgb;
-
-    result = diffuse * ambient; // Ambient
+    result = diffuse * ambient * (1.0 - calculate_shadows());
 
     vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
@@ -73,8 +72,6 @@ void main() {
     for (uint i = 0; i < directional_lights_count; ++i) {
         result += apply_directional_light(directional_lights[i], diffuse, specular, norms, view_dir);
     }
-
-    result *= 1.0 - calculate_shadows();
 
     frag_color = vec4(result, 1.0);
 }
@@ -118,15 +115,15 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 }
 
 float calculate_shadows() {
-    vec3 proj_coords = (shadow_frag_pos.xyz / shadow_frag_pos.w) * 0.5 + 0.5;
+    vec3 proj_coords = ((shadow_frag_pos.xyz / shadow_frag_pos.w) * 0.5) + 0.5;
 
     if (proj_coords.z > 1.0) {
         return 0.0;
     }
 
-    float closest_depth = texture(shadow_map, proj_coords.xy).r;
-    float current_depth = proj_coords.z;
-    float bias = max(0.05 * (1.0 - dot(normalize(normals), normalize(point_lights[0].position - frag_pos))), 0.005);
+    float closest = texture(shadow_map, proj_coords.xy).r;
+    float current = proj_coords.z;
+    float bias = max(0.05 * (1.0 - dot(normalize(normals), point_lights[0].position)), 0.005);
 
-    return current_depth - bias > closest_depth ? 1.0 : 0.0;
+    return current - bias > closest ? 1.0 : 0.0;
 }

@@ -33,7 +33,6 @@ namespace tethys::api {
 
         offscreen.depth_image = api::make_image(depth_image_info);
         offscreen.depth_view = api::make_image_view(offscreen.depth_image.handle, vk::Format::eD24UnormS8Uint, vk::ImageAspectFlagBits::eDepth, 1);
-        api::transition_image_layout(offscreen.depth_image.handle, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 
         Image::CreateInfo msaa_image_info{}; {
             msaa_image_info.format = vk::Format::eB8G8R8A8Srgb;
@@ -57,8 +56,8 @@ namespace tethys::api {
 
         Image::CreateInfo depth_image_info{}; {
             depth_image_info.format = vk::Format::eD24UnormS8Uint;
-            depth_image_info.width = ctx.swapchain.extent.width * 2;
-            depth_image_info.height = ctx.swapchain.extent.height * 2;
+            depth_image_info.width = 2048;
+            depth_image_info.height = 2048;
             depth_image_info.usage_flags = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled;
             depth_image_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             depth_image_info.tiling = vk::ImageTiling::eOptimal;
@@ -68,7 +67,6 @@ namespace tethys::api {
 
         shadow_depth.image = api::make_image(depth_image_info);
         shadow_depth.view = api::make_image_view(shadow_depth.image.handle, vk::Format::eD24UnormS8Uint, vk::ImageAspectFlagBits::eDepth, 1);
-        api::transition_image_layout(shadow_depth.image.handle, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 
         return shadow_depth;
     }

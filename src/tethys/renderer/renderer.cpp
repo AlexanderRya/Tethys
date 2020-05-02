@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <stack>
+#include <mutex>
 
 namespace tethys::renderer {
     using namespace api;
@@ -231,16 +232,6 @@ namespace tethys::renderer {
             generic_update[2].buffers = light_space_buffer.info();
         }
 
-        generic_set.update(generic_update);
-
-        std::array<u8, 4> white = { 255, 255, 255, 255 };
-        textures.emplace_back(load_texture(white.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
-
-        std::array<u8, 4> black{};
-        textures.emplace_back(load_texture(black.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
-
-        update_textures();
-
         api::SingleUpdateImageInfo shadow_map_update{}; {
             shadow_map_update.image.imageView = shadow_depth.view;
             shadow_map_update.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
@@ -250,6 +241,15 @@ namespace tethys::renderer {
         }
 
         generic_set.update(shadow_map_update);
+        generic_set.update(generic_update);
+
+        std::array<u8, 4> white = { 255, 255, 255, 255 };
+        textures.emplace_back(load_texture(white.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
+
+        std::array<u8, 4> black{};
+        textures.emplace_back(load_texture(black.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
+
+        update_textures();
     }
 
     Handle<Mesh> write_geometry(const Mesh& mesh) {
@@ -415,16 +415,15 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -7.0f, 7.5f);
+        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -3.0f, 8.0f);
+        light_proj[1][1] *= -1;
 
         auto light_view = glm::lookAt(
             data.point_lights[0].position,
             glm::vec3(0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f));
 
-        auto light_pv = light_proj * light_view;
-
-        light_space_buffer.write(light_pv);
+        light_space_buffer.write(light_proj * light_view);
 
         command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, ctx.dispatcher);
         command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, ctx.dispatcher);
@@ -628,9 +627,9 @@ namespace tethys::renderer {
 
             vk::Viewport viewport{}; {
                 viewport.width = shadow_depth.image.width;
-                viewport.height = -shadow_depth.image.height;
+                viewport.height = shadow_depth.image.height;
                 viewport.x = 0;
-                viewport.y = -viewport.height;
+                viewport.y = 0;
                 viewport.minDepth = 0.0f;
                 viewport.maxDepth = 1.0f;
             }
@@ -665,10 +664,10 @@ namespace tethys::renderer {
             }
 
             vk::Viewport viewport{}; {
-                viewport.width = static_cast<float>(ctx.swapchain.extent.width);
-                viewport.height = -static_cast<float>(ctx.swapchain.extent.height);
+                viewport.width = ctx.swapchain.extent.width;
+                viewport.height = ctx.swapchain.extent.height;
                 viewport.x = 0;
-                viewport.y = -viewport.height;
+                viewport.y = 0;
                 viewport.minDepth = 0.0f;
                 viewport.maxDepth = 1.0f;
             }
