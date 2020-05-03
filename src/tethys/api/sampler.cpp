@@ -31,9 +31,9 @@ namespace tethys::api {
         vk::SamplerCreateInfo info{}; {
             info.magFilter = vk::Filter::eNearest;
             info.minFilter = vk::Filter::eNearest;
-            info.addressModeU = vk::SamplerAddressMode::eRepeat;
-            info.addressModeV = vk::SamplerAddressMode::eRepeat;
-            info.addressModeW = vk::SamplerAddressMode::eRepeat;
+            info.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+            info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+            info.addressModeW = vk::SamplerAddressMode::eClampToEdge;
             info.anisotropyEnable = false;
             info.maxAnisotropy = 1;
             info.borderColor = vk::BorderColor::eFloatOpaqueWhite;

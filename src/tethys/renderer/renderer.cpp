@@ -158,7 +158,7 @@ namespace tethys::renderer {
             shadow_info.render_pass = shadow_depth_render_pass;
             shadow_info.layout_idx = layout::shadow;
             shadow_info.samples = vk::SampleCountFlagBits::e1;
-            shadow_info.cull = vk::CullModeFlagBits::eNone;
+            shadow_info.cull = vk::CullModeFlagBits::eBack;
             shadow_info.dynamic_states = {
                 vk::DynamicState::eViewport,
                 vk::DynamicState::eScissor
@@ -414,7 +414,7 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 7.5f);
         light_proj[1][1] *= -1;
 
         auto light_view = glm::lookAt(

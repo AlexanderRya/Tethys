@@ -52,28 +52,28 @@ layout (push_constant) uniform Constants {
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
 vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
-float calculate_shadows();
+float calculate_shadows(vec3 norms);
 
 void main() {
     vec3 result = vec3(1.0);
     vec4 color = texture(textures[diffuse_index], uvs).rgba;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
-    vec3 diffuse = color.rgb;
+    vec3 albedo = color.rgb;
 
-    result = diffuse * ambient;
+    result = albedo * ambient;
 
     vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
 
     for (uint i = 0; i < point_lights_count; ++i) {
-        result += apply_point_light(point_lights[i], diffuse, specular, norms, view_dir);
+        result += apply_point_light(point_lights[i], albedo, specular, norms, view_dir);
     }
 
     for (uint i = 0; i < directional_lights_count; ++i) {
-        result += apply_directional_light(directional_lights[i], diffuse, specular, norms, view_dir);
+        result += apply_directional_light(directional_lights[i], albedo, specular, norms, view_dir);
     }
 
-    result *= 1.0 - calculate_shadows() + ambient;
+    result *= calculate_shadows(norms);
 
     frag_color = vec4(result, 1.0);
 }
@@ -116,11 +116,22 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
     return result_diffuse + result_specular;
 }
 
-float calculate_shadows() {
-    vec3 proj_coords = shadow_frag_pos.xyz / shadow_frag_pos.w;
+float calculate_shadows(vec3 norms) {
+    vec3 light_space_ndc = shadow_frag_pos.xyz / shadow_frag_pos.w;
+    vec2 shadow_uv = light_space_ndc.xy * 0.5 + 0.5;
 
-    float closest = texture(shadow_map, proj_coords.xy).r;
-    float current = proj_coords.z;
+    if (light_space_ndc.z > 1.0)
+        return 1.0;
 
-    return current > closest ? 1.0 : 0.0;
+
+    float closest = texture(shadow_map, shadow_uv).r;
+    float current = light_space_ndc.z;
+
+    float bias = max(0.05 * (1.0 - dot(norms, normalize(point_lights[0].position - frag_pos))), 0.005);
+
+    if (closest + bias > current) {
+        return 1.0;
+    }
+
+    return ambient;
 }
