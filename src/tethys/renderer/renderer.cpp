@@ -22,8 +22,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/mat4x4.hpp>
 
 #include <vector>
 #include <stack>
@@ -158,11 +158,10 @@ namespace tethys::renderer {
             shadow_info.render_pass = shadow_depth_render_pass;
             shadow_info.layout_idx = layout::shadow;
             shadow_info.samples = vk::SampleCountFlagBits::e1;
-            shadow_info.cull = vk::CullModeFlagBits::eFront;
+            shadow_info.cull = vk::CullModeFlagBits::eNone;
             shadow_info.dynamic_states = {
                 vk::DynamicState::eViewport,
-                vk::DynamicState::eScissor,
-                vk::DynamicState::eDepthBias
+                vk::DynamicState::eScissor
             };
         }
         shadow = make_pipeline(shadow_info);
@@ -415,7 +414,7 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -3.0f, 8.0f);
+        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
         light_proj[1][1] *= -1;
 
         auto light_view = glm::lookAt(
@@ -642,7 +641,6 @@ namespace tethys::renderer {
 
             command_buffer.setViewport(0, viewport, ctx.dispatcher);
             command_buffer.setScissor(0, scissor, ctx.dispatcher);
-            command_buffer.setDepthBias(1.25f, 0.0f, 1.75f, ctx.dispatcher);
 
             command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
             shadow_depth_draw_pass(data);

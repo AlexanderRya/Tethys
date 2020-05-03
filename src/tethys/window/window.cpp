@@ -66,15 +66,15 @@ namespace tethys::window {
     }
 
     bool key_pressed(const i32 key) {
-        return glfwGetKey(window.handle, key) == GLFW_PRESS;
+        return glfwGetKey(handle(), key) == GLFW_PRESS;
     }
 
     bool key_released(const i32 key) {
-        return glfwGetKey(window.handle, key) == GLFW_RELEASE;
+        return glfwGetKey(handle(), key) == GLFW_RELEASE;
     }
 
     bool key_repeated(const i32 key) {
-        return glfwGetKey(window.handle, key) == GLFW_REPEAT;
+        return glfwGetKey(handle(), key) == GLFW_REPEAT;
     }
 
     GLFWwindow* handle() {
@@ -82,7 +82,7 @@ namespace tethys::window {
     }
 
     void close() {
-        glfwSetWindowShouldClose(window.handle, true);
+        glfwSetWindowShouldClose(handle(), true);
     }
 
     void poll() {

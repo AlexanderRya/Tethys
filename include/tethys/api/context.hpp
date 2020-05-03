@@ -30,7 +30,7 @@ namespace tethys::api {
         std::vector<vk::ImageView> image_views{};
     };
 
-    extern struct Context {
+    inline struct Context {
         vk::DispatchLoaderDynamic dispatcher{};
         VmaVulkanFunctions vma_dispatcher{};
         vk::Instance instance{};

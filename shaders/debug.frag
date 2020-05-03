@@ -46,5 +46,5 @@ layout (push_constant) uniform Constants {
 };
 
 void main() {
-    frag_color = vec4(vec3(1.0 - (1.0 - texture(shadow_map, uvs).r) * 25.0), 1.0);
+    frag_color = vec4(vec3(texture(shadow_map, uvs).r), 1.0);
 }

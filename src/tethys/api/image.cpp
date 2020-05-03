@@ -26,7 +26,7 @@ namespace tethys::api {
         }
 
         VmaAllocationCreateInfo allocation_create_info{}; {
-            allocation_create_info.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT;
+            allocation_create_info.flags = VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT;
             allocation_create_info.requiredFlags = 0;
             allocation_create_info.preferredFlags = 0;
             allocation_create_info.memoryTypeBits = 0;

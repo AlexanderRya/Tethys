@@ -74,7 +74,6 @@ set(TETHYS_HEADERS
 set(TETHYS_SOURCES
         "src/tethys/api/instance.cpp"
         "src/tethys/util.cpp"
-        "src/tethys/api/context.cpp"
         "src/tethys/api/vma.cpp"
         "src/tethys/window/window.cpp"
         "src/tethys/api/device.cpp"
@@ -123,7 +122,10 @@ else()
     target_compile_options(Tethys PUBLIC /MP)
 endif()
 
-set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} VK_ENABLE_BETA_EXTENSIONS)
+set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS}
+        VK_ENABLE_BETA_EXTENSIONS
+        GLM_FORCE_RADIANS
+        GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 if (WIN32)
     set(TETHYS_DEFINITIONS ${TETHYS_DEFINITIONS} _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS) # Goddamnit windows
