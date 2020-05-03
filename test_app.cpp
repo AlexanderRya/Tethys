@@ -28,7 +28,7 @@ int main() {
     tethys::api::initialise();
     tethys::renderer::initialise();
 
-    // auto nanosuit_model = tethys::renderer::upload_model("../resources/models/nanosuit/nanosuit.obj");
+    auto nanosuit_model = tethys::renderer::upload_model("../resources/models/nanosuit/nanosuit.obj");
     tethys::Handle<tethys::Model> plane_mesh;
     tethys::Handle<tethys::Model> cube_mesh;
 
@@ -169,6 +169,26 @@ int main() {
             cube2.shader = tethys::shader::generic;
         }
 
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, light_pos);
+        model = glm::scale(model, glm::vec3(0.25));
+
+        tethys::DrawCommand light{}; {
+            light.model = cube_mesh;
+            light.transform = model;
+            light.shader = tethys::shader::minimal;
+        }
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, -0.5f, -2.0));
+        model = glm::scale(model, glm::vec3(0.25));
+
+        tethys::DrawCommand nanosuit{}; {
+            cube2.model = nanosuit_model;
+            cube2.transform = model;
+            cube2.shader = tethys::shader::generic;
+        }
+
         tethys::DrawCommand plane{}; {
             plane.model = plane_mesh;
             plane.transform = glm::mat4(1.0f);
@@ -179,7 +199,8 @@ int main() {
             plane,
             cube0,
             cube1,
-            cube2
+            cube2,
+            nanosuit
         };
 
         data.point_lights = {

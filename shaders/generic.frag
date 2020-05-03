@@ -120,9 +120,9 @@ float calculate_shadows(vec3 norms) {
     vec3 light_space_ndc = shadow_frag_pos.xyz / shadow_frag_pos.w;
     vec2 shadow_uv = light_space_ndc.xy * 0.5 + 0.5;
 
-    if (light_space_ndc.z > 1.0)
+    if (light_space_ndc.z > 1.0) {
         return 1.0;
-
+    }
 
     float closest = texture(shadow_map, shadow_uv).r;
     float current = light_space_ndc.z;
