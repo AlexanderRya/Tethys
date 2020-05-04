@@ -8,7 +8,7 @@ namespace tethys::api {
         vk::BufferCreateInfo buffer_create_info{}; {
             buffer_create_info.size = size;
             buffer_create_info.queueFamilyIndexCount = 1;
-            buffer_create_info.pQueueFamilyIndices = &ctx.device.queue_family;
+            buffer_create_info.pQueueFamilyIndices = &context.device.queue_family;
             buffer_create_info.usage = usage;
             buffer_create_info.sharingMode = vk::SharingMode::eExclusive;
         }
@@ -26,7 +26,7 @@ namespace tethys::api {
         StaticBuffer buffer{};
 
         vmaCreateBuffer(
-            ctx.allocator,
+            context.allocator,
             reinterpret_cast<VkBufferCreateInfo*>(&buffer_create_info),
             &allocation_create_info,
             reinterpret_cast<VkBuffer*>(&buffer.handle),
@@ -46,7 +46,7 @@ namespace tethys::api {
                 region.dstOffset = 0;
             }
 
-            command_buffer.copyBuffer(src, dst, region, ctx.dispatcher);
+            command_buffer.copyBuffer(src, dst, region, context.dispatcher);
 
             end_transient(command_buffer);
         }
@@ -72,13 +72,13 @@ namespace tethys::api {
                 } };
             }
 
-            command_buffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, region, ctx.dispatcher);
+            command_buffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, region, context.dispatcher);
 
             end_transient(command_buffer);
         }
     }
 
     void destroy_buffer(StaticBuffer& buffer) {
-        vmaDestroyBuffer(ctx.allocator, buffer.handle, buffer.allocation);
+        vmaDestroyBuffer(context.allocator, buffer.handle, buffer.allocation);
     }
 } // namespace tethys::api

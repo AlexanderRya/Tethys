@@ -36,7 +36,7 @@ namespace tethys::api {
         current_size = 0;
 
         buffer = make_buffer(current_capacity * sizeof(Ty), flags, VMA_MEMORY_USAGE_CPU_TO_GPU, VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT);
-        vmaMapMemory(ctx.allocator, buffer.allocation, &mapped);
+        vmaMapMemory(context.allocator, buffer.allocation, &mapped);
 
         write(Ty{});
     }
@@ -44,7 +44,7 @@ namespace tethys::api {
     template <typename Ty>
     void SingleBuffer<Ty>::allocate(const usize capacity) {
         buffer = make_buffer(capacity * sizeof(Ty), buffer.flags, VMA_MEMORY_USAGE_CPU_TO_GPU, VMA_ALLOCATION_CREATE_STRATEGY_BEST_FIT_BIT);
-        vmaMapMemory(ctx.allocator, buffer.allocation, &mapped);
+        vmaMapMemory(context.allocator, buffer.allocation, &mapped);
         current_capacity = capacity;
     }
 
@@ -72,7 +72,7 @@ namespace tethys::api {
 
     template <typename Ty>
     void SingleBuffer<Ty>::deallocate() {
-        vmaUnmapMemory(ctx.allocator, buffer.allocation);
+        vmaUnmapMemory(context.allocator, buffer.allocation);
         destroy_buffer(buffer);
     }
 

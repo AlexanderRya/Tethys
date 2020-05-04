@@ -52,7 +52,7 @@ namespace tethys {
                 set_layout_create_info.pBindings = layout_bindings.data();
             }
 
-            set_layouts[layout::minimal] = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);
+            set_layouts[layout::minimal] = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
         }
 
         /* Generic set layout */ {
@@ -83,7 +83,7 @@ namespace tethys {
                 set_layout_create_info.pBindings = layout_bindings.data();
             }
 
-            set_layouts[layout::generic] = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);
+            set_layouts[layout::generic] = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
         }
 
         /* Shadow set layout */ {
@@ -104,7 +104,7 @@ namespace tethys {
                 set_layout_create_info.pBindings = layout_bindings.data();
             }
 
-            set_layouts[layout::shadow] = ctx.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, ctx.dispatcher);
+            set_layouts[layout::shadow] = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
         }
     }
 
@@ -125,7 +125,7 @@ namespace tethys {
                 layout_create_info.pPushConstantRanges = &range;
             }
 
-            pipeline_layouts[layout::minimal].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+            pipeline_layouts[layout::minimal].pipeline = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
             pipeline_layouts[layout::minimal].sets = { set_layouts[layout::minimal] };
         }
 
@@ -148,7 +148,7 @@ namespace tethys {
                 layout_create_info.pPushConstantRanges = &range;
             }
 
-            pipeline_layouts[layout::generic].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+            pipeline_layouts[layout::generic].pipeline = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
             pipeline_layouts[layout::generic].sets = std::move(sets);
         }
 
@@ -166,7 +166,7 @@ namespace tethys {
                 layout_create_info.pPushConstantRanges = &range;
             }
 
-            pipeline_layouts[layout::shadow].pipeline = ctx.device.logical.createPipelineLayout(layout_create_info, nullptr, ctx.dispatcher);
+            pipeline_layouts[layout::shadow].pipeline = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
             pipeline_layouts[layout::shadow].sets = { set_layouts[layout::shadow] };
         }
     }
@@ -185,7 +185,7 @@ namespace tethys {
             create_info.pCode = reinterpret_cast<const u32*>(spv.data());
         }
 
-        auto module = ctx.device.logical.createShaderModule(create_info, nullptr, ctx.dispatcher);
+        auto module = context.device.logical.createShaderModule(create_info, nullptr, context.dispatcher);
 
         logger::info("Module \"" + path + "\" successfully loaded");
 
@@ -292,15 +292,15 @@ namespace tethys {
 
         vk::PipelineRasterizationStateCreateInfo rasterizer_state_info{}; {
             rasterizer_state_info.lineWidth = 1.0f;
-            rasterizer_state_info.depthBiasEnable = false;
-            rasterizer_state_info.depthClampEnable = false;
+            rasterizer_state_info.depthBiasEnable = true;
+            rasterizer_state_info.depthClampEnable = true;
             rasterizer_state_info.rasterizerDiscardEnable = false;
             rasterizer_state_info.polygonMode = vk::PolygonMode::eFill;
             rasterizer_state_info.cullMode = info.cull;
             rasterizer_state_info.frontFace = vk::FrontFace::eClockwise;
         }
 
-        if (info.samples > ctx.device.max_samples) {
+        if (info.samples > context.device.samples) {
             throw std::runtime_error("Invalid number of samples requested in pipeline creation.");
         }
 
@@ -372,13 +372,13 @@ namespace tethys {
 
         Pipeline pipeline{};
 
-        pipeline.handle = ctx.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, ctx.dispatcher);
+        pipeline.handle = context.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, context.dispatcher);
         pipeline.layout = pipeline_layouts[info.layout_idx];
 
         logger::info("Pipeline successfully created");
 
         for (const auto& module : modules) {
-            ctx.device.logical.destroyShaderModule(module, nullptr, ctx.dispatcher);
+            context.device.logical.destroyShaderModule(module, nullptr, context.dispatcher);
         }
 
         return pipeline;

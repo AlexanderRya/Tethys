@@ -14,9 +14,9 @@ namespace tethys::api {
             VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT);
 
         void* mapped{};
-        vmaMapMemory(ctx.allocator, temp_buffer.allocation, &mapped);
+        vmaMapMemory(context.allocator, temp_buffer.allocation, &mapped);
         std::memcpy(mapped, indices.data(), sizeof(u32) * indices.size());
-        vmaUnmapMemory(ctx.allocator, temp_buffer.allocation);
+        vmaUnmapMemory(context.allocator, temp_buffer.allocation);
 
         IndexBuffer index_buffer;
         // Allocate device local buffer
@@ -29,7 +29,7 @@ namespace tethys::api {
         // Copy to device local
         api::copy_buffer(temp_buffer.handle, index_buffer.buffer.handle, indices.size() * sizeof(u32));
 
-        vmaDestroyBuffer(ctx.allocator, temp_buffer.handle, temp_buffer.allocation);
+        vmaDestroyBuffer(context.allocator, temp_buffer.handle, temp_buffer.allocation);
 
         logger::info("Allocated index buffer with size (in bytes): ", indices.size() * sizeof(u32));
 

@@ -131,7 +131,7 @@ int main() {
         float delta_time = frame_time - last_frame;
         last_frame = frame_time;
 
-        auto light_pos = glm::vec3(-2.0f, 4.0f, -1.0f);
+        auto light_pos = glm::vec3(-10.0f * std::sin(0.25f * glfwGetTime()), 12.0f, 10.0f * std::cos(0.25f * glfwGetTime()));
         auto projection = glm::perspective(glm::radians(60.f), 1280 / 720.f, 0.02f, 100.f);
         projection[1][1] *= -1;
 
@@ -184,9 +184,9 @@ int main() {
         model = glm::scale(model, glm::vec3(0.25));
 
         tethys::DrawCommand nanosuit{}; {
-            cube2.model = nanosuit_model;
-            cube2.transform = model;
-            cube2.shader = tethys::shader::generic;
+            nanosuit.model = nanosuit_model;
+            nanosuit.transform = model;
+            nanosuit.shader = tethys::shader::generic;
         }
 
         tethys::DrawCommand plane{}; {

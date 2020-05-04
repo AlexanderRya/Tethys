@@ -22,7 +22,7 @@ namespace tethys::api {
             framebuffer_create_info.pAttachments = attachments.data();
         }
 
-        auto framebuffer = ctx.device.logical.createFramebuffer(framebuffer_create_info, nullptr, ctx.dispatcher);
+        auto framebuffer = context.device.logical.createFramebuffer(framebuffer_create_info, nullptr, context.dispatcher);
 
         logger::info("Framebuffer successfully created with offscreen renderpass");
 
@@ -39,7 +39,7 @@ namespace tethys::api {
             framebuffer_create_info.pAttachments = &shadow_depth.view;
         }
 
-        auto framebuffer = ctx.device.logical.createFramebuffer(framebuffer_create_info, nullptr, ctx.dispatcher);
+        auto framebuffer = context.device.logical.createFramebuffer(framebuffer_create_info, nullptr, context.dispatcher);
 
         logger::info("Framebuffer successfully created with shadow depth renderpass");
 

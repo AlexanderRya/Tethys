@@ -46,7 +46,7 @@ namespace tethys {
                 nullptr,
                 nullptr,
                 barrier,
-                ctx.dispatcher);
+                context.dispatcher);
 
             vk::ImageBlit blit{}; {
                 blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
@@ -66,8 +66,8 @@ namespace tethys {
             command_buffer.blitImage(
                 texture.image.handle, vk::ImageLayout::eTransferSrcOptimal,
                 texture.image.handle, vk::ImageLayout::eTransferDstOptimal,
-                blit,vk::Filter::eLinear,
-                ctx.dispatcher);
+                blit, vk::Filter::eLinear,
+                context.dispatcher);
 
             barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
             barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
@@ -81,7 +81,7 @@ namespace tethys {
                 nullptr,
                 nullptr,
                 barrier,
-                ctx.dispatcher);
+                context.dispatcher);
 
             if (mip_width > 1) {
                 mip_width /= 2;
@@ -104,7 +104,7 @@ namespace tethys {
             nullptr,
             nullptr,
             barrier,
-            ctx.dispatcher);
+            context.dispatcher);
 
         end_transient(command_buffer);
     }
@@ -141,9 +141,9 @@ namespace tethys {
         auto staging = api::make_buffer(texture_size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_ONLY, VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT);
 
         void* mapped{};
-        vmaMapMemory(ctx.allocator, staging.allocation, &mapped);
+        vmaMapMemory(context.allocator, staging.allocation, &mapped);
         std::memcpy(mapped, data, texture_size);
-        vmaUnmapMemory(ctx.allocator, staging.allocation);
+        vmaUnmapMemory(context.allocator, staging.allocation);
 
         Texture texture;
         texture.mips = std::floor(std::log2(std::max(width, height)));

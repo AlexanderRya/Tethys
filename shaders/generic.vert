@@ -35,6 +35,12 @@ layout (push_constant) uniform Constants {
     uint directional_lights_count;
 };
 
+const mat4 bias = mat4(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.5, 0.5, 0.0, 1.0);
+
 void main() {
     mat4 model = transforms[transform_index];
 
@@ -43,6 +49,6 @@ void main() {
     normals = transpose(inverse(mat3(model))) * inormals;
     uvs = iuvs;
     view_pos = vec3(camera.pos);
-    shadow_frag_pos = light_space * vec4(frag_pos, 1.0);
+    shadow_frag_pos = (bias * light_space * model) * vec4(ivertex_pos, 1.0);
     gl_Position = camera.pv * vec4(frag_pos, 1.0);
 }

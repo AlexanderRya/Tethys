@@ -7,8 +7,8 @@ namespace tethys::api {
 
         Image::CreateInfo color_image_info{}; {
             color_image_info.format = vk::Format::eB8G8R8A8Srgb;
-            color_image_info.width = ctx.swapchain.extent.width;
-            color_image_info.height = ctx.swapchain.extent.height;
+            color_image_info.width = context.swapchain.extent.width;
+            color_image_info.height = context.swapchain.extent.height;
             color_image_info.usage_flags = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
             color_image_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             color_image_info.samples = vk::SampleCountFlagBits::e1;
@@ -22,12 +22,12 @@ namespace tethys::api {
 
         Image::CreateInfo depth_image_info{}; {
             depth_image_info.format = vk::Format::eD24UnormS8Uint;
-            depth_image_info.width = ctx.swapchain.extent.width;
-            depth_image_info.height = ctx.swapchain.extent.height;
+            depth_image_info.width = context.swapchain.extent.width;
+            depth_image_info.height = context.swapchain.extent.height;
             depth_image_info.usage_flags = vk::ImageUsageFlagBits::eDepthStencilAttachment;
             depth_image_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             depth_image_info.tiling = vk::ImageTiling::eOptimal;
-            depth_image_info.samples = ctx.device.max_samples;
+            depth_image_info.samples = context.device.samples;
             depth_image_info.mips = 1;
         }
 
@@ -36,11 +36,11 @@ namespace tethys::api {
 
         Image::CreateInfo msaa_image_info{}; {
             msaa_image_info.format = vk::Format::eB8G8R8A8Srgb;
-            msaa_image_info.width = ctx.swapchain.extent.width;
-            msaa_image_info.height = ctx.swapchain.extent.height;
+            msaa_image_info.width = context.swapchain.extent.width;
+            msaa_image_info.height = context.swapchain.extent.height;
             msaa_image_info.usage_flags = vk::ImageUsageFlagBits::eColorAttachment;
             msaa_image_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-            msaa_image_info.samples = ctx.device.max_samples;
+            msaa_image_info.samples = context.device.samples;
             msaa_image_info.tiling = vk::ImageTiling::eOptimal;
             msaa_image_info.mips = 1;
         }
@@ -56,8 +56,8 @@ namespace tethys::api {
 
         Image::CreateInfo depth_image_info{}; {
             depth_image_info.format = vk::Format::eD24UnormS8Uint;
-            depth_image_info.width = 2048;
-            depth_image_info.height = 2048;
+            depth_image_info.width = context.swapchain.extent.width * 2;
+            depth_image_info.height = context.swapchain.extent.height * 2;
             depth_image_info.usage_flags = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled;
             depth_image_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             depth_image_info.tiling = vk::ImageTiling::eOptimal;

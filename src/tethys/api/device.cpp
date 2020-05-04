@@ -5,7 +5,7 @@
 
 namespace tethys::api {
     [[nodiscard]] static vk::SampleCountFlagBits get_max_sample_count(const vk::PhysicalDevice physical) {
-        auto physical_device_properties = physical.getProperties(ctx.dispatcher);
+        auto physical_device_properties = physical.getProperties(context.dispatcher);
 
         auto count =
             physical_device_properties.limits.framebufferColorSampleCounts &
@@ -34,11 +34,11 @@ namespace tethys::api {
     }
 
      [[nodiscard]] static vk::PhysicalDevice get_physical_device() {
-        auto physical_devices = ctx.instance.enumeratePhysicalDevices(ctx.dispatcher);
+        auto physical_devices = context.instance.enumeratePhysicalDevices(context.dispatcher);
 
         for (const auto& device : physical_devices) {
-            auto device_properties = device.getProperties(ctx.dispatcher);
-            auto device_features = device.getFeatures(ctx.dispatcher);
+            auto device_properties = device.getProperties(context.dispatcher);
+            auto device_features = device.getFeatures(context.dispatcher);
 
             if ((device_properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu  ||
                  device_properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu ||
@@ -140,16 +140,16 @@ namespace tethys::api {
         Device device{};
 
         device.physical = get_physical_device();
-        device.queue_family = get_queue_family(ctx.surface, device.physical, ctx.dispatcher);
-        device.logical = get_device(device.queue_family, device.physical, ctx.dispatcher);
-        device.queue = get_queue(device.logical, device.queue_family, ctx.dispatcher);
-        device.max_samples = get_max_sample_count(device.physical);
+        device.queue_family = get_queue_family(context.surface, device.physical, context.dispatcher);
+        device.logical = get_device(device.queue_family, device.physical, context.dispatcher);
+        device.queue = get_queue(device.logical, device.queue_family, context.dispatcher);
+        device.samples = get_max_sample_count(device.physical);
 
         return device;
     }
 
     u64 find_memory_type(const u32 mask, const vk::MemoryPropertyFlags& flags) {
-        const vk::PhysicalDeviceMemoryProperties memory_properties = ctx.device.physical.getMemoryProperties(ctx.dispatcher);
+        const vk::PhysicalDeviceMemoryProperties memory_properties = context.device.physical.getMemoryProperties(context.dispatcher);
 
         for (u32 i = 0; i < memory_properties.memoryTypeCount; ++i) {
             if ((mask & (1u << i)) &&

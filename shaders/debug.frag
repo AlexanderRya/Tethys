@@ -45,6 +45,13 @@ layout (push_constant) uniform Constants {
     uint directional_lights_count;
 };
 
+float linearize(float depth) {
+    float near = 1.0;
+    float far = 96.0;
+
+    return (2.0 * near) / (far + near - depth * (far - near));
+}
+
 void main() {
-    frag_color = vec4(vec3(texture(shadow_map, uvs).r), 1.0);
+    frag_color = vec4(vec3(1.0 - linearize(texture(shadow_map, uvs).r)), 1.0);
 }

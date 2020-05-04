@@ -4,7 +4,7 @@
 
 namespace tethys::api {
     Image make_image(const Image::CreateInfo& info) {
-        if (info.samples > ctx.device.max_samples) {
+        if (info.samples > context.device.samples) {
             throw std::invalid_argument("Number of samples requested not supported by the GPU");
         }
 
@@ -38,7 +38,7 @@ namespace tethys::api {
         Image image{};
 
         vmaCreateImage(
-            ctx.allocator,
+            context.allocator,
             reinterpret_cast<VkImageCreateInfo*>(&image_info),
             &allocation_create_info,
             reinterpret_cast<VkImage*>(&image.handle),
@@ -70,7 +70,7 @@ namespace tethys::api {
             image_view_create_info.subresourceRange.layerCount = 1;
         }
 
-        return ctx.device.logical.createImageView(image_view_create_info, nullptr, ctx.dispatcher);
+        return context.device.logical.createImageView(image_view_create_info, nullptr, context.dispatcher);
     }
 
     void transition_image_layout(vk::Image image, const vk::ImageLayout old_layout, const vk::ImageLayout new_layout, const u32 mips) {
@@ -147,7 +147,7 @@ namespace tethys::api {
                 nullptr,
                 nullptr,
                 image_memory_barrier,
-                ctx.dispatcher);
+                context.dispatcher);
 
             end_transient(command_buffer);
         }

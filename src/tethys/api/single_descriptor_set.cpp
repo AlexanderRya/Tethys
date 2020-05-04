@@ -7,11 +7,11 @@ namespace tethys::api {
     void SingleDescriptorSet::create(const vk::DescriptorSetLayout layout) {
         vk::DescriptorSetAllocateInfo info{}; {
             info.descriptorSetCount = 1;
-            info.descriptorPool = ctx.descriptor_pool;
+            info.descriptorPool = context.descriptor_pool;
             info.pSetLayouts = &layout;
         }
 
-        descriptor_set = ctx.device.logical.allocateDescriptorSets(info, ctx.dispatcher).back();
+        descriptor_set = context.device.logical.allocateDescriptorSets(info, context.dispatcher).back();
     }
 
     void SingleDescriptorSet::update(const SingleUpdateBufferInfo& info) {
@@ -26,7 +26,7 @@ namespace tethys::api {
             write.descriptorType = info.type;
         }
 
-        ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
+        context.device.logical.updateDescriptorSets(write, nullptr, context.dispatcher);
     }
 
     void SingleDescriptorSet::update(const std::vector<SingleUpdateBufferInfo>& info) {
@@ -42,7 +42,7 @@ namespace tethys::api {
                 write.descriptorType = each.type;
             }
 
-            ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
+            context.device.logical.updateDescriptorSets(write, nullptr, context.dispatcher);
         }
     }
 
@@ -58,7 +58,7 @@ namespace tethys::api {
             write.descriptorType = info.type;
         }
 
-        ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
+        context.device.logical.updateDescriptorSets(write, nullptr, context.dispatcher);
     }
 
     void SingleDescriptorSet::update(const SingleUpdateImageInfo& info) {
@@ -73,7 +73,7 @@ namespace tethys::api {
             write.descriptorType = info.type;
         }
 
-        ctx.device.logical.updateDescriptorSets(write, nullptr, ctx.dispatcher);
+        context.device.logical.updateDescriptorSets(write, nullptr, context.dispatcher);
     }
 
     vk::DescriptorSet SingleDescriptorSet::handle() const {

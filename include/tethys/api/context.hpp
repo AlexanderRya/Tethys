@@ -14,7 +14,7 @@ namespace tethys::api {
         vk::Device logical{};
         vk::Queue queue{};
         u32 queue_family{};
-        vk::SampleCountFlagBits max_samples{};
+        vk::SampleCountFlagBits samples{};
     };
 
     struct Swapchain {
@@ -42,7 +42,7 @@ namespace tethys::api {
         vk::CommandPool command_pool{};
         vk::CommandPool transient_pool{};
         vk::DescriptorPool descriptor_pool{};
-    } ctx;
+    } context;
 } // namespace tethys::api
 
 #endif //TETHYS_CONTEXT_HPP

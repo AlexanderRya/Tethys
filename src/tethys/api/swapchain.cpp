@@ -35,7 +35,7 @@ namespace tethys::api {
     }
 
     [[nodiscard]] static vk::SurfaceFormatKHR get_format() {
-        auto surface_formats = ctx.device.physical.getSurfaceFormatsKHR(ctx.surface, {}, ctx.dispatcher);
+        auto surface_formats = context.device.physical.getSurfaceFormatsKHR(context.surface, {}, context.dispatcher);
 
         vk::SurfaceFormatKHR format = surface_formats[0];
 
@@ -56,7 +56,7 @@ namespace tethys::api {
     }
 
     [[nodiscard]] static vk::PresentModeKHR get_present_mode() {
-        for (const auto& mode : ctx.device.physical.getSurfacePresentModesKHR(ctx.surface, {}, ctx.dispatcher)) {
+        for (const auto& mode : context.device.physical.getSurfacePresentModesKHR(context.surface, {}, context.dispatcher)) {
             if (mode == vk::PresentModeKHR::eImmediate) {
                 logger::info("Swapchain details: present mode: vk::PresentModeKHR::", vk::to_string(mode));
                 return mode;
@@ -70,7 +70,7 @@ namespace tethys::api {
 
     static void get_swapchain(Swapchain& swapchain) {
         vk::SwapchainCreateInfoKHR swapchain_create_info{}; {
-            swapchain_create_info.surface = ctx.surface;
+            swapchain_create_info.surface = context.surface;
             swapchain_create_info.minImageCount = swapchain.image_count;
             swapchain_create_info.imageFormat = swapchain.format.format;
             swapchain_create_info.imageColorSpace = swapchain.format.colorSpace;
@@ -80,20 +80,20 @@ namespace tethys::api {
             swapchain_create_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
             swapchain_create_info.imageSharingMode = vk::SharingMode::eExclusive;
             swapchain_create_info.queueFamilyIndexCount = 1;
-            swapchain_create_info.pQueueFamilyIndices = &ctx.device.queue_family;
+            swapchain_create_info.pQueueFamilyIndices = &context.device.queue_family;
             swapchain_create_info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
             swapchain_create_info.presentMode = swapchain.present_mode;
             swapchain_create_info.clipped = true;
             swapchain_create_info.oldSwapchain = nullptr;
         }
 
-        swapchain.handle = ctx.device.logical.createSwapchainKHR(swapchain_create_info, nullptr, ctx.dispatcher);
+        swapchain.handle = context.device.logical.createSwapchainKHR(swapchain_create_info, nullptr, context.dispatcher);
 
         logger::info("Swapchain successfully created");
     }
 
     static void create_images(Swapchain& swapchain) {
-        swapchain.images = ctx.device.logical.getSwapchainImagesKHR(swapchain.handle, ctx.dispatcher);
+        swapchain.images = context.device.logical.getSwapchainImagesKHR(swapchain.handle, context.dispatcher);
 
         swapchain.image_views.reserve(swapchain.image_count);
 
@@ -105,7 +105,7 @@ namespace tethys::api {
     }
 
     Swapchain make_swapchain() {
-        auto capabilities = ctx.device.physical.getSurfaceCapabilitiesKHR(ctx.surface, ctx.dispatcher);
+        auto capabilities = context.device.physical.getSurfaceCapabilitiesKHR(context.surface, context.dispatcher);
 
         Swapchain swapchain{};
 

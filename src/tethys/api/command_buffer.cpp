@@ -8,12 +8,12 @@
 namespace tethys::api {
     std::vector<vk::CommandBuffer> make_rendering_command_buffers() {
         vk::CommandBufferAllocateInfo allocate_info{}; {
-            allocate_info.commandPool = ctx.command_pool;
-            allocate_info.commandBufferCount = ctx.swapchain.image_count;
+            allocate_info.commandPool = context.command_pool;
+            allocate_info.commandBufferCount = context.swapchain.image_count;
             allocate_info.level = vk::CommandBufferLevel::ePrimary;
         }
 
-        auto buffers = ctx.device.logical.allocateCommandBuffers(allocate_info, ctx.dispatcher);
+        auto buffers = context.device.logical.allocateCommandBuffers(allocate_info, context.dispatcher);
 
         logger::info("Created ", allocate_info.commandBufferCount, " command buffers for rendering");
 
@@ -24,32 +24,32 @@ namespace tethys::api {
         vk::CommandBufferAllocateInfo command_buffer_allocate_info{}; {
             command_buffer_allocate_info.commandBufferCount = 1;
             command_buffer_allocate_info.level = vk::CommandBufferLevel::ePrimary;
-            command_buffer_allocate_info.commandPool = ctx.transient_pool;
+            command_buffer_allocate_info.commandPool = context.transient_pool;
         }
 
-        auto command_buffers = ctx.device.logical.allocateCommandBuffers(command_buffer_allocate_info, ctx.dispatcher);
+        auto command_buffers = context.device.logical.allocateCommandBuffers(command_buffer_allocate_info, context.dispatcher);
 
         vk::CommandBufferBeginInfo begin_info{}; {
             begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
         }
 
-        command_buffers[0].begin(begin_info, ctx.dispatcher);
+        command_buffers[0].begin(begin_info, context.dispatcher);
 
         return command_buffers[0];
     }
 
     void end_transient(const vk::CommandBuffer command_buffer) {
-        command_buffer.end(ctx.dispatcher);
+        command_buffer.end(context.dispatcher);
 
         vk::SubmitInfo submit_info{}; {
             submit_info.commandBufferCount = 1;
             submit_info.pCommandBuffers = &command_buffer;
         }
 
-        ctx.device.queue.submit(submit_info, nullptr, ctx.dispatcher);
+        context.device.queue.submit(submit_info, nullptr, context.dispatcher);
 
-        ctx.device.queue.waitIdle(ctx.dispatcher);
+        context.device.queue.waitIdle(context.dispatcher);
 
-        ctx.device.logical.freeCommandBuffers(ctx.transient_pool, command_buffer, ctx.dispatcher);
+        context.device.logical.freeCommandBuffers(context.transient_pool, command_buffer, context.dispatcher);
     }
 } // namespace tethys::api

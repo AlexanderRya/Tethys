@@ -9,7 +9,7 @@ namespace tethys::api {
     vk::RenderPass make_offscreen_render_pass(const Offscreen& offscreen) {
         vk::AttachmentDescription color_description{}; {
             color_description.format = offscreen.msaa_image.format;
-            color_description.samples = ctx.device.max_samples;
+            color_description.samples = context.device.samples;
             color_description.loadOp = vk::AttachmentLoadOp::eClear;
             color_description.storeOp = vk::AttachmentStoreOp::eStore;
             color_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
@@ -25,7 +25,7 @@ namespace tethys::api {
 
         vk::AttachmentDescription depth_description{}; {
             depth_description.format = offscreen.depth_image.format;
-            depth_description.samples = ctx.device.max_samples;
+            depth_description.samples = context.device.samples;
             depth_description.loadOp = vk::AttachmentLoadOp::eClear;
             depth_description.storeOp = vk::AttachmentStoreOp::eDontCare;
             depth_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
@@ -87,7 +87,7 @@ namespace tethys::api {
             render_pass_create_info.pDependencies = &subpass_dependency;
         }
 
-        auto render_pass = ctx.device.logical.createRenderPass(render_pass_create_info, nullptr, ctx.dispatcher);
+        auto render_pass = context.device.logical.createRenderPass(render_pass_create_info, nullptr, context.dispatcher);
 
         logger::info("Offscreen renderpass successfully created");
 
@@ -137,7 +137,7 @@ namespace tethys::api {
             render_pass_create_info.pDependencies = &subpass_dependency;
         }
 
-        auto render_pass = ctx.device.logical.createRenderPass(render_pass_create_info, nullptr, ctx.dispatcher);
+        auto render_pass = context.device.logical.createRenderPass(render_pass_create_info, nullptr, context.dispatcher);
 
         logger::info("Shadow renderpass successfully created");
 

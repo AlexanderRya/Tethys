@@ -20,9 +20,9 @@ namespace tethys::api {
 
         logger::info("Vulkan module: ", util::vulkan_module, " loaded at address: ", module);
 
-        ctx.dispatcher.vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(util::load_symbol(module, "vkCreateInstance"));
-        ctx.dispatcher.vkEnumerateInstanceExtensionProperties = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(util::load_symbol(module, "vkEnumerateInstanceExtensionProperties"));
-        ctx.dispatcher.vkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(util::load_symbol(module, "vkGetInstanceProcAddr"));
+         context.dispatcher.vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(util::load_symbol(module, "vkCreateInstance"));
+         context.dispatcher.vkEnumerateInstanceExtensionProperties = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(util::load_symbol(module, "vkEnumerateInstanceExtensionProperties"));
+         context.dispatcher.vkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(util::load_symbol(module, "vkGetInstanceProcAddr"));
 
         util::close_module(module);
     }
@@ -30,36 +30,36 @@ namespace tethys::api {
      static void load_vma() {
         logger::info("Initializing Vulkan Memory Allocator.");
 
-        ctx.vma_dispatcher.vkAllocateMemory = ctx.dispatcher.vkAllocateMemory;
-        ctx.vma_dispatcher.vkBindBufferMemory = ctx.dispatcher.vkBindBufferMemory;
-        ctx.vma_dispatcher.vkBindBufferMemory2KHR = ctx.dispatcher.vkBindBufferMemory2KHR;
-        ctx.vma_dispatcher.vkBindImageMemory = ctx.dispatcher.vkBindImageMemory;
-        ctx.vma_dispatcher.vkBindImageMemory2KHR = ctx.dispatcher.vkBindImageMemory2KHR;
-        ctx.vma_dispatcher.vkCmdCopyBuffer = ctx.dispatcher.vkCmdCopyBuffer;
-        ctx.vma_dispatcher.vkCreateBuffer = ctx.dispatcher.vkCreateBuffer;
-        ctx.vma_dispatcher.vkCreateImage = ctx.dispatcher.vkCreateImage;
-        ctx.vma_dispatcher.vkDestroyBuffer = ctx.dispatcher.vkDestroyBuffer;
-        ctx.vma_dispatcher.vkDestroyImage = ctx.dispatcher.vkDestroyImage;
-        ctx.vma_dispatcher.vkFlushMappedMemoryRanges = ctx.dispatcher.vkFlushMappedMemoryRanges;
-        ctx.vma_dispatcher.vkFreeMemory = ctx.dispatcher.vkFreeMemory;
-        ctx.vma_dispatcher.vkGetBufferMemoryRequirements = ctx.dispatcher.vkGetBufferMemoryRequirements;
-        ctx.vma_dispatcher.vkGetBufferMemoryRequirements2KHR = ctx.dispatcher.vkGetBufferMemoryRequirements2KHR;
-        ctx.vma_dispatcher.vkGetImageMemoryRequirements = ctx.dispatcher.vkGetImageMemoryRequirements;
-        ctx.vma_dispatcher.vkGetImageMemoryRequirements2KHR = ctx.dispatcher.vkGetImageMemoryRequirements2KHR;
-        ctx.vma_dispatcher.vkGetPhysicalDeviceMemoryProperties = ctx.dispatcher.vkGetPhysicalDeviceMemoryProperties;
-        ctx.vma_dispatcher.vkGetPhysicalDeviceMemoryProperties2KHR = ctx.dispatcher.vkGetPhysicalDeviceMemoryProperties2KHR;
-        ctx.vma_dispatcher.vkGetPhysicalDeviceProperties = ctx.dispatcher.vkGetPhysicalDeviceProperties;
-        ctx.vma_dispatcher.vkInvalidateMappedMemoryRanges = ctx.dispatcher.vkInvalidateMappedMemoryRanges;
-        ctx.vma_dispatcher.vkMapMemory = ctx.dispatcher.vkMapMemory;
-        ctx.vma_dispatcher.vkUnmapMemory = ctx.dispatcher.vkUnmapMemory;
+         context.vma_dispatcher.vkAllocateMemory = context.dispatcher.vkAllocateMemory;
+         context.vma_dispatcher.vkBindBufferMemory = context.dispatcher.vkBindBufferMemory;
+         context.vma_dispatcher.vkBindBufferMemory2KHR = context.dispatcher.vkBindBufferMemory2KHR;
+         context.vma_dispatcher.vkBindImageMemory = context.dispatcher.vkBindImageMemory;
+         context.vma_dispatcher.vkBindImageMemory2KHR = context.dispatcher.vkBindImageMemory2KHR;
+         context.vma_dispatcher.vkCmdCopyBuffer = context.dispatcher.vkCmdCopyBuffer;
+         context.vma_dispatcher.vkCreateBuffer = context.dispatcher.vkCreateBuffer;
+         context.vma_dispatcher.vkCreateImage = context.dispatcher.vkCreateImage;
+         context.vma_dispatcher.vkDestroyBuffer = context.dispatcher.vkDestroyBuffer;
+         context.vma_dispatcher.vkDestroyImage = context.dispatcher.vkDestroyImage;
+         context.vma_dispatcher.vkFlushMappedMemoryRanges = context.dispatcher.vkFlushMappedMemoryRanges;
+         context.vma_dispatcher.vkFreeMemory = context.dispatcher.vkFreeMemory;
+         context.vma_dispatcher.vkGetBufferMemoryRequirements = context.dispatcher.vkGetBufferMemoryRequirements;
+         context.vma_dispatcher.vkGetBufferMemoryRequirements2KHR = context.dispatcher.vkGetBufferMemoryRequirements2KHR;
+         context.vma_dispatcher.vkGetImageMemoryRequirements = context.dispatcher.vkGetImageMemoryRequirements;
+         context.vma_dispatcher.vkGetImageMemoryRequirements2KHR = context.dispatcher.vkGetImageMemoryRequirements2KHR;
+         context.vma_dispatcher.vkGetPhysicalDeviceMemoryProperties = context.dispatcher.vkGetPhysicalDeviceMemoryProperties;
+         context.vma_dispatcher.vkGetPhysicalDeviceMemoryProperties2KHR = context.dispatcher.vkGetPhysicalDeviceMemoryProperties2KHR;
+         context.vma_dispatcher.vkGetPhysicalDeviceProperties = context.dispatcher.vkGetPhysicalDeviceProperties;
+         context.vma_dispatcher.vkInvalidateMappedMemoryRanges = context.dispatcher.vkInvalidateMappedMemoryRanges;
+         context.vma_dispatcher.vkMapMemory = context.dispatcher.vkMapMemory;
+         context.vma_dispatcher.vkUnmapMemory = context.dispatcher.vkUnmapMemory;
     }
 
      [[nodiscard]] static VmaAllocator make_allocator() {
         VmaAllocatorCreateInfo allocator_create_info{}; {
-            allocator_create_info.pVulkanFunctions = &ctx.vma_dispatcher;
-            allocator_create_info.instance = static_cast<VkInstance>(ctx.instance);
-            allocator_create_info.device = static_cast<VkDevice>(ctx.device.logical);
-            allocator_create_info.physicalDevice = static_cast<VkPhysicalDevice>(ctx.device.physical);
+            allocator_create_info.pVulkanFunctions = &context.vma_dispatcher;
+            allocator_create_info.instance = static_cast<VkInstance>(context.instance);
+            allocator_create_info.device = static_cast<VkDevice>(context.device.logical);
+            allocator_create_info.physicalDevice = static_cast<VkPhysicalDevice>(context.device.physical);
             allocator_create_info.pHeapSizeLimit = nullptr;
             allocator_create_info.pRecordSettings = nullptr;
             allocator_create_info.pAllocationCallbacks = nullptr;
@@ -83,20 +83,20 @@ namespace tethys::api {
     void initialise() {
         logger::info("Vulkan initialization sequence starting");
         load_vulkan_module();
-        ctx.instance = make_instance();
-        ctx.dispatcher.init(static_cast<VkInstance>(ctx.instance), ctx.dispatcher.vkGetInstanceProcAddr);
+        context.instance = make_instance();
+        context.dispatcher.init(static_cast<VkInstance>(context.instance), context.dispatcher.vkGetInstanceProcAddr);
         load_vma();
 #if defined(TETHYS_DEBUG)
         logger::warning("Vulkan debug mode active, performance may be lower than usual");
         ctx.validation = install_validation_layers();
 #endif
-        ctx.surface = tethys::window::surface();
-        ctx.device = make_device();
-        ctx.command_pool = make_command_pool();
-        ctx.transient_pool = make_transient_pool();
-        ctx.allocator = make_allocator();
-        ctx.swapchain = make_swapchain();
-        ctx.descriptor_pool = make_descriptor_pool();
+        context.surface = tethys::window::surface();
+        context.device = make_device();
+        context.command_pool = make_command_pool();
+        context.transient_pool = make_transient_pool();
+        context.allocator = make_allocator();
+        context.swapchain = make_swapchain();
+        context.descriptor_pool = make_descriptor_pool();
         make_samplers();
 
         logger::info("Vulkan initialization sequence completed successfully");

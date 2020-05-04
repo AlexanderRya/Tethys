@@ -28,7 +28,7 @@ namespace tethys::api {
         u32 count = 0;
 
         auto required_extensions = glfwGetRequiredInstanceExtensions(&count);
-        auto extensions = vk::enumerateInstanceExtensionProperties(nullptr, {}, ctx.dispatcher);
+        auto extensions = vk::enumerateInstanceExtensionProperties(nullptr, {}, context.dispatcher);
 
         std::vector<const char*> enabled_extensions;
         enabled_extensions.reserve(count + 2);
@@ -78,7 +78,7 @@ namespace tethys::api {
 #endif
         }
 
-        return vk::createInstance(instance_create_info, nullptr, ctx.dispatcher);
+        return vk::createInstance(instance_create_info, nullptr, context.dispatcher);
     }
 
     vk::DebugUtilsMessengerEXT install_validation_layers() {
@@ -94,6 +94,6 @@ namespace tethys::api {
             create_info.pfnUserCallback = vulkan_debug_callback;
         }
 
-        return ctx.instance.createDebugUtilsMessengerEXT(create_info, nullptr, ctx.dispatcher);
+        return context.instance.createDebugUtilsMessengerEXT(create_info, nullptr, context.dispatcher);
     }
 } // namespace tethys::api

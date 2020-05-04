@@ -48,7 +48,7 @@ namespace tethys::window {
 
         VkSurfaceKHR sf{};
 
-        glfwCreateWindowSurface(static_cast<VkInstance>(ctx.instance), window.handle, nullptr, &sf);
+        glfwCreateWindowSurface(static_cast<VkInstance>(context.instance), window.handle, nullptr, &sf);
 
         return sf;
     }

@@ -19,7 +19,7 @@ namespace tethys::api {
             descriptor_pool_create_info.maxSets = descriptor_pool_sizes.size() * 100000;
         }
 
-        auto pool = ctx.device.logical.createDescriptorPool(descriptor_pool_create_info, nullptr, ctx.dispatcher);
+        auto pool = context.device.logical.createDescriptorPool(descriptor_pool_create_info, nullptr, context.dispatcher);
 
         logger::info("Descriptor pool successfully created, sizes:");
         for (const auto& [type, count] : descriptor_pool_sizes) {

@@ -52,13 +52,12 @@ layout (push_constant) uniform Constants {
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
 vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir);
-float calculate_shadows(vec3 norms);
+float calculate_shadows();
 
 void main() {
     vec3 result = vec3(1.0);
-    vec4 color = texture(textures[diffuse_index], uvs).rgba;
+    vec3 albedo = texture(textures[diffuse_index], uvs).rgb;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
-    vec3 albedo = color.rgb;
 
     result = albedo * ambient;
 
@@ -73,9 +72,9 @@ void main() {
         result += apply_directional_light(directional_lights[i], albedo, specular, norms, view_dir);
     }
 
-    result *= calculate_shadows(norms);
+    float shadow = calculate_shadows();
 
-    frag_color = vec4(result, 1.0);
+    frag_color = vec4(result * shadow, 1.0);
 }
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir) {
@@ -116,22 +115,18 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
     return result_diffuse + result_specular;
 }
 
-float calculate_shadows(vec3 norms) {
-    vec3 light_space_ndc = shadow_frag_pos.xyz / shadow_frag_pos.w;
-    vec2 shadow_uv = light_space_ndc.xy * 0.5 + 0.5;
+float calculate_shadows() {
+    vec4 shadow_coord = shadow_frag_pos / shadow_frag_pos.w;
 
-    if (light_space_ndc.z > 1.0) {
+    if (shadow_coord.z > 1.0) {
         return 1.0;
     }
 
-    float closest = texture(shadow_map, shadow_uv).r;
-    float current = light_space_ndc.z;
+    float dist = texture(shadow_map, shadow_coord.st).r;
 
-    float bias = max(0.05 * (1.0 - dot(norms, normalize(point_lights[0].position - frag_pos))), 0.005);
-
-    if (closest + bias > current) {
-        return 1.0;
+    if (shadow_coord.w > 0.0 && dist < shadow_coord.z) {
+        return ambient;
     }
 
-    return ambient;
+    return 1.0;
 }

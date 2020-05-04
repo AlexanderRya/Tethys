@@ -112,8 +112,8 @@ namespace tethys::renderer {
         render_finished.reserve(frames_in_flight);
 
         for (u64 i = 0; i < frames_in_flight; ++i) {
-            image_available.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
-            render_finished.emplace_back(ctx.device.logical.createSemaphore(semaphore_create_info, nullptr, ctx.dispatcher));
+            image_available.emplace_back(context.device.logical.createSemaphore(semaphore_create_info, nullptr, context.dispatcher));
+            render_finished.emplace_back(context.device.logical.createSemaphore(semaphore_create_info, nullptr, context.dispatcher));
         }
 
         in_flight.resize(frames_in_flight, nullptr);
@@ -127,7 +127,7 @@ namespace tethys::renderer {
             generic_info.subpass_idx = 0;
             generic_info.layout_idx = layout::generic;
             generic_info.render_pass = offscreen_render_pass;
-            generic_info.samples = ctx.device.max_samples;
+            generic_info.samples = context.device.samples;
             generic_info.cull = vk::CullModeFlagBits::eNone;
             generic_info.dynamic_states = {
                 vk::DynamicState::eViewport,
@@ -142,7 +142,7 @@ namespace tethys::renderer {
             minimal_info.subpass_idx = 0;
             minimal_info.render_pass = offscreen_render_pass;
             minimal_info.layout_idx = layout::minimal;
-            minimal_info.samples = ctx.device.max_samples;
+            minimal_info.samples = context.device.samples;
             generic_info.cull = vk::CullModeFlagBits::eNone;
             minimal_info.dynamic_states = {
                 vk::DynamicState::eViewport,
@@ -161,7 +161,8 @@ namespace tethys::renderer {
             shadow_info.cull = vk::CullModeFlagBits::eBack;
             shadow_info.dynamic_states = {
                 vk::DynamicState::eViewport,
-                vk::DynamicState::eScissor
+                vk::DynamicState::eScissor,
+                vk::DynamicState::eDepthBias
             };
         }
         shadow = make_pipeline(shadow_info);
@@ -172,7 +173,7 @@ namespace tethys::renderer {
             debug_info.subpass_idx = 0;
             debug_info.render_pass = offscreen_render_pass;
             debug_info.layout_idx = layout::generic;
-            debug_info.samples = ctx.device.max_samples;
+            debug_info.samples = context.device.samples;
             debug_info.cull = vk::CullModeFlagBits::eNone;
             debug_info.dynamic_states = {
                 vk::DynamicState::eViewport,
@@ -414,7 +415,7 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 7.5f);
+        auto light_proj = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, 96.0f);
         light_proj[1][1] *= -1;
 
         auto light_view = glm::lookAt(
@@ -424,8 +425,8 @@ namespace tethys::renderer {
 
         light_space_buffer.write(light_proj * light_view);
 
-        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, ctx.dispatcher);
-        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, ctx.dispatcher);
+        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, context.dispatcher);
+        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, context.dispatcher);
 
         for (usize i = 0; i < data.draw_commands.size(); ++i) {
             auto& draw = data.draw_commands[i];
@@ -439,10 +440,10 @@ namespace tethys::renderer {
                     static_cast<u32>(i)
                 };
 
-                command_buffer.pushConstants<u32>(shadow.layout.pipeline, vk::ShaderStageFlagBits::eVertex, 0, indices, ctx.dispatcher);
-                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
-                command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-                command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
+                command_buffer.pushConstants<u32>(shadow.layout.pipeline, vk::ShaderStageFlagBits::eVertex, 0, indices, context.dispatcher);
+                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
+                command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), context.dispatcher);
+                command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, context.dispatcher);
             }
         }
     }
@@ -473,23 +474,23 @@ namespace tethys::renderer {
                         static_cast<u32>(data.directional_lights.size())
                     };
 
-                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, ctx.dispatcher);
-                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
-                    command_buffer.pushConstants<u32>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, ctx.dispatcher);
+                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, context.dispatcher);
+                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, context.dispatcher);
+                    command_buffer.pushConstants<u32>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
                 } else if (draw.shader == shader::minimal) {
                     std::array indices{
                         static_cast<u32>(i),
                         static_cast<u32>(submesh.diffuse.index)
                     };
 
-                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, ctx.dispatcher);
-                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, ctx.dispatcher);
-                    command_buffer.pushConstants<u32>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, ctx.dispatcher);
+                    command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, context.dispatcher);
+                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, context.dispatcher);
+                    command_buffer.pushConstants<u32>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
                 }
 
-                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
-                command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-                command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
+                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
+                command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), context.dispatcher);
+                command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, context.dispatcher);
             }
         }
 
@@ -503,20 +504,20 @@ namespace tethys::renderer {
         auto& vbo = vertex_buffers[debug_quad.vbo_index];
         auto& ibo = index_buffers[debug_quad.ibo_index];
 
-        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, debug.handle, ctx.dispatcher);
-        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, debug.layout.pipeline, 0, sets, nullptr, ctx.dispatcher);
-        command_buffer.pushConstants<u32>(debug.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, ctx.dispatcher);
-        command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, ctx.dispatcher);
-        command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), ctx.dispatcher);
-        command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, ctx.dispatcher);
+        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, debug.handle, context.dispatcher);
+        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, debug.layout.pipeline, 0, sets, nullptr, context.dispatcher);
+        command_buffer.pushConstants<u32>(debug.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
+        command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
+        command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), context.dispatcher);
+        command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, context.dispatcher);
     }
 
     static void copy_to_swapchain() {
         auto& command_buffer = command_buffers[image_index];
 
         vk::ImageCopy copy{}; {
-            copy.extent.width = ctx.swapchain.extent.width;
-            copy.extent.height = ctx.swapchain.extent.height;
+            copy.extent.width = context.swapchain.extent.width;
+            copy.extent.height = context.swapchain.extent.height;
             copy.extent.depth = 1;
             copy.srcOffset = vk::Offset3D{};
             copy.dstOffset = vk::Offset3D{};
@@ -531,7 +532,7 @@ namespace tethys::renderer {
         }
 
         vk::ImageMemoryBarrier copy_barrier{}; {
-            copy_barrier.image = ctx.swapchain.images[image_index];
+            copy_barrier.image = context.swapchain.images[image_index];
             copy_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             copy_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             copy_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -552,15 +553,15 @@ namespace tethys::renderer {
             nullptr,
             nullptr,
             copy_barrier,
-            ctx.dispatcher);
+            context.dispatcher);
 
         command_buffer.copyImage(
             offscreen.image.handle, vk::ImageLayout::eTransferSrcOptimal,
-            ctx.swapchain.images[image_index], vk::ImageLayout::eTransferDstOptimal,
-            copy, ctx.dispatcher);
+            context.swapchain.images[image_index], vk::ImageLayout::eTransferDstOptimal,
+            copy, context.dispatcher);
 
         vk::ImageMemoryBarrier present_barrier{}; {
-            present_barrier.image = ctx.swapchain.images[image_index];
+            present_barrier.image = context.swapchain.images[image_index];
             present_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             present_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             present_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -581,22 +582,22 @@ namespace tethys::renderer {
             nullptr,
             nullptr,
             present_barrier,
-            ctx.dispatcher);
+            context.dispatcher);
     }
 
 
     void draw(const RenderData& data) {
-        image_index = ctx.device.logical.acquireNextImageKHR(ctx.swapchain.handle, -1, image_available[current_frame], nullptr, ctx.dispatcher).value;
+        image_index = context.device.logical.acquireNextImageKHR(context.swapchain.handle, -1, image_available[current_frame], nullptr, context.dispatcher).value;
 
         if (!in_flight[current_frame]) {
             vk::FenceCreateInfo fence_create_info{}; {
                 fence_create_info.flags = vk::FenceCreateFlagBits::eSignaled;
             }
 
-            in_flight[current_frame] = ctx.device.logical.createFence(fence_create_info, nullptr, ctx.dispatcher);
+            in_flight[current_frame] = context.device.logical.createFence(fence_create_info, nullptr, context.dispatcher);
         }
 
-        ctx.device.logical.waitForFences(in_flight[current_frame], true, -1, ctx.dispatcher);
+        context.device.logical.waitForFences(in_flight[current_frame], true, -1, context.dispatcher);
 
         auto& command_buffer = command_buffers[image_index];
 
@@ -604,7 +605,7 @@ namespace tethys::renderer {
             begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
         }
 
-        command_buffer.begin(begin_info, ctx.dispatcher);
+        command_buffer.begin(begin_info, context.dispatcher);
 
         update_transforms(data);
         update_camera(data.camera);
@@ -639,12 +640,13 @@ namespace tethys::renderer {
                 scissor.offset = { { 0, 0 } };
             }
 
-            command_buffer.setViewport(0, viewport, ctx.dispatcher);
-            command_buffer.setScissor(0, scissor, ctx.dispatcher);
+            command_buffer.setViewport(0, viewport, context.dispatcher);
+            command_buffer.setScissor(0, scissor, context.dispatcher);
+            command_buffer.setDepthBias(1.25025f, 0.0f, 1.75005f, context.dispatcher);
 
-            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
+            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, context.dispatcher);
             shadow_depth_draw_pass(data);
-            command_buffer.endRenderPass(ctx.dispatcher);
+            command_buffer.endRenderPass(context.dispatcher);
         }
 
         /* Final color pass */ {
@@ -654,7 +656,7 @@ namespace tethys::renderer {
             }
 
             vk::RenderPassBeginInfo render_pass_begin_info{}; {
-                render_pass_begin_info.renderArea.extent = ctx.swapchain.extent;
+                render_pass_begin_info.renderArea.extent = context.swapchain.extent;
                 render_pass_begin_info.framebuffer = offscreen_framebuffer;
                 render_pass_begin_info.renderPass = offscreen_render_pass;
                 render_pass_begin_info.clearValueCount = clear_values.size();
@@ -662,8 +664,8 @@ namespace tethys::renderer {
             }
 
             vk::Viewport viewport{}; {
-                viewport.width = ctx.swapchain.extent.width;
-                viewport.height = ctx.swapchain.extent.height;
+                viewport.width = context.swapchain.extent.width;
+                viewport.height = context.swapchain.extent.height;
                 viewport.x = 0;
                 viewport.y = 0;
                 viewport.minDepth = 0.0f;
@@ -671,21 +673,21 @@ namespace tethys::renderer {
             }
 
             vk::Rect2D scissor{}; {
-                scissor.extent = ctx.swapchain.extent;
+                scissor.extent = context.swapchain.extent;
                 scissor.offset = { { 0, 0 } };
             }
 
-            command_buffer.setViewport(0, viewport, ctx.dispatcher);
-            command_buffer.setScissor(0, scissor, ctx.dispatcher);
+            command_buffer.setViewport(0, viewport, context.dispatcher);
+            command_buffer.setScissor(0, scissor, context.dispatcher);
 
-            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, ctx.dispatcher);
+            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, context.dispatcher);
             final_draw_pass(data);
-            command_buffer.endRenderPass(ctx.dispatcher);
+            command_buffer.endRenderPass(context.dispatcher);
         }
 
         copy_to_swapchain();
 
-        command_buffer.end(ctx.dispatcher);
+        command_buffer.end(context.dispatcher);
     }
 
     void submit() {
@@ -700,18 +702,18 @@ namespace tethys::renderer {
             submit_info.pSignalSemaphores = &render_finished[current_frame];
         }
 
-        ctx.device.logical.resetFences(in_flight[current_frame], ctx.dispatcher);
-        ctx.device.queue.submit(submit_info, in_flight[current_frame], ctx.dispatcher);
+        context.device.logical.resetFences(in_flight[current_frame], context.dispatcher);
+        context.device.queue.submit(submit_info, in_flight[current_frame], context.dispatcher);
 
         vk::PresentInfoKHR present_info{}; {
             present_info.waitSemaphoreCount = 1;
             present_info.pWaitSemaphores = &render_finished[current_frame];
             present_info.swapchainCount = 1;
-            present_info.pSwapchains = &ctx.swapchain.handle;
+            present_info.pSwapchains = &context.swapchain.handle;
             present_info.pImageIndices = &image_index;
         }
 
-        ctx.device.queue.presentKHR(present_info, ctx.dispatcher);
+        context.device.queue.presentKHR(present_info, context.dispatcher);
 
         current_frame = (current_frame + 1) % frames_in_flight;
     }

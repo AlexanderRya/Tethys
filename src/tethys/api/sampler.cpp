@@ -24,16 +24,16 @@ namespace tethys::api {
             info.mipLodBias = 0;
         }
 
-        return ctx.device.logical.createSampler(info, nullptr, ctx.dispatcher);
+        return context.device.logical.createSampler(info, nullptr, context.dispatcher);
     }
 
     [[nodiscard]] static vk::Sampler make_depth_sampler() {
         vk::SamplerCreateInfo info{}; {
             info.magFilter = vk::Filter::eNearest;
             info.minFilter = vk::Filter::eNearest;
-            info.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-            info.addressModeV = vk::SamplerAddressMode::eClampToEdge;
-            info.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+            info.addressModeU = vk::SamplerAddressMode::eClampToBorder;
+            info.addressModeV = vk::SamplerAddressMode::eClampToBorder;
+            info.addressModeW = vk::SamplerAddressMode::eClampToBorder;
             info.anisotropyEnable = false;
             info.maxAnisotropy = 1;
             info.borderColor = vk::BorderColor::eFloatOpaqueWhite;
@@ -46,7 +46,7 @@ namespace tethys::api {
             info.mipLodBias = 0;
         }
 
-        return ctx.device.logical.createSampler(info, nullptr, ctx.dispatcher);
+        return context.device.logical.createSampler(info, nullptr, context.dispatcher);
     }
 
     void make_samplers() {
