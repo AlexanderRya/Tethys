@@ -293,7 +293,7 @@ namespace tethys {
         vk::PipelineRasterizationStateCreateInfo rasterizer_state_info{}; {
             rasterizer_state_info.lineWidth = 1.0f;
             rasterizer_state_info.depthBiasEnable = true;
-            rasterizer_state_info.depthClampEnable = true;
+            rasterizer_state_info.depthClampEnable = false;
             rasterizer_state_info.rasterizerDiscardEnable = false;
             rasterizer_state_info.polygonMode = vk::PolygonMode::eFill;
             rasterizer_state_info.cullMode = info.cull;

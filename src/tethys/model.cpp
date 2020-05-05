@@ -53,13 +53,17 @@ namespace tethys {
                 vertex.uvs.y = mesh->mTextureCoords[0][i].y;
             }
 
-            vertex.tangent.x = mesh->mTangents[i].x;
-            vertex.tangent.y = mesh->mTangents[i].y;
-            vertex.tangent.z = mesh->mTangents[i].z;
+            if (mesh->mTangents) {
+                vertex.tangent.x = mesh->mTangents[i].x;
+                vertex.tangent.y = mesh->mTangents[i].y;
+                vertex.tangent.z = mesh->mTangents[i].z;
+            }
 
-            vertex.bitangent.x = mesh->mBitangents[i].x;
-            vertex.bitangent.y = mesh->mBitangents[i].y;
-            vertex.bitangent.z = mesh->mBitangents[i].z;
+            if (mesh->mBitangents) {
+                vertex.bitangent.x = mesh->mBitangents[i].x;
+                vertex.bitangent.y = mesh->mBitangents[i].y;
+                vertex.bitangent.z = mesh->mBitangents[i].z;
+            }
 
             geometry.emplace_back(vertex);
         }
@@ -68,7 +72,7 @@ namespace tethys {
         indices.reserve(mesh->mNumFaces * 3);
 
         for (usize i = 0; i < mesh->mNumFaces; i++) {
-            aiFace& face = mesh->mFaces[i];
+            auto& face = mesh->mFaces[i];
             for (usize j = 0; j < face.mNumIndices; j++) {
                 indices.push_back(face.mIndices[j]);
             }
@@ -81,12 +85,16 @@ namespace tethys {
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
         sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
+        if (sub_mesh.specular.index == 1) { // Test
+            sub_mesh.specular = sub_mesh.diffuse;
+        }
+
         return sub_mesh;
     }
 
     static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::string& model_path) {
         for (usize i = 0; i < node->mNumMeshes; i++) {
-            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            auto mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(load_mesh(scene, mesh, model_path));
         }
 
@@ -99,7 +107,7 @@ namespace tethys {
         Model model;
         Assimp::Importer importer;
 
-        auto scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+        auto scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             throw std::runtime_error("Failed to load model");
@@ -114,7 +122,7 @@ namespace tethys {
         Model::SubMesh submesh{}; {
             submesh.mesh = renderer::write_geometry(vertices, indices);
             submesh.diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, vk::Format::eR8G8B8A8Srgb) : texture::white;
-            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : texture::black;
+            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : submesh.diffuse;
             submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, vk::Format::eR8G8B8A8Unorm) : texture::black;
         }
 

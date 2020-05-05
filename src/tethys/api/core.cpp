@@ -88,7 +88,7 @@ namespace tethys::api {
         load_vma();
 #if defined(TETHYS_DEBUG)
         logger::warning("Vulkan debug mode active, performance may be lower than usual");
-        ctx.validation = install_validation_layers();
+        context.validation = install_validation_layers();
 #endif
         context.surface = tethys::window::surface();
         context.device = make_device();

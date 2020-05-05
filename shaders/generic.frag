@@ -3,12 +3,14 @@
 
 const float ambient = 0.1;
 
-layout (location = 0) in vec3 vertex_pos;
-layout (location = 1) in vec3 frag_pos;
-layout (location = 2) in vec3 normals;
-layout (location = 3) in vec2 uvs;
-layout (location = 4) in vec3 view_pos;
-layout (location = 5) in vec4 shadow_frag_pos;
+layout (location = 0) in vertex_out {
+    vec3 vertex_pos;
+    vec3 frag_pos;
+    vec2 uvs;
+    vec3 view_pos;
+    vec4 shadow_frag_pos;
+    mat3 TBN;
+};
 
 layout (location = 0) out vec4 frag_color;
 
@@ -56,12 +58,13 @@ float calculate_shadows();
 
 void main() {
     vec3 result = vec3(1.0);
+
     vec3 albedo = texture(textures[diffuse_index], uvs).rgb;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
+    vec3 norms = normalize(TBN * (texture(textures[normal_index], uvs).rgb * 2.0 - 1.0));
 
     result = albedo * ambient;
 
-    vec3 norms = normalize(normals);
     vec3 view_dir = normalize(view_pos - frag_pos);
 
     for (uint i = 0; i < point_lights_count; ++i) {
@@ -118,14 +121,11 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 float calculate_shadows() {
     vec4 shadow_coord = shadow_frag_pos / shadow_frag_pos.w;
 
-    if (shadow_coord.z > 1.0) {
-        return 1.0;
-    }
-
-    float dist = texture(shadow_map, shadow_coord.st).r;
-
-    if (shadow_coord.w > 0.0 && dist < shadow_coord.z) {
-        return ambient;
+    if (shadow_coord.z > -1.0 && shadow_coord.z < 1.0) {
+        float light_depth = texture(shadow_map, shadow_coord.st).r;
+        if (shadow_coord.w > 0.0 && light_depth < shadow_coord.z) {
+            return ambient;
+        }
     }
 
     return 1.0;

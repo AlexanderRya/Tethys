@@ -9,7 +9,8 @@ layout (location = 4) in vec3 ibi_tangents;
 layout (location = 0) out vec2 uvs;
 
 layout (set = 0, binding = 0) uniform Camera {
-    mat4 pv;
+    mat4 proj;
+    mat4 view;
     vec4 pos;
 } camera;
 
@@ -24,5 +25,5 @@ layout (push_constant) uniform Constants {
 
 void main() {
     uvs = iuvs;
-    gl_Position = camera.pv * transforms[transform_index] * vec4(ivertex_pos, 1.0);
+    gl_Position = camera.proj * camera.view * transforms[transform_index] * vec4(ivertex_pos, 1.0);
 }

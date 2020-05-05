@@ -6,7 +6,8 @@
 
 namespace tethys {
     struct Camera {
-        glm::mat4 pv_mat;
+        glm::mat4 projection;
+        glm::mat4 view;
         glm::vec4 pos;
     };
 } // namespace tethys

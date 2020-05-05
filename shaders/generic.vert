@@ -6,15 +6,18 @@ layout (location = 2) in vec2 iuvs;
 layout (location = 3) in vec3 itangents;
 layout (location = 4) in vec3 ibi_tangents;
 
-layout (location = 0) out vec3 vertex_pos;
-layout (location = 1) out vec3 frag_pos;
-layout (location = 2) out vec3 normals;
-layout (location = 3) out vec2 uvs;
-layout (location = 4) out vec3 view_pos;
-layout (location = 5) out vec4 shadow_frag_pos;
+layout (location = 0) out vertex_out {
+    vec3 vertex_pos;
+    vec3 frag_pos;
+    vec2 uvs;
+    vec3 view_pos;
+    vec4 shadow_frag_pos;
+    mat3 TBN;
+};
 
 layout (set = 0, binding = 0) uniform Camera {
-    mat4 pv;
+    mat4 proj;
+    mat4 view;
     vec4 pos;
 } camera;
 
@@ -44,11 +47,15 @@ const mat4 bias = mat4(
 void main() {
     mat4 model = transforms[transform_index];
 
+    vec3 T = normalize(vec3(model * vec4(itangents, 0.0)));
+    vec3 B = normalize(vec3(model * vec4(ibi_tangents, 0.0)));
+    vec3 N = normalize(vec3(model * vec4(inormals, 0.0)));
+
+    TBN = mat3(T, B, N);
     vertex_pos = ivertex_pos;
     frag_pos = vec3(model * vec4(ivertex_pos, 1.0));
-    normals = transpose(inverse(mat3(model))) * inormals;
     uvs = iuvs;
     view_pos = vec3(camera.pos);
     shadow_frag_pos = (bias * light_space * model) * vec4(ivertex_pos, 1.0);
-    gl_Position = camera.pv * vec4(frag_pos, 1.0);
+    gl_Position = camera.proj * camera.view * vec4(frag_pos, 1.0);
 }
