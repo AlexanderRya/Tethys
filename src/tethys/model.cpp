@@ -85,10 +85,6 @@ namespace tethys {
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
         sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
-        if (sub_mesh.specular.index == 1) { // Test
-            sub_mesh.specular = sub_mesh.diffuse;
-        }
-
         return sub_mesh;
     }
 

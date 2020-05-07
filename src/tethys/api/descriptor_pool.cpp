@@ -23,7 +23,7 @@ namespace tethys::api {
 
         logger::info("Descriptor pool successfully created, sizes:");
         for (const auto& [type, count] : descriptor_pool_sizes) {
-            logger::info("Type: ", vk::to_string(type), ", Count: ", count);
+            logger::info("Type: {}, Count: {}", vk::to_string(type), count);
         }
 
         return pool;

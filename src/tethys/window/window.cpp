@@ -13,11 +13,11 @@ namespace tethys::window {
 
     void initialise(const u32 width, const u32 height, const char* title) {
         glfwSetErrorCallback([](const i32 code, const char* message) {
-            util::print(util::format(
+            std::printf("%s", util::format(
                 "[{}] [GLFW3] [Error: {}]: {}\n",
                 util::timestamp(),
                 code,
-                message));
+                message).c_str());
         });
 
         if (!glfwInit()) {
@@ -36,7 +36,7 @@ namespace tethys::window {
             throw std::runtime_error("Failed window creation");
         }
 
-        logger::info("Window successfully created with size: ", width, "x", height);
+        logger::info("Window successfully created with size: {}x{}", width, height);
     }
 
     bool should_close() {

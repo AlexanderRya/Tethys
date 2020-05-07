@@ -32,7 +32,7 @@ namespace tethys::api {
 
         vmaDestroyBuffer(context.allocator, temp_buffer.handle, temp_buffer.allocation);
 
-        logger::info("Allocated vertex buffer with size (in bytes): ", vertices.size() * sizeof(Vertex));
+        logger::info("Allocated vertex buffer with size (in bytes): {}", vertices.size() * sizeof(Vertex));
 
         vertex_buffer.size = vertices.size();
 

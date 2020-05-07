@@ -53,5 +53,5 @@ float linearize(float depth) {
 }
 
 void main() {
-    frag_color = vec4(vec3(1.0 - linearize(texture(shadow_map, uvs).r)), 1.0);
+    frag_color = vec4(vec3(texture(shadow_map, uvs).r), 1.0);
 }

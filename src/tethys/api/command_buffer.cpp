@@ -15,7 +15,7 @@ namespace tethys::api {
 
         auto buffers = context.device.logical.allocateCommandBuffers(allocate_info, context.dispatcher);
 
-        logger::info("Created ", allocate_info.commandBufferCount, " command buffers for rendering");
+        logger::info("Created {} command buffers for rendering", allocate_info.commandBufferCount);
 
         return buffers;
     }

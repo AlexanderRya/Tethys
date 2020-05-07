@@ -15,7 +15,7 @@ namespace tethys::api {
             count = capabilities.maxImageCount;
         }
 
-        logger::info("Swapchain details: image count: ", count);
+        logger::info("Swapchain details: image count: {}", count);
 
         return count;
     }
@@ -43,14 +43,14 @@ namespace tethys::api {
             if (each.format == vk::Format::eB8G8R8A8Srgb &&
                 each.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
 
-                logger::info("Swapchain details: format: vk::Format::", vk::to_string(each.format));
-                logger::info("Swapchain details: color space: vk::ColorSpaceKHR::", vk::to_string(each.colorSpace));
+                logger::info("Swapchain details: format: vk::Format::{}", vk::to_string(each.format));
+                logger::info("Swapchain details: color space: vk::ColorSpaceKHR::{}", vk::to_string(each.colorSpace));
                 return each;
             }
         }
 
-        logger::warning("Swapchain details: non-preferred format: vk::Format::", vk::to_string(format.format));
-        logger::warning("Swapchain details: non-preferred color space: vk::ColorSpaceKHR::", vk::to_string(format.colorSpace));
+        logger::warning("Swapchain details: non-preferred format: vk::Format::{}", vk::to_string(format.format));
+        logger::warning("Swapchain details: non-preferred color space: vk::ColorSpaceKHR::{}", vk::to_string(format.colorSpace));
 
         return format;
     }
@@ -58,12 +58,12 @@ namespace tethys::api {
     [[nodiscard]] static vk::PresentModeKHR get_present_mode() {
         for (const auto& mode : context.device.physical.getSurfacePresentModesKHR(context.surface, {}, context.dispatcher)) {
             if (mode == vk::PresentModeKHR::eImmediate) {
-                logger::info("Swapchain details: present mode: vk::PresentModeKHR::", vk::to_string(mode));
+                logger::info("Swapchain details: present mode: vk::PresentModeKHR::{}", vk::to_string(mode));
                 return mode;
             }
         }
 
-        logger::warning("Swapchain details: non-preferreds present mode: vk::PresentModeKHR::", vk::to_string(vk::PresentModeKHR::eFifo));
+        logger::warning("Swapchain details: non-preferreds present mode: vk::PresentModeKHR::{}", vk::to_string(vk::PresentModeKHR::eFifo));
 
         return vk::PresentModeKHR::eFifo;
     }
@@ -80,7 +80,7 @@ namespace tethys::api {
             swapchain_create_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
             swapchain_create_info.imageSharingMode = vk::SharingMode::eExclusive;
             swapchain_create_info.queueFamilyIndexCount = 1;
-            swapchain_create_info.pQueueFamilyIndices = &context.device.queue_family;
+            swapchain_create_info.pQueueFamilyIndices = &context.device.family;
             swapchain_create_info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
             swapchain_create_info.presentMode = swapchain.present_mode;
             swapchain_create_info.clipped = true;

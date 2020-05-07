@@ -31,7 +31,7 @@ namespace tethys::api {
 
         vmaDestroyBuffer(context.allocator, temp_buffer.handle, temp_buffer.allocation);
 
-        logger::info("Allocated index buffer with size (in bytes): ", indices.size() * sizeof(u32));
+        logger::info("Allocated index buffer with size (in bytes): {}", indices.size() * sizeof(u32));
 
         index_buffer.size = indices.size();
 

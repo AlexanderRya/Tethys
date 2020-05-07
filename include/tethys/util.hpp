@@ -18,15 +18,25 @@
 #include <type_traits>
 
 namespace tethys::util {
+    struct Funct {
+        Funct(void(*f)()) : f(f) {}
+
+        template <typename Ty>
+        Ty as() const {
+            return reinterpret_cast<Ty>(f);
+        }
+    private:
+        void(*f)();
+    };
 #if _WIN32
     constexpr inline const char* vulkan_module = "vulkan-1.dll";
     HMODULE load_module(LPCSTR);
-    auto load_symbol(HMODULE, LPCSTR) -> void(*)();
+    Funct load_symbol(HMODULE, LPCSTR);
     void close_module(HMODULE);
 #elif __linux__
     constexpr inline const char* vulkan_module = "libvulkan.so";
     void* load_module(const char*);
-    auto load_symbol(void* handle, const char* symbol) -> void(*)();
+    Funct load_symbol(void* handle, const char* symbol);
     void close_module(void*);
 #endif
     template <typename ...Args>
@@ -65,14 +75,6 @@ namespace tethys::util {
     }
 
     [[nodiscard]] std::string timestamp();
-    void print(const std::string&);
-    void print(const char*);
-    void print(const void* addr);
-
-    template <typename Ty, std::enable_if_t<std::is_arithmetic_v<Ty>>* = nullptr>
-    void print(const Ty val) {
-        print(std::to_string(val));
-    }
 } // namespace tethys::util
 
 #endif //TETHYS_UTIL_HPP

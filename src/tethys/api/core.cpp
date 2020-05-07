@@ -18,11 +18,11 @@ namespace tethys::api {
      static void load_vulkan_module() {
         auto module = util::load_module(util::vulkan_module);
 
-        logger::info("Vulkan module: ", util::vulkan_module, " loaded at address: ", module);
+        logger::info("Vulkan module: {} loaded at address: {}", util::vulkan_module, module);
 
-         context.dispatcher.vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(util::load_symbol(module, "vkCreateInstance"));
-         context.dispatcher.vkEnumerateInstanceExtensionProperties = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(util::load_symbol(module, "vkEnumerateInstanceExtensionProperties"));
-         context.dispatcher.vkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(util::load_symbol(module, "vkGetInstanceProcAddr"));
+         context.dispatcher.vkGetInstanceProcAddr = util::load_symbol(module, "vkGetInstanceProcAddr").as<PFN_vkGetInstanceProcAddr>();
+         context.dispatcher.vkCreateInstance = util::load_symbol(module, "vkCreateInstance").as<PFN_vkCreateInstance>();
+         context.dispatcher.vkEnumerateInstanceExtensionProperties = util::load_symbol(module, "vkEnumerateInstanceExtensionProperties").as<PFN_vkEnumerateInstanceExtensionProperties>();
 
         util::close_module(module);
     }
@@ -66,7 +66,7 @@ namespace tethys::api {
             allocator_create_info.pDeviceMemoryCallbacks = nullptr;
             allocator_create_info.frameInUseCount = 1;
             allocator_create_info.preferredLargeHeapBlockSize = 0;
-            allocator_create_info.vulkanApiVersion = VK_API_VERSION_1_0;
+            allocator_create_info.vulkanApiVersion = VK_API_VERSION_1_2;
         }
 
         VmaAllocator allocator{};
@@ -85,7 +85,6 @@ namespace tethys::api {
         load_vulkan_module();
         context.instance = make_instance();
         context.dispatcher.init(static_cast<VkInstance>(context.instance), context.dispatcher.vkGetInstanceProcAddr);
-        load_vma();
 #if defined(TETHYS_DEBUG)
         logger::warning("Vulkan debug mode active, performance may be lower than usual");
         context.validation = install_validation_layers();
@@ -94,6 +93,7 @@ namespace tethys::api {
         context.device = make_device();
         context.command_pool = make_command_pool();
         context.transient_pool = make_transient_pool();
+        load_vma();
         context.allocator = make_allocator();
         context.swapchain = make_swapchain();
         context.descriptor_pool = make_descriptor_pool();

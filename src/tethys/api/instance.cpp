@@ -10,12 +10,12 @@ namespace tethys::api {
         VkDebugUtilsMessageTypeFlagsEXT type,
         const VkDebugUtilsMessengerCallbackDataEXT* data,
         void*) {
-        util::print(util::format(
+        std::printf("%s", util::format(
             "[{}] [Vulkan] [{}/{}]: {}\n",
             util::timestamp(),
             vk::to_string(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(severity)),
             vk::to_string(static_cast<vk::DebugUtilsMessageTypeFlagBitsEXT>(type)),
-            data->pMessage));
+            data->pMessage).c_str());
 
         if (severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
             std::abort();
@@ -36,7 +36,7 @@ namespace tethys::api {
         for (u32 i = 0; i < count; ++i) {
             for (const auto& extension : extensions) {
                 if (std::strcmp(extension.extensionName, required_extensions[i]) == 0) {
-                    logger::info("Required extension activated: ", enabled_extensions.emplace_back(required_extensions[i]));
+                    logger::info("Required extension activated: {}", enabled_extensions.emplace_back(required_extensions[i]));
                     break;
                 }
             }
@@ -45,10 +45,13 @@ namespace tethys::api {
         if (enabled_extensions.size() != count) {
             throw std::runtime_error("Required extension not supported.");
         }
+
 #ifdef TETHYS_DEBUG
         enabled_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
-        return enabled_extensions;
+         enabled_extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
+         return enabled_extensions;
     }
 
     vk::Instance make_instance() {

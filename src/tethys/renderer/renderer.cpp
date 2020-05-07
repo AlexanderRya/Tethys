@@ -415,7 +415,7 @@ namespace tethys::renderer {
     static void shadow_depth_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
-        auto light_proj = glm::perspective(glm::radians(45.0f), shadow_depth.image.width / (float)shadow_depth.image.height, 0.1f, 96.0f);
+        auto light_proj = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.5f, 15.0f);
         light_proj[1][1] *= -1;
 
         auto light_view = glm::lookAt(
@@ -556,7 +556,7 @@ namespace tethys::renderer {
             context.dispatcher);
 
         command_buffer.copyImage(
-            offscreen.image.handle, vk::ImageLayout::eTransferSrcOptimal,
+            offscreen.color.handle, vk::ImageLayout::eTransferSrcOptimal,
             context.swapchain.images[image_index], vk::ImageLayout::eTransferDstOptimal,
             copy, context.dispatcher);
 
@@ -642,7 +642,7 @@ namespace tethys::renderer {
 
             command_buffer.setViewport(0, viewport, context.dispatcher);
             command_buffer.setScissor(0, scissor, context.dispatcher);
-            command_buffer.setDepthBias(2.0f, 0.0f, 1.5f, context.dispatcher);
+            command_buffer.setDepthBias(1.25f, 0.0f, 1.75f, context.dispatcher);
 
             command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, context.dispatcher);
             shadow_depth_draw_pass(data);

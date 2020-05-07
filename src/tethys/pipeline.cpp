@@ -209,25 +209,13 @@ namespace tethys {
         }
 
         std::array<vk::PipelineShaderStageCreateInfo, 2> stages{}; {
-            /* Vertex Module */ {
-                vk::PipelineShaderStageCreateInfo vertex_stage{}; {
-                    vertex_stage.pName = "main";
-                    vertex_stage.module = modules[0];
-                    vertex_stage.stage = vk::ShaderStageFlagBits::eVertex;
-                }
+            stages[0].pName = "main";
+            stages[0].module = modules[0];
+            stages[0].stage = vk::ShaderStageFlagBits::eVertex;
 
-                stages[0] = vertex_stage;
-            }
-
-            /* Fragment Module */ {
-                vk::PipelineShaderStageCreateInfo fragment_stage{}; {
-                    fragment_stage.pName = "main";
-                    fragment_stage.module = modules[1];
-                    fragment_stage.stage = vk::ShaderStageFlagBits::eFragment;
-                }
-
-                stages[1] = fragment_stage;
-            }
+            stages[1].pName = "main";
+            stages[1].module = modules[1];
+            stages[1].stage = vk::ShaderStageFlagBits::eFragment;
         }
 
         vk::PipelineDynamicStateCreateInfo dynamic_state_create_info{}; {
@@ -293,6 +281,8 @@ namespace tethys {
         vk::PipelineRasterizationStateCreateInfo rasterizer_state_info{}; {
             rasterizer_state_info.lineWidth = 1.0f;
             rasterizer_state_info.depthBiasEnable = true;
+            rasterizer_state_info.depthBiasSlopeFactor = 0.0f;
+            rasterizer_state_info.depthBiasConstantFactor = 0.0f;
             rasterizer_state_info.depthClampEnable = false;
             rasterizer_state_info.rasterizerDiscardEnable = false;
             rasterizer_state_info.polygonMode = vk::PolygonMode::eFill;

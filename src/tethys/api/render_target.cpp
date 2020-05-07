@@ -16,9 +16,9 @@ namespace tethys::api {
             color_image_info.mips = 1;
         }
 
-        offscreen.image = api::make_image(color_image_info);
+        offscreen.color = api::make_image(color_image_info);
 
-        offscreen.image_view = api::make_image_view(offscreen.image.handle, vk::Format::eB8G8R8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
+        offscreen.color_view = api::make_image_view(offscreen.color.handle, vk::Format::eB8G8R8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
 
         Image::CreateInfo depth_image_info{}; {
             depth_image_info.format = vk::Format::eD24UnormS8Uint;
@@ -31,8 +31,8 @@ namespace tethys::api {
             depth_image_info.mips = 1;
         }
 
-        offscreen.depth_image = api::make_image(depth_image_info);
-        offscreen.depth_view = api::make_image_view(offscreen.depth_image.handle, vk::Format::eD24UnormS8Uint, vk::ImageAspectFlagBits::eDepth, 1);
+        offscreen.depth = api::make_image(depth_image_info);
+        offscreen.depth_view = api::make_image_view(offscreen.depth.handle, vk::Format::eD24UnormS8Uint, vk::ImageAspectFlagBits::eDepth, 1);
 
         Image::CreateInfo msaa_image_info{}; {
             msaa_image_info.format = vk::Format::eB8G8R8A8Srgb;
@@ -45,8 +45,8 @@ namespace tethys::api {
             msaa_image_info.mips = 1;
         }
 
-        offscreen.msaa_image = api::make_image(msaa_image_info);
-        offscreen.msaa_view = api::make_image_view(offscreen.msaa_image.handle, vk::Format::eB8G8R8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
+        offscreen.resolve = api::make_image(msaa_image_info);
+        offscreen.resolve_view = api::make_image_view(offscreen.resolve.handle, vk::Format::eB8G8R8A8Srgb, vk::ImageAspectFlagBits::eColor, 1);
 
         return offscreen;
     }

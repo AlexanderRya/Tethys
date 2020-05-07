@@ -171,10 +171,9 @@ namespace tethys {
 
         texture.view = api::make_image_view(texture.image.handle, format, vk::ImageAspectFlagBits::eColor, texture.mips);
 
-        logger::info("Successfully loaded texture, "
-                     "width: ", width,
-                     ", height: ", height,
-                     ", channels: ", channels);
+        logger::info(
+            "Successfully loaded texture, width: {}, height: {}, channels: {}",
+            width, height, channels);
 
         return texture;
     }

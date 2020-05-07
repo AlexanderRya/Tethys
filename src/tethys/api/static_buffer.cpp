@@ -8,7 +8,7 @@ namespace tethys::api {
         vk::BufferCreateInfo buffer_create_info{}; {
             buffer_create_info.size = size;
             buffer_create_info.queueFamilyIndexCount = 1;
-            buffer_create_info.pQueueFamilyIndices = &context.device.queue_family;
+            buffer_create_info.pQueueFamilyIndices = &context.device.family;
             buffer_create_info.usage = usage;
             buffer_create_info.sharingMode = vk::SharingMode::eExclusive;
         }

@@ -7,14 +7,14 @@
 
 namespace tethys::api {
     struct Offscreen {
-        api::Image image{};
-        vk::ImageView image_view{};
+        api::Image color{};
+        vk::ImageView color_view{};
 
-        api::Image depth_image{};
+        api::Image depth{};
         vk::ImageView depth_view{};
 
-        api::Image msaa_image{};
-        vk::ImageView msaa_view{};
+        api::Image resolve{};
+        vk::ImageView resolve_view{};
     };
 
     struct ShadowDepth {

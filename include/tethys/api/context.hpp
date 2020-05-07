@@ -13,7 +13,7 @@ namespace tethys::api {
         vk::PhysicalDevice physical{};
         vk::Device logical{};
         vk::Queue queue{};
-        u32 queue_family{};
+        u32 family{};
         vk::SampleCountFlagBits samples{};
     };
 

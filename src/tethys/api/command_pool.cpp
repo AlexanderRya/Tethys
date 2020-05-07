@@ -8,7 +8,7 @@
 namespace tethys::api {
     vk::CommandPool make_command_pool() {
         vk::CommandPoolCreateInfo command_pool_create_info{}; {
-            command_pool_create_info.queueFamilyIndex = context.device.queue_family;
+            command_pool_create_info.queueFamilyIndex = context.device.family;
             command_pool_create_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
         }
 
@@ -21,7 +21,7 @@ namespace tethys::api {
 
     vk::CommandPool make_transient_pool() {
         vk::CommandPoolCreateInfo command_pool_create_info{}; {
-            command_pool_create_info.queueFamilyIndex = context.device.queue_family;
+            command_pool_create_info.queueFamilyIndex = context.device.family;
             command_pool_create_info.flags =
                 vk::CommandPoolCreateFlagBits::eResetCommandBuffer |
                 vk::CommandPoolCreateFlagBits::eTransient;

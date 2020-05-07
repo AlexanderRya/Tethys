@@ -75,9 +75,9 @@ void main() {
         result += apply_directional_light(directional_lights[i], albedo, specular, norms, view_dir);
     }
 
-    float shadow = calculate_shadows();
+    float shadow_factor = calculate_shadows();
 
-    frag_color = vec4(result * shadow, 1.0);
+    frag_color = vec4(result * shadow_factor, 1.0);
 }
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir) {
@@ -88,7 +88,7 @@ vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal,
 
     // Specular
     vec3 halfway_dir = normalize(light_dir + view_dir);
-    float spec = pow(max(dot(normal, halfway_dir), 0.0), 32);
+    float spec = pow(max(dot(normal, halfway_dir), 0.0), 64);
 
     // Attenuation
     float distance = length(light.position - frag_pos);
@@ -109,7 +109,7 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
 
     // Specular
     vec3 halfway_dir = normalize(light_dir + view_dir);
-    float spec = pow(max(dot(normal, halfway_dir), 0.0), 32);
+    float spec = pow(max(dot(normal, halfway_dir), 0.0), 64);
 
     // Combine
     vec3 result_diffuse = light.color * diff * color;

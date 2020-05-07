@@ -8,7 +8,7 @@
 namespace tethys::api {
     vk::RenderPass make_offscreen_render_pass(const Offscreen& offscreen) {
         vk::AttachmentDescription color_description{}; {
-            color_description.format = offscreen.msaa_image.format;
+            color_description.format = offscreen.resolve.format;
             color_description.samples = context.device.samples;
             color_description.loadOp = vk::AttachmentLoadOp::eClear;
             color_description.storeOp = vk::AttachmentStoreOp::eStore;
@@ -24,7 +24,7 @@ namespace tethys::api {
         }
 
         vk::AttachmentDescription depth_description{}; {
-            depth_description.format = offscreen.depth_image.format;
+            depth_description.format = offscreen.depth.format;
             depth_description.samples = context.device.samples;
             depth_description.loadOp = vk::AttachmentLoadOp::eClear;
             depth_description.storeOp = vk::AttachmentStoreOp::eDontCare;
@@ -40,7 +40,7 @@ namespace tethys::api {
         }
 
         vk::AttachmentDescription color_resolve_description{}; {
-            color_resolve_description.format = offscreen.image.format;
+            color_resolve_description.format = offscreen.color.format;
             color_resolve_description.samples = vk::SampleCountFlagBits::e1;
             color_resolve_description.loadOp = vk::AttachmentLoadOp::eDontCare;
             color_resolve_description.storeOp = vk::AttachmentStoreOp::eStore;
@@ -119,13 +119,22 @@ namespace tethys::api {
             subpass_description.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
         }
 
-        vk::SubpassDependency subpass_dependency{}; { // I have 0 idea lol.
-            subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-            subpass_dependency.dstSubpass = 0;
-            subpass_dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-            subpass_dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-            subpass_dependency.srcAccessMask = {};
-            subpass_dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+        std::array<vk::SubpassDependency, 2> subpass_dependencies{}; { // I have 0 idea lol.
+            subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+            subpass_dependencies[0].dstSubpass = 0;
+            subpass_dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+            subpass_dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+            subpass_dependencies[0].srcAccessMask = vk::AccessFlagBits::eShaderRead;
+            subpass_dependencies[0].dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            subpass_dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+
+            subpass_dependencies[1].srcSubpass = 0;
+            subpass_dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+            subpass_dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eLateFragmentTests;
+            subpass_dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+            subpass_dependencies[1].srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            subpass_dependencies[1].dstAccessMask = vk::AccessFlagBits::eShaderRead;
+            subpass_dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
         }
 
         vk::RenderPassCreateInfo render_pass_create_info{}; {
@@ -133,8 +142,8 @@ namespace tethys::api {
             render_pass_create_info.pAttachments = &depth_description;
             render_pass_create_info.subpassCount = 1;
             render_pass_create_info.pSubpasses = &subpass_description;
-            render_pass_create_info.dependencyCount = 1;
-            render_pass_create_info.pDependencies = &subpass_dependency;
+            render_pass_create_info.dependencyCount = subpass_dependencies.size();
+            render_pass_create_info.pDependencies = subpass_dependencies.data();
         }
 
         auto render_pass = context.device.logical.createRenderPass(render_pass_create_info, nullptr, context.dispatcher);

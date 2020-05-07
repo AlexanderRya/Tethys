@@ -5,30 +5,27 @@
 
 namespace tethys::logger {
     template <typename ...Args>
-    void info(Args&& ...args) {
-        util::print(util::format(
-            "[{}] [Logger] [Info]: ",
-            util::timestamp()));
-
-        (((util::print(args)), ...), util::print("\n"));
+    void info(const std::string& format, Args&& ...args) {
+        std::printf("%s\n",
+            util::format(
+                "[{}] [Logger] [Info]: " + format,
+                util::timestamp(), args...).c_str());
     }
 
     template <typename ...Args>
-    void warning(Args&& ...args) {
-        util::print(util::format(
-            "[{}] [Logger] [Warning]: ",
-            util::timestamp()));
-
-        (((util::print(args)), ...), util::print("\n"));
+    void warning(const std::string& format, Args&& ...args) {
+        std::printf("%s\n",
+            util::format(
+                "[{}] [Logger] [Warning]: " + format,
+                util::timestamp(), args...).c_str());
     }
 
     template <typename ...Args>
-    void error(Args&& ...args) {
-        util::print(util::format(
-            "[{}] [Logger] [Error]: ",
-            util::timestamp()));
-
-        (((util::print(args)), ...), util::print("\n"));
+    void error(const std::string& format, Args&& ...args) {
+        std::printf("%s\n",
+            util::format(
+                "[{}] [Logger] [Error]: " + format,
+                util::timestamp(), args...).c_str());
     }
 } // namespace tethys::logger
 
