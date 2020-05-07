@@ -17,7 +17,16 @@ namespace tethys {
         using namespace std::string_literals;
 
         if (!material->GetTextureCount(type)) {
-            return type == aiTextureType_DIFFUSE ? texture::white : texture::black;
+            switch (type) {
+                case aiTextureType_DIFFUSE:
+                    return texture::white;
+                case aiTextureType_SPECULAR:
+                    return texture::black;
+                case aiTextureType_DISPLACEMENT:
+                    return texture::green;
+                default:
+                    throw std::runtime_error("Nope.");
+            }
         }
 
         aiString str;
@@ -53,17 +62,13 @@ namespace tethys {
                 vertex.uvs.y = mesh->mTextureCoords[0][i].y;
             }
 
-            if (mesh->mTangents) {
-                vertex.tangent.x = mesh->mTangents[i].x;
-                vertex.tangent.y = mesh->mTangents[i].y;
-                vertex.tangent.z = mesh->mTangents[i].z;
-            }
+            vertex.tangent.x = mesh->mTangents[i].x;
+            vertex.tangent.y = mesh->mTangents[i].y;
+            vertex.tangent.z = mesh->mTangents[i].z;
 
-            if (mesh->mBitangents) {
-                vertex.bitangent.x = mesh->mBitangents[i].x;
-                vertex.bitangent.y = mesh->mBitangents[i].y;
-                vertex.bitangent.z = mesh->mBitangents[i].z;
-            }
+            vertex.bitangent.x = mesh->mBitangents[i].x;
+            vertex.bitangent.y = mesh->mBitangents[i].y;
+            vertex.bitangent.z = mesh->mBitangents[i].z;
 
             geometry.emplace_back(vertex);
         }
@@ -83,7 +88,7 @@ namespace tethys {
         sub_mesh.mesh = renderer::write_geometry(geometry, indices);
         sub_mesh.diffuse = try_load_texture(material, aiTextureType_DIFFUSE, model_path);
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
-        sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
+        sub_mesh.normal = try_load_texture(material, aiTextureType_DISPLACEMENT, model_path);
 
         return sub_mesh;
     }

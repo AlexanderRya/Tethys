@@ -244,8 +244,11 @@ namespace tethys::renderer {
         std::array<u8, 4> white = { 255, 255, 255, 255 };
         textures.emplace_back(load_texture(white.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
 
-        std::array<u8, 4> black{};
-        textures.emplace_back(load_texture(black.data(), 1, 1, 4, vk::Format::eR8G8B8A8Srgb));
+        std::array<u8, 4> black{ 0, 0, 0, 255 };
+        textures.emplace_back(load_texture(black.data(), 1, 1, 4, vk::Format::eR8G8B8A8Unorm));
+
+        std::array<u8, 4> green{ 0, 255, 0, 255 };
+        textures.emplace_back(load_texture(green.data(), 1, 1, 4, vk::Format::eR8G8B8A8Unorm));
 
         update_textures();
 

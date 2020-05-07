@@ -14,13 +14,13 @@ namespace tethys::api {
             info.addressModeW = vk::SamplerAddressMode::eRepeat;
             info.anisotropyEnable = true;
             info.maxAnisotropy = 16;
-            info.borderColor = vk::BorderColor::eIntOpaqueBlack;
+            info.borderColor = vk::BorderColor::eFloatOpaqueWhite;
             info.unnormalizedCoordinates = false;
             info.compareEnable = false;
             info.compareOp = vk::CompareOp::eAlways;
             info.mipmapMode = vk::SamplerMipmapMode::eLinear;
             info.minLod = 0;
-            info.maxLod = 16;
+            info.maxLod = 1;
             info.mipLodBias = 0;
         }
 

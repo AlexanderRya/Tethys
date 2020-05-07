@@ -31,7 +31,7 @@ layout (set = 1, binding = 3) uniform LightSpace {
 
 layout (push_constant) uniform Constants {
     uint transform_index;
-    uint diffuse_index;
+    uint albedo_index;
     uint specular_index;
     uint normal_index;
     uint point_lights_count;
@@ -48,10 +48,8 @@ void main() {
     mat4 model = transforms[transform_index];
 
     vec3 T = normalize(vec3(model * vec4(itangents, 0.0)));
+    vec3 B = normalize(vec3(model * vec4(ibi_tangents, 0.0)));
     vec3 N = normalize(vec3(model * vec4(inormals, 0.0)));
-
-    T = normalize(T - dot(T, N) * N);
-    vec3 B = cross(N, T);
 
     TBN = mat3(T, B, N);
     vertex_pos = ivertex_pos;
