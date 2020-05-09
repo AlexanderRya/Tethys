@@ -11,7 +11,7 @@ layout (location = 0) out vertex_out {
     vec3 frag_pos;
     vec2 uvs;
     vec3 view_pos;
-    vec4 shadow_frag_pos;
+    vec3 normals;
     mat3 TBN;
 };
 
@@ -25,10 +25,6 @@ layout (set = 0, binding = 1) buffer readonly Transform {
     mat4[] transforms;
 };
 
-layout (set = 1, binding = 3) uniform LightSpace {
-    mat4 light_space;
-};
-
 layout (push_constant) uniform Constants {
     uint transform_index;
     uint albedo_index;
@@ -37,12 +33,6 @@ layout (push_constant) uniform Constants {
     uint point_lights_count;
     uint directional_lights_count;
 };
-
-const mat4 bias = mat4(
-    0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.5, 0.5, 0.0, 1.0);
 
 void main() {
     mat4 model = transforms[transform_index];
@@ -56,6 +46,6 @@ void main() {
     frag_pos = vec3(model * vec4(ivertex_pos, 1.0));
     uvs = iuvs;
     view_pos = vec3(camera.pos);
-    shadow_frag_pos = (bias * light_space * model) * vec4(ivertex_pos, 1.0);
+    normals = inormals;
     gl_Position = camera.proj * camera.view * vec4(frag_pos, 1.0);
 }

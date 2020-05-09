@@ -20,12 +20,10 @@ namespace tethys {
             switch (type) {
                 case aiTextureType_DIFFUSE:
                     return texture::white;
-                case aiTextureType_SPECULAR:
-                    return texture::black;
-                case aiTextureType_DISPLACEMENT:
+                case aiTextureType_HEIGHT:
                     return texture::green;
                 default:
-                    throw std::runtime_error("Nope.");
+                    return texture::black;
             }
         }
 
@@ -79,7 +77,7 @@ namespace tethys {
         for (usize i = 0; i < mesh->mNumFaces; i++) {
             auto& face = mesh->mFaces[i];
             for (usize j = 0; j < face.mNumIndices; j++) {
-                indices.push_back(face.mIndices[j]);
+                indices.emplace_back(face.mIndices[j]);
             }
         }
 
@@ -88,7 +86,7 @@ namespace tethys {
         sub_mesh.mesh = renderer::write_geometry(geometry, indices);
         sub_mesh.diffuse = try_load_texture(material, aiTextureType_DIFFUSE, model_path);
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
-        sub_mesh.normal = try_load_texture(material, aiTextureType_DISPLACEMENT, model_path);
+        sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
         return sub_mesh;
     }
@@ -96,7 +94,7 @@ namespace tethys {
     static void process_node(const aiScene* scene, const aiNode* node, std::vector<Model::SubMesh>& meshes, const std::string& model_path) {
         for (usize i = 0; i < node->mNumMeshes; i++) {
             auto mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(load_mesh(scene, mesh, model_path));
+            meshes.emplace_back(load_mesh(scene, mesh, model_path));
         }
 
         for (usize i = 0; i < node->mNumChildren; i++) {
@@ -123,8 +121,8 @@ namespace tethys {
         Model::SubMesh submesh{}; {
             submesh.mesh = renderer::write_geometry(vertices, indices);
             submesh.diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, vk::Format::eR8G8B8A8Srgb) : texture::white;
-            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : submesh.diffuse;
-            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, vk::Format::eR8G8B8A8Unorm) : texture::black;
+            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : texture::black;
+            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, vk::Format::eR8G8B8A8Unorm) : texture::green;
         }
 
         return Model{ {

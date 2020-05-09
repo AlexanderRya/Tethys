@@ -20,7 +20,7 @@ layout (set = 0, binding = 1) buffer readonly Transform {
 
 layout (push_constant) uniform Constants {
     uint transform_index;
-    uint material_index;
+    uint albedo_index;
 };
 
 void main() {

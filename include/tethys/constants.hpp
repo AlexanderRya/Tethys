@@ -13,16 +13,13 @@ namespace tethys {
         constexpr inline u32 texture = 2;
 
         // Set = 1
-        constexpr inline u32 shadow_map = 0;
-        constexpr inline u32 point_light = 1;
-        constexpr inline u32 directional_light = 2;
-        constexpr inline u32 light_space = 3;
+        constexpr inline u32 point_light = 0;
+        constexpr inline u32 directional_light = 1;
     } // namespace tethys::binding
 
     namespace layout {
         constexpr inline u32 generic = 0;
         constexpr inline u32 minimal = 1;
-        constexpr inline u32 shadow = 2;
     } // namespace tethys::layout
 
     namespace shader {

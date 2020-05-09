@@ -1,7 +1,6 @@
 #include <tethys/api/context.hpp>
 #include <tethys/constants.hpp>
 #include <tethys/pipeline.hpp>
-#include <tethys/acquire.hpp>
 #include <tethys/vertex.hpp>
 #include <tethys/logger.hpp>
 
@@ -11,165 +10,84 @@
 namespace tethys {
     using namespace api;
 
-    static std::vector<vk::DescriptorSetLayout> set_layouts;
-    static std::vector<PipelineLayout> pipeline_layouts;
+    namespace layout {
+        static std::vector<vk::DescriptorSetLayout> set_layouts;
 
-    void load_set_layouts() {
-        set_layouts.resize(3);
-
-        /* Minimal set layout */ {
-            std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings{}; {
-                layout_bindings[0].descriptorCount = 1;
-                layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-                layout_bindings[0].binding = binding::camera;
-                layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
-
-                layout_bindings[1].descriptorCount = 1;
-                layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
-                layout_bindings[1].binding = binding::transform;
-                layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
-
-                layout_bindings[2].descriptorCount = 1024;
-                layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-                layout_bindings[2].binding = binding::texture;
-                layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
-            }
-
-            std::array<vk::DescriptorBindingFlags, 3> binding_flags{}; {
-                binding_flags[0] = {};
-                binding_flags[1] = {};
-                binding_flags[2] = vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound;
-            }
-
-            vk::DescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{}; {
-                binding_flags_info.bindingCount = binding_flags.size();
-                binding_flags_info.pBindingFlags = binding_flags.data();
-            }
-
-            vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
-                set_layout_create_info.pNext = &binding_flags_info;
-                set_layout_create_info.bindingCount = layout_bindings.size();
-                set_layout_create_info.pBindings = layout_bindings.data();
-            }
-
-            set_layouts[layout::minimal] = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
+        template <>
+        vk::DescriptorSetLayout& get<layout::generic>() {
+            return set_layouts[layout::generic];
         }
 
-        /* Generic set layout */ {
-            std::array<vk::DescriptorSetLayoutBinding, 4> layout_bindings{}; {
-                layout_bindings[0].descriptorCount = 1;
-                layout_bindings[0].descriptorType = vk::DescriptorType::eStorageBuffer;
-                layout_bindings[0].binding = binding::point_light;
-                layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-                layout_bindings[1].descriptorCount = 1;
-                layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
-                layout_bindings[1].binding = binding::directional_light;
-                layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-                layout_bindings[2].descriptorCount = 1;
-                layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-                layout_bindings[2].binding = binding::shadow_map;
-                layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-                layout_bindings[3].descriptorCount = 1;
-                layout_bindings[3].descriptorType = vk::DescriptorType::eUniformBuffer;
-                layout_bindings[3].binding = binding::light_space;
-                layout_bindings[3].stageFlags = vk::ShaderStageFlagBits::eVertex;
-            }
-
-            vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
-                set_layout_create_info.bindingCount = layout_bindings.size();
-                set_layout_create_info.pBindings = layout_bindings.data();
-            }
-
-            set_layouts[layout::generic] = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
+        template <>
+        vk::DescriptorSetLayout& get<layout::minimal>() {
+            return set_layouts[layout::minimal];
         }
 
-        /* Shadow set layout */ {
-            std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings{}; {
-                layout_bindings[0].descriptorCount = 1;
-                layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-                layout_bindings[0].binding = binding::camera;
-                layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
+        void load() {
+            set_layouts.resize(2);
 
-                layout_bindings[1].descriptorCount = 1;
-                layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
-                layout_bindings[1].binding = binding::transform;
-                layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
+            /* Minimal set layout */ {
+                std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings{}; {
+                    layout_bindings[0].descriptorCount = 1;
+                    layout_bindings[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+                    layout_bindings[0].binding = binding::camera;
+                    layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+                    layout_bindings[1].descriptorCount = 1;
+                    layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
+                    layout_bindings[1].binding = binding::transform;
+                    layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+                    layout_bindings[2].descriptorCount = 1024;
+                    layout_bindings[2].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+                    layout_bindings[2].binding = binding::texture;
+                    layout_bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
+                }
+
+                std::array<vk::DescriptorBindingFlags, 3> binding_flags{}; {
+                    binding_flags[0] = {};
+                    binding_flags[1] = {};
+                    binding_flags[2] = vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound;
+                }
+
+                vk::DescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{}; {
+                    binding_flags_info.bindingCount = binding_flags.size();
+                    binding_flags_info.pBindingFlags = binding_flags.data();
+                }
+
+                vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
+                    set_layout_create_info.pNext = &binding_flags_info;
+                    set_layout_create_info.bindingCount = layout_bindings.size();
+                    set_layout_create_info.pBindings = layout_bindings.data();
+                }
+
+                layout::get<layout::minimal>() = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
             }
 
-            vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
-                set_layout_create_info.bindingCount = layout_bindings.size();
-                set_layout_create_info.pBindings = layout_bindings.data();
-            }
+            /* Generic set layout */ {
+                std::array<vk::DescriptorSetLayoutBinding, 2> layout_bindings{}; {
+                    layout_bindings[0].descriptorCount = 1;
+                    layout_bindings[0].descriptorType = vk::DescriptorType::eStorageBuffer;
+                    layout_bindings[0].binding = binding::point_light;
+                    layout_bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
 
-            set_layouts[layout::shadow] = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
+                    layout_bindings[1].descriptorCount = 1;
+                    layout_bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
+                    layout_bindings[1].binding = binding::directional_light;
+                    layout_bindings[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+                }
+
+                vk::DescriptorSetLayoutCreateInfo set_layout_create_info{}; {
+                    set_layout_create_info.bindingCount = layout_bindings.size();
+                    set_layout_create_info.pBindings = layout_bindings.data();
+                }
+
+                layout::get<layout::generic>() = context.device.logical.createDescriptorSetLayout(set_layout_create_info, nullptr, context.dispatcher);
+            }
         }
-    }
+    } // namespace tethys::layout
 
-    void load_pipeline_layouts() {
-        pipeline_layouts.resize(3);
-
-        /* Minimal pipeline layout */ {
-            vk::PushConstantRange range{}; {
-                range.size = 2 * sizeof(u32);
-                range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
-                range.offset = 0;
-            }
-
-            vk::PipelineLayoutCreateInfo layout_create_info{}; {
-                layout_create_info.setLayoutCount = 1;
-                layout_create_info.pSetLayouts = &set_layouts[layout::minimal];
-                layout_create_info.pushConstantRangeCount = 1;
-                layout_create_info.pPushConstantRanges = &range;
-            }
-
-            pipeline_layouts[layout::minimal].pipeline = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
-            pipeline_layouts[layout::minimal].sets = { set_layouts[layout::minimal] };
-        }
-
-        /* Generic pipeline layout */ {
-            vk::PushConstantRange range{}; {
-                range.size = 6 * sizeof(u32);
-                range.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
-                range.offset = 0;
-            }
-
-            std::vector<vk::DescriptorSetLayout> sets(2); {
-                sets[0] = set_layouts[layout::minimal];
-                sets[1] = set_layouts[layout::generic];
-            }
-
-            vk::PipelineLayoutCreateInfo layout_create_info{}; {
-                layout_create_info.setLayoutCount = sets.size();
-                layout_create_info.pSetLayouts = sets.data();
-                layout_create_info.pushConstantRangeCount = 1;
-                layout_create_info.pPushConstantRanges = &range;
-            }
-
-            pipeline_layouts[layout::generic].pipeline = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
-            pipeline_layouts[layout::generic].sets = std::move(sets);
-        }
-
-        /* Shadow pipeline layout */ {
-            vk::PushConstantRange range{}; {
-                range.size = sizeof(u32);
-                range.stageFlags = vk::ShaderStageFlagBits::eVertex;
-                range.offset = 0;
-            }
-
-            vk::PipelineLayoutCreateInfo layout_create_info{}; {
-                layout_create_info.setLayoutCount = 1;
-                layout_create_info.pSetLayouts = &set_layouts[layout::shadow];
-                layout_create_info.pushConstantRangeCount = 1;
-                layout_create_info.pPushConstantRanges = &range;
-            }
-
-            pipeline_layouts[layout::shadow].pipeline = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
-            pipeline_layouts[layout::shadow].sets = { set_layouts[layout::shadow] };
-        }
-    }
 
     [[nodiscard]] static vk::ShaderModule load_module(const std::string& path) {
         std::ifstream in(path, std::fstream::binary);
@@ -192,17 +110,21 @@ namespace tethys {
         return module;
     }
 
-    template <>
-    PipelineLayout& acquire<PipelineLayout&>(const u32 idx) {
-        return pipeline_layouts[idx];
-    }
-
-    template <>
-    vk::DescriptorSetLayout& acquire<vk::DescriptorSetLayout>(const u32 idx) {
-        return set_layouts[idx];
-    }
-
     Pipeline make_pipeline(const Pipeline::CreateInfo& info) {
+        Pipeline pipeline{};
+
+        vk::PipelineLayoutCreateInfo layout_create_info{}; {
+            if (info.push_constants.size != 0) {
+                layout_create_info.pushConstantRangeCount = 1;
+                layout_create_info.pPushConstantRanges = &info.push_constants;
+            }
+            if (!info.layouts.empty()) {
+                layout_create_info.setLayoutCount = info.layouts.size();
+                layout_create_info.pSetLayouts = info.layouts.data();
+            }
+        }
+        pipeline.layout = context.device.logical.createPipelineLayout(layout_create_info, nullptr, context.dispatcher);
+
         std::array<vk::ShaderModule, 2> modules{}; {
             modules[0] = load_module(info.vertex);
             modules[1] = load_module(info.fragment);
@@ -353,17 +275,14 @@ namespace tethys {
             pipeline_info.pDepthStencilState = &depth_stencil_info;
             pipeline_info.pColorBlendState = &color_blend_info;
             pipeline_info.pDynamicState = &dynamic_state_create_info;
-            pipeline_info.layout = pipeline_layouts[info.layout_idx].pipeline;
+            pipeline_info.layout = pipeline.layout;
             pipeline_info.renderPass = info.render_pass;
             pipeline_info.subpass = info.subpass_idx;
             pipeline_info.basePipelineHandle = nullptr;
             pipeline_info.basePipelineIndex = -1;
         }
 
-        Pipeline pipeline{};
-
         pipeline.handle = context.device.logical.createGraphicsPipeline(nullptr, pipeline_info, nullptr, context.dispatcher);
-        pipeline.layout = pipeline_layouts[info.layout_idx];
 
         logger::info("Pipeline successfully created");
 

@@ -28,21 +28,4 @@ namespace tethys::api {
 
         return framebuffer;
     }
-
-    vk::Framebuffer make_shadow_depth_framebuffer(const ShadowDepth& shadow_depth, const vk::RenderPass render_pass) {
-        vk::FramebufferCreateInfo framebuffer_create_info{}; {
-            framebuffer_create_info.renderPass = render_pass;
-            framebuffer_create_info.width = shadow_depth.image.width;
-            framebuffer_create_info.height = shadow_depth.image.height;
-            framebuffer_create_info.layers = 1;
-            framebuffer_create_info.attachmentCount = 1;
-            framebuffer_create_info.pAttachments = &shadow_depth.view;
-        }
-
-        auto framebuffer = context.device.logical.createFramebuffer(framebuffer_create_info, nullptr, context.dispatcher);
-
-        logger::info("Framebuffer successfully created with shadow depth renderpass");
-
-        return framebuffer;
-    }
 } // namespace tethys::api

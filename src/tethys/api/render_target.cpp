@@ -49,24 +49,4 @@ namespace tethys::api {
 
         return offscreen;
     }
-
-    ShadowDepth make_shadow_depth_target() {
-        Image::CreateInfo depth_image_info{}; {
-            depth_image_info.format = vk::Format::eD32Sfloat;
-            depth_image_info.width = context.swapchain.extent.width * 2;
-            depth_image_info.height = context.swapchain.extent.height * 2;
-            depth_image_info.usage_flags = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled;
-            depth_image_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
-            depth_image_info.tiling = vk::ImageTiling::eOptimal;
-            depth_image_info.samples = vk::SampleCountFlagBits::e1;
-            depth_image_info.mips = 1;
-        }
-
-        ShadowDepth shadow_depth{}; {
-            shadow_depth.image = api::make_image(depth_image_info);
-            shadow_depth.view = api::make_image_view(shadow_depth.image.handle, vk::Format::eD32Sfloat, vk::ImageAspectFlagBits::eDepth, 1);
-        }
-
-        return shadow_depth;
-    }
 } // namespace tethys::api

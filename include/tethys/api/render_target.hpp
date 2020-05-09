@@ -17,13 +17,7 @@ namespace tethys::api {
         vk::ImageView resolve_view{};
     };
 
-    struct ShadowDepth {
-        api::Image image{};
-        vk::ImageView view{};
-    };
-
     [[nodiscard]] Offscreen make_offscreen_target();
-    [[nodiscard]] ShadowDepth make_shadow_depth_target();
 } // namespace tethys::api
 
 #endif //TETHYS_RENDER_TARGET_HPP

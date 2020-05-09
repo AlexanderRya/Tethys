@@ -16,7 +16,6 @@
 #include <tethys/constants.hpp>
 #include <tethys/pipeline.hpp>
 #include <tethys/texture.hpp>
-#include <tethys/acquire.hpp>
 #include <tethys/model.hpp>
 #include <tethys/types.hpp>
 
@@ -35,9 +34,6 @@ namespace tethys::renderer {
     static vk::RenderPass offscreen_render_pass{};
     static vk::Framebuffer offscreen_framebuffer{};
 
-    static vk::RenderPass shadow_depth_render_pass{};
-    static vk::Framebuffer shadow_depth_framebuffer{};
-
     static std::vector<vk::Semaphore> image_available{};
     static std::vector<vk::Semaphore> render_finished{};
     static std::vector<vk::Fence> in_flight{};
@@ -54,7 +50,6 @@ namespace tethys::renderer {
     static std::vector<api::IndexBuffer> index_buffers{};
 
     static Offscreen offscreen{};
-    static ShadowDepth shadow_depth{};
 
     static std::vector<Texture> textures{};
     static std::vector<Model> models{};
@@ -65,18 +60,12 @@ namespace tethys::renderer {
     // Part of set 1
     static api::Buffer<PointLight> point_light_buffer{};
     static api::Buffer<DirectionalLight> directional_light_buffer{};
-    static api::Buffer<glm::mat4> light_space_buffer{};
 
     static api::DescriptorSet generic_set{};
     static api::DescriptorSet minimal_set{};
-    static api::DescriptorSet shadow_set{};
 
     static Pipeline generic;
     static Pipeline minimal;
-    static Pipeline shadow;
-    static Pipeline debug;
-
-    static Handle<Mesh> debug_quad;
 
     static void update_textures() {
         std::vector<vk::DescriptorImageInfo> image_info{};
@@ -100,10 +89,6 @@ namespace tethys::renderer {
         offscreen_render_pass = api::make_offscreen_render_pass(offscreen);
         offscreen_framebuffer = api::make_offscreen_framebuffer(offscreen, offscreen_render_pass);
 
-        shadow_depth = api::make_shadow_depth_target();
-        shadow_depth_render_pass = api::make_shadow_depth_render_pass(shadow_depth);
-        shadow_depth_framebuffer = api::make_shadow_depth_framebuffer(shadow_depth, shadow_depth_render_pass);
-
         command_buffers = api::make_rendering_command_buffers();
 
         vk::SemaphoreCreateInfo semaphore_create_info{};
@@ -118,20 +103,27 @@ namespace tethys::renderer {
 
         in_flight.resize(frames_in_flight, nullptr);
 
-        load_set_layouts();
-        load_pipeline_layouts();
+        layout::load();
 
         Pipeline::CreateInfo generic_info{}; {
             generic_info.vertex = "shaders/generic.vert.spv";
             generic_info.fragment = "shaders/generic.frag.spv";
             generic_info.subpass_idx = 0;
-            generic_info.layout_idx = layout::generic;
             generic_info.render_pass = offscreen_render_pass;
             generic_info.samples = context.device.samples;
             generic_info.cull = vk::CullModeFlagBits::eNone;
             generic_info.dynamic_states = {
                 vk::DynamicState::eViewport,
                 vk::DynamicState::eScissor
+            };
+            generic_info.layouts = {
+                layout::get<layout::minimal>(),
+                layout::get<layout::generic>()
+            };
+            generic_info.push_constants = {
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                0,
+                sizeof(u32) * 6
             };
         }
         generic = make_pipeline(generic_info);
@@ -141,56 +133,30 @@ namespace tethys::renderer {
             minimal_info.fragment = "shaders/minimal.frag.spv";
             minimal_info.subpass_idx = 0;
             minimal_info.render_pass = offscreen_render_pass;
-            minimal_info.layout_idx = layout::minimal;
             minimal_info.samples = context.device.samples;
             generic_info.cull = vk::CullModeFlagBits::eNone;
             minimal_info.dynamic_states = {
                 vk::DynamicState::eViewport,
                 vk::DynamicState::eScissor
             };
+            minimal_info.layouts = {
+                layout::get<layout::minimal>()
+            };
+            minimal_info.push_constants = {
+                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                0,
+                sizeof(u32) * 2
+            };
         }
         minimal = make_pipeline(minimal_info);
-
-        Pipeline::CreateInfo shadow_info{}; {
-            shadow_info.vertex = "shaders/shadow.vert.spv";
-            shadow_info.fragment = "shaders/shadow.frag.spv";
-            shadow_info.subpass_idx = 0;
-            shadow_info.render_pass = shadow_depth_render_pass;
-            shadow_info.layout_idx = layout::shadow;
-            shadow_info.samples = vk::SampleCountFlagBits::e1;
-            shadow_info.cull = vk::CullModeFlagBits::eFront;
-            shadow_info.dynamic_states = {
-                vk::DynamicState::eViewport,
-                vk::DynamicState::eScissor,
-                vk::DynamicState::eDepthBias
-            };
-        }
-        shadow = make_pipeline(shadow_info);
-
-        Pipeline::CreateInfo debug_info{}; {
-            debug_info.vertex = "shaders/debug.vert.spv";
-            debug_info.fragment = "shaders/debug.frag.spv";
-            debug_info.subpass_idx = 0;
-            debug_info.render_pass = offscreen_render_pass;
-            debug_info.layout_idx = layout::generic;
-            debug_info.samples = context.device.samples;
-            debug_info.cull = vk::CullModeFlagBits::eNone;
-            debug_info.dynamic_states = {
-                vk::DynamicState::eViewport,
-                vk::DynamicState::eScissor
-            };
-        }
-        debug = make_pipeline(debug_info);
 
         camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
         transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         point_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
         directional_light_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
-        light_space_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
 
-        generic_set.create(acquire<vk::DescriptorSetLayout>(layout::generic));
-        minimal_set.create(acquire<vk::DescriptorSetLayout>(layout::minimal));
-        shadow_set.create(acquire<vk::DescriptorSetLayout>(layout::shadow));
+        generic_set.create(layout::get<layout::generic>());
+        minimal_set.create(layout::get<layout::minimal>());
 
         std::vector<api::UpdateBufferInfo> minimal_update(2); {
             minimal_update[0].binding = binding::camera;
@@ -201,22 +167,9 @@ namespace tethys::renderer {
             minimal_update[1].type = vk::DescriptorType::eStorageBuffer;
             minimal_update[1].buffers = transform_buffer.info();
         }
-
         minimal_set.update(minimal_update);
 
-        std::vector<api::UpdateBufferInfo> shadow_update(2); {
-            shadow_update[0].binding = binding::camera;
-            shadow_update[0].type = vk::DescriptorType::eUniformBuffer;
-            shadow_update[0].buffers = light_space_buffer.info();
-
-            shadow_update[1].binding = binding::transform;
-            shadow_update[1].type = vk::DescriptorType::eStorageBuffer;
-            shadow_update[1].buffers = transform_buffer.info();
-        }
-
-        shadow_set.update(shadow_update);
-
-        std::vector<api::UpdateBufferInfo> generic_update(3); {
+        std::vector<api::UpdateBufferInfo> generic_update(2); {
             generic_update[0].binding = binding::point_light;
             generic_update[0].type = vk::DescriptorType::eStorageBuffer;
             generic_update[0].buffers = point_light_buffer.info();
@@ -224,21 +177,7 @@ namespace tethys::renderer {
             generic_update[1].binding = binding::directional_light;
             generic_update[1].type = vk::DescriptorType::eStorageBuffer;
             generic_update[1].buffers = directional_light_buffer.info();
-
-            generic_update[2].binding = binding::light_space;
-            generic_update[2].type = vk::DescriptorType::eUniformBuffer;
-            generic_update[2].buffers = light_space_buffer.info();
         }
-
-        api::SingleUpdateImageInfo shadow_map_update{}; {
-            shadow_map_update.image.imageView = shadow_depth.view;
-            shadow_map_update.image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            shadow_map_update.image.sampler = sampler_from_type(SamplerType::eDepth);
-            shadow_map_update.binding = binding::shadow_map;
-            shadow_map_update.type = vk::DescriptorType::eCombinedImageSampler;
-        }
-
-        generic_set.update(shadow_map_update);
         generic_set.update(generic_update);
 
         std::array<u8, 4> white = { 255, 255, 255, 255 };
@@ -251,8 +190,6 @@ namespace tethys::renderer {
         textures.emplace_back(load_texture(green.data(), 1, 1, 4, vk::Format::eR8G8B8A8Unorm));
 
         update_textures();
-
-        debug_quad = write_geometry(generate_debug_quad());
     }
 
     Handle<Mesh> write_geometry(const Mesh& mesh) {
@@ -333,7 +270,6 @@ namespace tethys::renderer {
             }
 
             minimal_set[current_frame].update(info);
-            shadow_set[current_frame].update(info);
         }
     }
 
@@ -415,42 +351,6 @@ namespace tethys::renderer {
         }
     }
 
-    static void shadow_depth_draw_pass(const RenderData& data) {
-        auto& command_buffer = command_buffers[image_index];
-
-        auto light_proj = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.5f, 15.0f);
-        light_proj[1][1] *= -1;
-
-        auto light_view = glm::lookAt(
-            data.point_lights[0].position,
-            glm::vec3(0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f));
-
-        light_space_buffer.write(light_proj * light_view);
-
-        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadow.handle, context.dispatcher);
-        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadow.layout.pipeline, 0, shadow_set[current_frame].handle(), nullptr, context.dispatcher);
-
-        for (usize i = 0; i < data.draw_commands.size(); ++i) {
-            auto& draw = data.draw_commands[i];
-            auto& model = models[draw.model.index];
-
-            for (const auto& submesh : model.submeshes) {
-                auto& vbo = vertex_buffers[submesh.mesh.vbo_index];
-                auto& ibo = index_buffers[submesh.mesh.ibo_index];
-
-                std::array indices{
-                    static_cast<u32>(i)
-                };
-
-                command_buffer.pushConstants<u32>(shadow.layout.pipeline, vk::ShaderStageFlagBits::eVertex, 0, indices, context.dispatcher);
-                command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
-                command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), context.dispatcher);
-                command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, context.dispatcher);
-            }
-        }
-    }
-
     static void final_draw_pass(const RenderData& data) {
         auto& command_buffer = command_buffers[image_index];
 
@@ -478,8 +378,8 @@ namespace tethys::renderer {
                     };
 
                     command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, generic.handle, context.dispatcher);
-                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout.pipeline, 0, sets, nullptr, context.dispatcher);
-                    command_buffer.pushConstants<u32>(generic.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
+                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, generic.layout, 0, sets, nullptr, context.dispatcher);
+                    command_buffer.pushConstants<u32>(generic.layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
                 } else if (draw.shader == shader::minimal) {
                     std::array indices{
                         static_cast<u32>(i),
@@ -487,8 +387,8 @@ namespace tethys::renderer {
                     };
 
                     command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, context.dispatcher);
-                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout.pipeline, 0, minimal_set[current_frame].handle(), nullptr, context.dispatcher);
-                    command_buffer.pushConstants<u32>(minimal.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
+                    command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout, 0, minimal_set[current_frame].handle(), nullptr, context.dispatcher);
+                    command_buffer.pushConstants<u32>(minimal.layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
                 }
 
                 command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
@@ -496,23 +396,6 @@ namespace tethys::renderer {
                 command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, context.dispatcher);
             }
         }
-
-        std::array<vk::DescriptorSet, 2> sets{
-            minimal_set[current_frame].handle(),
-            generic_set[current_frame].handle()
-        };
-
-        std::array<u32, 6> indices{};
-
-        auto& vbo = vertex_buffers[debug_quad.vbo_index];
-        auto& ibo = index_buffers[debug_quad.ibo_index];
-
-        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, debug.handle, context.dispatcher);
-        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, debug.layout.pipeline, 0, sets, nullptr, context.dispatcher);
-        command_buffer.pushConstants<u32>(debug.layout.pipeline, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
-        command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
-        command_buffer.bindVertexBuffers(0, vbo.buffer.handle, static_cast<vk::DeviceSize>(0), context.dispatcher);
-        command_buffer.drawIndexed(ibo.size, 1, 0, 0, 0, context.dispatcher);
     }
 
     static void copy_to_swapchain() {
@@ -614,43 +497,6 @@ namespace tethys::renderer {
         update_camera(data.camera);
         update_point_lights(data.point_lights);
         update_directional_lights(data.directional_lights);
-
-        /* Shadow pass */ {
-            vk::ClearValue clear{};
-            clear.depthStencil = vk::ClearDepthStencilValue{ { 1.0f, 0 } };
-
-            vk::RenderPassBeginInfo render_pass_begin_info{}; {
-                render_pass_begin_info.renderArea.extent.width = shadow_depth.image.width;
-                render_pass_begin_info.renderArea.extent.height = shadow_depth.image.height;
-                render_pass_begin_info.framebuffer = shadow_depth_framebuffer;
-                render_pass_begin_info.renderPass = shadow_depth_render_pass;
-                render_pass_begin_info.clearValueCount = 1;
-                render_pass_begin_info.pClearValues = &clear;
-            }
-
-            vk::Viewport viewport{}; {
-                viewport.width = shadow_depth.image.width;
-                viewport.height = shadow_depth.image.height;
-                viewport.x = 0;
-                viewport.y = 0;
-                viewport.minDepth = 0.0f;
-                viewport.maxDepth = 1.0f;
-            }
-
-            vk::Rect2D scissor{}; {
-                scissor.extent.width = shadow_depth.image.width;
-                scissor.extent.height = shadow_depth.image.height;
-                scissor.offset = { { 0, 0 } };
-            }
-
-            command_buffer.setViewport(0, viewport, context.dispatcher);
-            command_buffer.setScissor(0, scissor, context.dispatcher);
-            command_buffer.setDepthBias(1.25f, 0.0f, 1.75f, context.dispatcher);
-
-            command_buffer.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline, context.dispatcher);
-            shadow_depth_draw_pass(data);
-            command_buffer.endRenderPass(context.dispatcher);
-        }
 
         /* Final color pass */ {
             std::array<vk::ClearValue, 2> clear_values{}; {

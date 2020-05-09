@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 project(Tethys)
 
 find_package(Vulkan REQUIRED)
@@ -67,7 +67,6 @@ set(TETHYS_HEADERS
         "include/tethys/camera.hpp"
         "include/tethys/material.hpp"
         "include/tethys/directional_light.hpp"
-        "include/tethys/acquire.hpp"
         "include/tethys/api/index_buffer.hpp"
         "include/tethys/model.hpp"
         "include/tethys/api/render_target.hpp")
@@ -113,6 +112,7 @@ target_include_directories(Tethys PUBLIC
         external/assimp/include
         external/VulkanMemoryAllocator/src)
 
+target_compile_options(assimp INTERFACE -Wno-error)
 if (UNIX)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_compile_options(Tethys PUBLIC -O0 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-c99-extensions -Wno-shadow -Wno-deprecated-declarations -Wno-nullability-extension)
@@ -147,6 +147,8 @@ if (UNIX)
 else()
     target_link_libraries(Tethys PUBLIC glfw assimp)
 endif()
+
+target_precompile_headers(Tethys PUBLIC <vulkan/vulkan.hpp>)
 
 file(GLOB SHADER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert" "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag")
 set(SHADER_OUTPUT_FILES "")

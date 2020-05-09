@@ -29,8 +29,8 @@ namespace tethys::api {
 
     [[nodiscard]] static vk::Sampler make_depth_sampler() {
         vk::SamplerCreateInfo info{}; {
-            info.magFilter = vk::Filter::eNearest;
-            info.minFilter = vk::Filter::eNearest;
+            info.magFilter = vk::Filter::eLinear;
+            info.minFilter = vk::Filter::eLinear;
             info.addressModeU = vk::SamplerAddressMode::eClampToBorder;
             info.addressModeV = vk::SamplerAddressMode::eClampToBorder;
             info.addressModeW = vk::SamplerAddressMode::eClampToBorder;

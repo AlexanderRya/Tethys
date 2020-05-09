@@ -9,17 +9,21 @@
 #include <vector>
 
 namespace tethys {
-    struct PipelineLayout {
-        vk::PipelineLayout pipeline{};
-        std::vector<vk::DescriptorSetLayout> sets{};
-    };
+    namespace layout {
+        template <u32 Idx>
+        vk::DescriptorSetLayout& get();
+
+        void load();
+    } // namespace tethys::layout
 
     struct Pipeline {
         struct CreateInfo {
+            std::vector<vk::DescriptorSetLayout> layouts{};
+            vk::PushConstantRange push_constants{};
+
             std::string vertex{};
             std::string fragment{};
 
-            u32 layout_idx{};
             u32 subpass_idx{};
 
             vk::RenderPass render_pass{};
@@ -29,11 +33,8 @@ namespace tethys {
         };
 
         vk::Pipeline handle{};
-        PipelineLayout layout{};
+        vk::PipelineLayout layout{};
     };
-
-    void load_set_layouts();
-    void load_pipeline_layouts();
 
     [[nodiscard]] Pipeline make_pipeline(const Pipeline::CreateInfo&);
 } // namespace tethys
