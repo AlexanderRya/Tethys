@@ -128,6 +128,8 @@ namespace tethys {
     }
 
     Texture load_texture(const u8* data, const u32 width, const u32 height, const u32 channels, const vk::Format format) {
+        static usize texture_index = 0;
+
         if (!data) {
             throw std::runtime_error("Error, can't load texture without data");
         }
@@ -156,20 +158,18 @@ namespace tethys {
             create_info.width = width;
             create_info.height = height;
             create_info.mips = texture.mips;
-            create_info.memory_usage = VMA_MEMORY_USAGE_GPU_ONLY;
             create_info.usage_flags = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
             create_info.format = format;
+            create_info.aspect = vk::ImageAspectFlagBits::eColor;
             create_info.tiling = vk::ImageTiling::eOptimal;
             create_info.samples = vk::SampleCountFlagBits::e1;
         }
-
         texture.image = api::make_image(create_info);
+        texture.index = texture_index++;
 
         api::transition_image_layout(texture.image.handle, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, texture.mips);
         api::copy_buffer_to_image(staging.handle, texture.image.handle, width, height);
         generate_mipmaps(texture);
-
-        texture.view = api::make_image_view(texture.image.handle, format, vk::ImageAspectFlagBits::eColor, texture.mips);
 
         logger::info(
             "Successfully loaded texture, width: {}, height: {}, channels: {}",
@@ -181,7 +181,7 @@ namespace tethys {
     vk::DescriptorImageInfo Texture::info(const api::SamplerType& type) const {
         vk::DescriptorImageInfo image_info{}; {
             image_info.sampler = api::sampler_from_type(type);
-            image_info.imageView = view;
+            image_info.imageView = image.view;
             image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         }
         return image_info;

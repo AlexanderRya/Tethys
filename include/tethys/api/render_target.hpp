@@ -8,13 +8,8 @@
 namespace tethys::api {
     struct Offscreen {
         api::Image color{};
-        vk::ImageView color_view{};
-
         api::Image depth{};
-        vk::ImageView depth_view{};
-
-        api::Image resolve{};
-        vk::ImageView resolve_view{};
+        api::Image msaa{};
     };
 
     [[nodiscard]] Offscreen make_offscreen_target();

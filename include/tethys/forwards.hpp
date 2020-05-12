@@ -24,12 +24,10 @@ namespace tethys {
     struct Model;
     struct Vertex;
     struct Texture;
-    struct PipelineLayout;
+    struct Pipeline;
     struct PointLight;
     struct DirectionalLight;
     struct RenderData;
-    template <typename>
-    struct Handle;
 } // namespace tethys
 
 namespace tethys::api {

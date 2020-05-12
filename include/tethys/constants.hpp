@@ -2,7 +2,6 @@
 #define TETHYS_CONSTANTS_HPP
 
 #include <tethys/forwards.hpp>
-#include <tethys/handle.hpp>
 #include <tethys/types.hpp>
 
 namespace tethys {
@@ -28,9 +27,9 @@ namespace tethys {
     } // namespace tethys::shader
 
     namespace texture {
-        inline Handle<Texture> white{ 0 };
-        inline Handle<Texture> black{ 1 };
-        inline Handle<Texture> green{ 2 };
+        constexpr inline u32 white = 0;
+        constexpr inline u32 black = 1;
+        constexpr inline u32 green = 2;
     } // namespace tethys::texture
 
     namespace api {

@@ -10,7 +10,7 @@
 namespace tethys {
     struct Texture {
         api::Image image{};
-        vk::ImageView view{};
+        u32 index{}; // Temporary fix, indicates texture index in texture descriptor
         u32 mips{};
 
         [[nodiscard]] vk::DescriptorImageInfo info(const api::SamplerType&) const;

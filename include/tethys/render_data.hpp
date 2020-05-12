@@ -1,10 +1,9 @@
 #ifndef TETHYS_RENDER_DATA_HPP
 #define TETHYS_RENDER_DATA_HPP
 
+#include <tethys/pipeline.hpp>
 #include <tethys/forwards.hpp>
-#include <tethys/material.hpp>
 #include <tethys/camera.hpp>
-#include <tethys/handle.hpp>
 #include <tethys/model.hpp>
 #include <tethys/mesh.hpp>
 
@@ -12,9 +11,9 @@
 
 namespace tethys {
     struct DrawCommand {
-        Handle<Model> model{};
+        Model model{};
         glm::mat4 transform{};
-        u32 shader{};
+        Pipeline shader{};
     };
 
     struct RenderData {

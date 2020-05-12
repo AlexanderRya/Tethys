@@ -32,7 +32,7 @@ namespace tethys::api {
             allocation_create_info.memoryTypeBits = 0;
             allocation_create_info.pool = nullptr;
             allocation_create_info.pUserData = nullptr;
-            allocation_create_info.usage = info.memory_usage;
+            allocation_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
         }
 
         Image image{};
@@ -50,6 +50,7 @@ namespace tethys::api {
         image.width = info.width;
         image.tiling = info.tiling;
         image.samples = info.samples;
+        image.view = make_image_view(image.handle, info.format, info.aspect, info.mips);
 
         return image;
     }
@@ -99,13 +100,13 @@ namespace tethys::api {
 
             switch (old_layout) {
                 case vk::ImageLayout::eUndefined: {
-                    image_memory_barrier.srcAccessMask = {};
                     source_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+                    image_memory_barrier.srcAccessMask = {};
                 } break;
 
                 case vk::ImageLayout::eTransferDstOptimal: {
-                    image_memory_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
                     source_stage = vk::PipelineStageFlagBits::eTransfer;
+                    image_memory_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
                 } break;
 
                 default: {
@@ -115,8 +116,8 @@ namespace tethys::api {
 
             switch (new_layout) {
                 case vk::ImageLayout::eTransferDstOptimal: {
-                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
                     destination_stage = vk::PipelineStageFlagBits::eTransfer;
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
                 } break;
 
                 case vk::ImageLayout::eShaderReadOnlyOptimal: {
@@ -126,13 +127,13 @@ namespace tethys::api {
 
                 case vk::ImageLayout::eDepthStencilAttachmentOptimal: {
                     image_memory_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
                     destination_stage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
                 } break;
 
                 case vk::ImageLayout::ePresentSrcKHR: {
-                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
                     destination_stage = vk::PipelineStageFlagBits::eAllGraphics;
+                    image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
                 } break;
 
                 default: {

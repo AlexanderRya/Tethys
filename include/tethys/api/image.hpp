@@ -18,16 +18,17 @@ namespace tethys::api {
 
             vk::Format format{};
             vk::ImageTiling tiling{};
+            vk::ImageAspectFlagBits aspect{};
             vk::SampleCountFlagBits samples{};
 
             vk::ImageUsageFlags usage_flags{};
-            VmaMemoryUsage memory_usage{};
         };
 
         i32 width{};
         i32 height{};
         vk::Image handle{};
         vk::Format format{};
+        vk::ImageView view{};
         vk::ImageTiling tiling{};
         VmaAllocation allocation{};
         vk::SampleCountFlagBits samples{};

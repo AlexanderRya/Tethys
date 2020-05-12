@@ -11,19 +11,30 @@
 #include <filesystem>
 #include <vector>
 
-namespace tethys::renderer {
-    void initialise();
+namespace tethys {
+    namespace renderer {
+        void initialise();
 
-    [[nodiscard]] Handle<Mesh> write_geometry(const Mesh&);
-    [[nodiscard]] Handle<Mesh> write_geometry(const std::vector<Vertex>&, const std::vector<u32>&);
-    [[nodiscard]] Handle<Texture> upload_texture(const u8, const u8, const u8, const u8, const vk::Format);
-    [[nodiscard]] Handle<Texture> upload_texture(const char*, const vk::Format);
-    [[nodiscard]] Handle<Model> upload_model(const std::string&);
-    [[nodiscard]] Handle<Model> upload_model(const std::vector<Vertex>&, const std::vector<u32>&, const char* = nullptr, const char* = nullptr, const char* = nullptr);
-    void unload_geometry(Handle<Mesh>&&);
+        [[nodiscard]] Mesh write_geometry(const VertexData&);
+        [[nodiscard]] Mesh write_geometry(const std::vector<Vertex>&, const std::vector<u32>&);
+        [[nodiscard]] Texture upload_texture(const u8, const u8, const u8, const u8, const vk::Format);
+        [[nodiscard]] Texture upload_texture(const char*, const vk::Format);
+        [[nodiscard]] Model upload_model(const std::string&);
+        [[nodiscard]] Model upload_model(const VertexData&,  const char* = nullptr, const char* = nullptr, const char* = nullptr);
 
-    void draw(const RenderData&);
-    void submit();
-} // namespace tethys::renderer
+        void draw(const RenderData&);
+        void submit();
+    } // namespace tethys::renderer
+
+    namespace texture {
+        template <usize Nx>
+        Texture& get();
+    } // namespace tethys::texture
+
+    namespace shader {
+        template <usize Nx>
+        Pipeline& get();
+    } // namespace tethys::shader
+} // namespace tethys
 
 #endif //TETHYS_RENDERER_HPP

@@ -5,6 +5,7 @@
 
 namespace tethys::api {
     enum class SamplerType {
+        eNone,
         eDefault,
         eDepth
     };

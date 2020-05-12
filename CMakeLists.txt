@@ -65,7 +65,6 @@ set(TETHYS_HEADERS
         "include/tethys/api/sampler.hpp"
         "include/tethys/point_light.hpp"
         "include/tethys/camera.hpp"
-        "include/tethys/material.hpp"
         "include/tethys/directional_light.hpp"
         "include/tethys/api/index_buffer.hpp"
         "include/tethys/model.hpp"
@@ -96,8 +95,7 @@ set(TETHYS_SOURCES
         "src/tethys/api/stb_image.cpp"
         "src/tethys/api/index_buffer.cpp"
         "src/tethys/model.cpp"
-        "src/tethys/api/render_target.cpp"
-        "src/tethys/mesh.cpp")
+        "src/tethys/api/render_target.cpp" src/tethys/mesh.cpp)
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}

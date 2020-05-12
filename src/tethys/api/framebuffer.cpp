@@ -8,9 +8,9 @@
 namespace tethys::api {
     vk::Framebuffer make_offscreen_framebuffer(const Offscreen& offscreen, const vk::RenderPass render_pass) {
         std::array<vk::ImageView, 3> attachments{}; {
-            attachments[0] = offscreen.resolve_view;
-            attachments[1] = offscreen.depth_view;
-            attachments[2] = offscreen.color_view;
+            attachments[0] = offscreen.msaa.view;
+            attachments[1] = offscreen.depth.view;
+            attachments[2] = offscreen.color.view;
         }
 
         vk::FramebufferCreateInfo framebuffer_create_info{}; {

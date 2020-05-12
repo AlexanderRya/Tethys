@@ -87,6 +87,7 @@ namespace tethys::api {
     vk::DebugUtilsMessengerEXT install_validation_layers() {
         vk::DebugUtilsMessengerCreateInfoEXT create_info{}; {
             create_info.messageSeverity =
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo    |
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
                 vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;

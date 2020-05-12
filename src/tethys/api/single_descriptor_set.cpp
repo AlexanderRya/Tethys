@@ -48,8 +48,8 @@ namespace tethys::api {
 
     void SingleDescriptorSet::update(const UpdateImageInfo& info) {
         vk::WriteDescriptorSet write{}; {
-            write.descriptorCount = info.image.size();
-            write.pImageInfo = info.image.data();
+            write.descriptorCount = info.size;
+            write.pImageInfo = info.image;
             write.pTexelBufferView = nullptr;
             write.pBufferInfo = nullptr;
             write.dstSet = descriptor_set;

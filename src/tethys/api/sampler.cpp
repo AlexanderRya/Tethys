@@ -60,6 +60,8 @@ namespace tethys::api {
                 return default_sampler;
             case SamplerType::eDepth:
                 return depth_sampler;
+            default:
+                return nullptr;
         }
     }
 } // namespace tethys::api

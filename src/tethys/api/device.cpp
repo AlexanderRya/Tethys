@@ -80,10 +80,7 @@ namespace tethys::api {
 
         constexpr std::array enabled_exts{
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            //VK_KHR_RAY_TRACING_EXTENSION_NAME,
             VK_KHR_BIND_MEMORY_2_EXTENSION_NAME,
-            //VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-            //VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
             VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME
         };
 
@@ -116,13 +113,13 @@ namespace tethys::api {
             descriptor_indexing_features.runtimeDescriptorArray = true;
         }
 
-        /*vk::PhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{}; {
+        vk::PhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{}; {
             ray_tracing_features.pNext = &descriptor_indexing_features;
             ray_tracing_features.rayTracing = true;
-        }*/
+        }
 
         vk::DeviceCreateInfo device_create_info{}; {
-            device_create_info.pNext = &descriptor_indexing_features;
+            device_create_info.pNext = &ray_tracing_features;
             device_create_info.ppEnabledExtensionNames = enabled_exts.data();
             device_create_info.enabledExtensionCount = enabled_exts.size();
             device_create_info.pQueueCreateInfos = &queue_create_info;

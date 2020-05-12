@@ -11,19 +11,19 @@
 #include <unordered_map>
 
 namespace tethys {
-    static std::unordered_map<std::string, Handle<Texture>> loaded_textures;
+    static std::unordered_map<std::string, Texture> loaded_textures;
 
-    static Handle<Texture> try_load_texture(const aiMaterial* material, const aiTextureType type, const std::string& model_path) {
+    [[nodiscard]] static Texture& try_load_texture(const aiMaterial* material, const aiTextureType type, const std::string& model_path) {
         using namespace std::string_literals;
 
         if (!material->GetTextureCount(type)) {
             switch (type) {
                 case aiTextureType_DIFFUSE:
-                    return texture::white;
+                    return texture::get<texture::white>();
                 case aiTextureType_HEIGHT:
-                    return texture::green;
+                    return texture::get<texture::green>();
                 default:
-                    return texture::black;
+                    return texture::get<texture::black>();
             }
         }
 
@@ -71,7 +71,6 @@ namespace tethys {
             geometry.emplace_back(vertex);
         }
 
-
         indices.reserve(mesh->mNumFaces * 3);
 
         for (usize i = 0; i < mesh->mNumFaces; i++) {
@@ -84,7 +83,7 @@ namespace tethys {
         auto& material = scene->mMaterials[mesh->mMaterialIndex];
 
         sub_mesh.mesh = renderer::write_geometry(geometry, indices);
-        sub_mesh.diffuse = try_load_texture(material, aiTextureType_DIFFUSE, model_path);
+        sub_mesh.albedo = try_load_texture(material, aiTextureType_DIFFUSE, model_path);
         sub_mesh.specular = try_load_texture(material, aiTextureType_SPECULAR, model_path);
         sub_mesh.normal = try_load_texture(material, aiTextureType_HEIGHT, model_path);
 
@@ -117,12 +116,12 @@ namespace tethys {
         return model;
     }
 
-    Model load_model(const std::vector<Vertex>& vertices, const std::vector<u32>& indices, const char* diffuse, const char* specular, const char* normal) {
+    Model load_model(const VertexData& data, const char* diffuse, const char* specular, const char* normal) {
         Model::SubMesh submesh{}; {
-            submesh.mesh = renderer::write_geometry(vertices, indices);
-            submesh.diffuse = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, vk::Format::eR8G8B8A8Srgb) : texture::white;
-            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : texture::black;
-            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, vk::Format::eR8G8B8A8Unorm) : texture::green;
+            submesh.mesh = renderer::write_geometry(data);
+            submesh.albedo = diffuse ? loaded_textures.find(diffuse) != loaded_textures.end() ? loaded_textures[diffuse] : renderer::upload_texture(diffuse, vk::Format::eR8G8B8A8Srgb) : texture::get<texture::white>();
+            submesh.specular = specular ? loaded_textures.find(specular) != loaded_textures.end() ? loaded_textures[specular] : renderer::upload_texture(specular, vk::Format::eR8G8B8A8Unorm) : texture::get<texture::black>();
+            submesh.normal = normal ? loaded_textures.find(normal) != loaded_textures.end() ? loaded_textures[normal] : renderer::upload_texture(normal, vk::Format::eR8G8B8A8Unorm) : texture::get<texture::green>();
         }
 
         return Model{ {

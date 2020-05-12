@@ -7,15 +7,33 @@
 
 namespace tethys::api {
     vk::RenderPass make_offscreen_render_pass(const Offscreen& offscreen) {
-        vk::AttachmentDescription color_description{}; {
-            color_description.format = offscreen.resolve.format;
-            color_description.samples = context.device.samples;
-            color_description.loadOp = vk::AttachmentLoadOp::eClear;
-            color_description.storeOp = vk::AttachmentStoreOp::eStore;
-            color_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-            color_description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-            color_description.initialLayout = vk::ImageLayout::eUndefined;
-            color_description.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        std::array<vk::AttachmentDescription, 3> attachments{}; {
+            attachments[0].format = offscreen.msaa.format;
+            attachments[0].samples = context.device.samples;
+            attachments[0].loadOp = vk::AttachmentLoadOp::eClear;
+            attachments[0].storeOp = vk::AttachmentStoreOp::eStore;
+            attachments[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+            attachments[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+            attachments[0].initialLayout = vk::ImageLayout::eUndefined;
+            attachments[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+
+            attachments[1].format = offscreen.depth.format;
+            attachments[1].samples = context.device.samples;
+            attachments[1].loadOp = vk::AttachmentLoadOp::eClear;
+            attachments[1].storeOp = vk::AttachmentStoreOp::eDontCare;
+            attachments[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+            attachments[1].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+            attachments[1].initialLayout = vk::ImageLayout::eUndefined;
+            attachments[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+            attachments[2].format = offscreen.color.format;
+            attachments[2].samples = vk::SampleCountFlagBits::e1;
+            attachments[2].loadOp = vk::AttachmentLoadOp::eDontCare;
+            attachments[2].storeOp = vk::AttachmentStoreOp::eStore;
+            attachments[2].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+            attachments[2].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+            attachments[2].initialLayout = vk::ImageLayout::eUndefined;
+            attachments[2].finalLayout = vk::ImageLayout::eTransferSrcOptimal;
         }
 
         vk::AttachmentReference color_attachment{}; {
@@ -23,31 +41,9 @@ namespace tethys::api {
             color_attachment.attachment = 0;
         }
 
-        vk::AttachmentDescription depth_description{}; {
-            depth_description.format = offscreen.depth.format;
-            depth_description.samples = context.device.samples;
-            depth_description.loadOp = vk::AttachmentLoadOp::eClear;
-            depth_description.storeOp = vk::AttachmentStoreOp::eDontCare;
-            depth_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-            depth_description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-            depth_description.initialLayout = vk::ImageLayout::eUndefined;
-            depth_description.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-        }
-
         vk::AttachmentReference depth_attachment{}; {
             depth_attachment.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
             depth_attachment.attachment = 1;
-        }
-
-        vk::AttachmentDescription color_resolve_description{}; {
-            color_resolve_description.format = offscreen.color.format;
-            color_resolve_description.samples = vk::SampleCountFlagBits::e1;
-            color_resolve_description.loadOp = vk::AttachmentLoadOp::eDontCare;
-            color_resolve_description.storeOp = vk::AttachmentStoreOp::eStore;
-            color_resolve_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-            color_resolve_description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-            color_resolve_description.initialLayout = vk::ImageLayout::eUndefined;
-            color_resolve_description.finalLayout = vk::ImageLayout::eTransferSrcOptimal;
         }
 
         vk::AttachmentReference color_resolve_attachment{}; {
@@ -58,12 +54,12 @@ namespace tethys::api {
         vk::SubpassDescription subpass_description{}; {
             subpass_description.colorAttachmentCount = 1;
             subpass_description.pColorAttachments = &color_attachment;
-            subpass_description.pResolveAttachments = &color_resolve_attachment;
             subpass_description.pDepthStencilAttachment = &depth_attachment;
+            subpass_description.pResolveAttachments = &color_resolve_attachment;
             subpass_description.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
         }
 
-        vk::SubpassDependency subpass_dependency{}; { // ¯\_(ツ)_/¯
+        vk::SubpassDependency subpass_dependency{}; {
             subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
             subpass_dependency.dstSubpass = 0;
             subpass_dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
@@ -71,12 +67,6 @@ namespace tethys::api {
             subpass_dependency.srcAccessMask = {};
             subpass_dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
         }
-
-        std::array<vk::AttachmentDescription, 3> attachments{
-            color_description,
-            depth_description,
-            color_resolve_description
-        };
 
         vk::RenderPassCreateInfo render_pass_create_info{}; {
             render_pass_create_info.attachmentCount = attachments.size();

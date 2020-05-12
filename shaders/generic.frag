@@ -59,7 +59,11 @@ void main() {
 
     vec3 albedo = texture(textures[albedo_index], uvs).rgb;
     vec3 specular = texture(textures[specular_index], uvs).rgb;
-    vec3 normal = normal_index == 2 ? normals : normalize(TBN * (2.0 * texture(textures[normal_index], uvs).rgb - 1.0));
+    vec3 normal = normals;
+
+    if (normal_index != 2) {
+        normal = normalize(TBN * (2.0 * texture(textures[normal_index], uvs).rgb - 1.0));
+    }
 
     result = albedo * ambient;
 

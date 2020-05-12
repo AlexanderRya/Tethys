@@ -28,12 +28,16 @@ int main() {
     tethys::api::initialise();
     tethys::renderer::initialise();
 
+    auto& generic = tethys::shader::get<tethys::shader::generic>();
+    auto& minimal = tethys::shader::get<tethys::shader::minimal>();
+
     //auto nanosuit_model = tethys::renderer::upload_model("../resources/models/nanosuit/nanosuit.obj");
     auto dragon_model = tethys::renderer::upload_model("../resources/models/dragon/dragon.obj");
     auto suzanne_model = tethys::renderer::upload_model("../resources/models/suzanne/suzanne.obj");
     auto plane_model = tethys::renderer::upload_model("../resources/models/plane/plane.obj");
+    auto sphere_mesh = tethys::renderer::upload_model(tethys::generate_sphere(1.0f, 36, 18), "../resources/textures/wood.png");
     //auto sponza_model = tethys::renderer::upload_model("../resources/models/sponza/sponza.obj");
-    tethys::Handle<tethys::Model> cube_mesh;
+    tethys::Model cube_mesh;
 
     /* Cube mesh */ {
         std::vector<float> cube_vertices_floats{
@@ -75,14 +79,14 @@ int main() {
             -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
         };
 
-        std::vector<tethys::Vertex> cube_vertices(36);
-        std::memcpy(cube_vertices.data(), cube_vertices_floats.data(), sizeof(tethys::Vertex) * cube_vertices.size());
+        tethys::VertexData cube_data{}; {
+            cube_data.geometry.resize(36);
+            cube_data.indices.resize(36);
+        }
+        std::memcpy(cube_data.geometry.data(), cube_vertices_floats.data(), sizeof(float) * cube_vertices_floats.size());
+        std::iota(cube_data.indices.begin(), cube_data.indices.end(), 0);
 
-        std::vector<unsigned> cube_indices(36);
-
-        std::iota(cube_indices.begin(), cube_indices.end(), 0);
-
-        cube_mesh = tethys::renderer::upload_model(cube_vertices, cube_indices, "../resources/textures/wood.png");
+        cube_mesh = tethys::renderer::upload_model(cube_data, "../resources/textures/wood.png");
     }
 
     static CameraUtil camera;
@@ -106,6 +110,8 @@ int main() {
         camera.process(xoffset, yoffset);
     });
 
+    auto light_pos = glm::vec3(0.0f, 3.0f, 0.0f);
+
     glfwSetInputMode(tethys::window::handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float last_frame = 0;
@@ -117,11 +123,26 @@ int main() {
         float delta_time = frame_time - last_frame;
         last_frame = frame_time;
 
-        auto light_pos = glm::vec3(-6.0f * std::sin(0.5f * glfwGetTime()), 7.0f, 6.0f * std::cos(0.5f * glfwGetTime()));
-        //auto light_pos = glm::vec3(10.0f, 1.0f, 0.0f);
+        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_RIGHT)) {
+            light_pos.x += 1.25f * delta_time;
+        }
+        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_LEFT)) {
+            light_pos.x -= 1.25f * delta_time;
+        }
+        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_RIGHT_SHIFT)) {
+            light_pos.y += 1.25f * delta_time;
+        }
+        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_RIGHT_CONTROL)) {
+            light_pos.y -= 1.25f * delta_time;
+        }
+        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_DOWN)) {
+            light_pos.z += 1.25f * delta_time;
+        }
+        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_UP)) {
+            light_pos.z -= 1.25f * delta_time;
+        }
 
         data.camera.projection = glm::perspective(glm::radians(60.f), 1280 / 720.0f, 0.1f, 1000.f);
-        data.camera.projection[1][1] *= -1;
         data.camera.view = camera.view();
         data.camera.pos = glm::vec4(camera.cam_pos, 0.0f);
 
@@ -129,28 +150,28 @@ int main() {
             tethys::DrawCommand{
                 .model = dragon_model,
                 .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 0.5f, -0.5f)), glm::vec3(0.61f)),
-                .shader = tethys::shader::generic
+                .shader = generic
             },
             tethys::DrawCommand{
                 .model = suzanne_model,
                 .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.5, 0.5, 0.5)), glm::vec3(0.45f)),
-                .shader = tethys::shader::generic
+                .shader = generic
             },
             tethys::DrawCommand{
                 .model = plane_model,
                 .transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)),
-                .shader = tethys::shader::generic
+                .shader = generic
             },
             /*tethys::DrawCommand{
                 .model = sponza_model,
                 .transform = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f)),
-                .shader = tethys::shader::generic
-            },
+                .shader = generic
+            },*/
             tethys::DrawCommand{
-                .model = cube_mesh,
+                .model = sphere_mesh,
                 .transform = glm::scale(glm::translate(glm::mat4(1.0f), light_pos), glm::vec3(0.15f)),
-                .shader = tethys::shader::minimal
-            }*/
+                .shader = minimal
+            }
         };
 
         data.point_lights = {
