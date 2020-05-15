@@ -22,8 +22,9 @@ namespace tethys {
     } // namespace tethys::layout
 
     namespace shader {
-        constexpr inline u32 generic = 0;
-        constexpr inline u32 minimal = 1;
+        constexpr inline u32 minimal = 0;
+        constexpr inline u32 generic = 1;
+        constexpr inline u32 pbr = 2;
     } // namespace tethys::shader
 
     namespace texture {

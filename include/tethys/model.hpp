@@ -16,15 +16,19 @@ namespace tethys {
             Mesh mesh;
 
             Texture albedo;
-            Texture specular;
+            Texture metallic;
             Texture normal;
+            Texture roughness;
+            Texture occlusion;
         };
 
         std::vector<SubMesh> submeshes;
     };
 
     [[nodiscard]] Model load_model(const std::string&);
+    [[nodiscard]] Model load_model_pbr(const std::string&);
     [[nodiscard]] Model load_model(const VertexData&, const char*, const char*, const char*);
+    [[nodiscard]] Model load_model(const VertexData&, const char*, const char*, const char*, const char*, const char*);
 } // namespace tethys
 
 #endif //TETHYS_MODEL_HPP

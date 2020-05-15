@@ -4,17 +4,15 @@
 #include <glm/vec3.hpp>
 
 namespace tethys {
-    struct Falloff {
+    struct PointLight {
+        glm::vec3 position;
+        float pad0 = 1.0f;
+        glm::vec3 color;
+        float pad1 = 1.0f;
         float intensity;
         float constant;
         float linear;
         float quadratic;
-    };
-
-    struct PointLight {
-        alignas(16) glm::vec3 position;
-        alignas(16) glm::vec3 color;
-        alignas(16) Falloff falloff;
     };
 } // namespace tethys
 

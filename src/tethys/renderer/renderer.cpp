@@ -56,8 +56,9 @@ namespace tethys {
         static api::DescriptorSet generic_set{};
         static api::DescriptorSet minimal_set{};
 
-        static Pipeline generic;
         static Pipeline minimal;
+        static Pipeline generic;
+        static Pipeline pbr;
 
         static std::vector<Texture> builtin_textures{};
         static std::vector<vk::DescriptorImageInfo> texture_descriptors{};
@@ -93,6 +94,28 @@ namespace tethys {
 
             layout::load();
 
+            Pipeline::CreateInfo minimal_info{}; {
+                minimal_info.vertex = "shaders/minimal.vert.spv";
+                minimal_info.fragment = "shaders/minimal.frag.spv";
+                minimal_info.subpass_idx = 0;
+                minimal_info.render_pass = offscreen_render_pass;
+                minimal_info.samples = context.device.samples;
+                minimal_info.cull = vk::CullModeFlagBits::eNone;
+                minimal_info.dynamic_states = {
+                    vk::DynamicState::eViewport,
+                    vk::DynamicState::eScissor
+                };
+                minimal_info.layouts = {
+                    layout::get<layout::minimal>()
+                };
+                minimal_info.push_constants = {
+                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                    0,
+                    sizeof(u32) * 2
+                };
+            }
+            minimal = make_pipeline(minimal_info);
+
             Pipeline::CreateInfo generic_info{}; {
                 generic_info.vertex = "shaders/generic.vert.spv";
                 generic_info.fragment = "shaders/generic.frag.spv";
@@ -116,27 +139,28 @@ namespace tethys {
             }
             generic = make_pipeline(generic_info);
 
-            Pipeline::CreateInfo minimal_info{}; {
-                minimal_info.vertex = "shaders/minimal.vert.spv";
-                minimal_info.fragment = "shaders/minimal.frag.spv";
-                minimal_info.subpass_idx = 0;
-                minimal_info.render_pass = offscreen_render_pass;
-                minimal_info.samples = context.device.samples;
-                generic_info.cull = vk::CullModeFlagBits::eNone;
-                minimal_info.dynamic_states = {
+            Pipeline::CreateInfo pbr_info{}; {
+                pbr_info.vertex = "shaders/pbr.vert.spv";
+                pbr_info.fragment = "shaders/pbr.frag.spv";
+                pbr_info.subpass_idx = 0;
+                pbr_info.render_pass = offscreen_render_pass;
+                pbr_info.samples = context.device.samples;
+                pbr_info.cull = vk::CullModeFlagBits::eNone;
+                pbr_info.dynamic_states = {
                     vk::DynamicState::eViewport,
                     vk::DynamicState::eScissor
                 };
-                minimal_info.layouts = {
-                    layout::get<layout::minimal>()
+                pbr_info.layouts = {
+                    layout::get<layout::minimal>(),
+                    layout::get<layout::generic>()
                 };
-                minimal_info.push_constants = {
+                pbr_info.push_constants = {
                     vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
                     0,
-                    sizeof(u32) * 2
+                    sizeof(u32) * 8
                 };
             }
-            minimal = make_pipeline(minimal_info);
+            pbr = make_pipeline(pbr_info);
 
             camera_buffer.create(vk::BufferUsageFlagBits::eUniformBuffer);
             transform_buffer.create(vk::BufferUsageFlagBits::eStorageBuffer);
@@ -194,8 +218,16 @@ namespace tethys {
             return load_model(path);
         }
 
-        Model upload_model(const VertexData& data, const char* diffuse, const char* specular, const char* normal) {
-            return load_model(data, diffuse, specular, normal);
+        Model upload_model_pbr(const std::string& path) {
+            return load_model_pbr(path);
+        }
+
+        Model upload_model(const VertexData& data, const char* albedo, const char* metallic, const char* normal) {
+            return load_model(data, albedo, metallic, normal);
+        }
+
+        Model upload_model(const VertexData& data, const char* albedo, const char* metallic, const char* normal, const char* roughness, const char* occlusion) {
+            return load_model(data, albedo, metallic, normal, roughness, occlusion);
         }
 
         Texture upload_texture(const char* path, const vk::Format color_space) {
@@ -319,7 +351,7 @@ namespace tethys {
                     auto& index_count = submesh.mesh.index_count;
 
                     if (draw.shader.handle == generic.handle) {
-                        std::array<vk::DescriptorSet, 2> sets{
+                        std::array sets{
                             minimal_set[current_frame].handle(),
                             generic_set[current_frame].handle()
                         };
@@ -327,7 +359,7 @@ namespace tethys {
                         std::array indices{
                             static_cast<u32>(i),
                             static_cast<u32>(submesh.albedo.index),
-                            static_cast<u32>(submesh.specular.index),
+                            static_cast<u32>(submesh.metallic.index),
                             static_cast<u32>(submesh.normal.index),
                             static_cast<u32>(data.point_lights.size()),
                             static_cast<u32>(data.directional_lights.size())
@@ -345,6 +377,26 @@ namespace tethys {
                         command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, minimal.handle, context.dispatcher);
                         command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, minimal.layout, 0, minimal_set[current_frame].handle(), nullptr, context.dispatcher);
                         command_buffer.pushConstants<u32>(minimal.layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
+                    } else if (draw.shader.handle == pbr.handle) {
+                        std::array sets{
+                            minimal_set[current_frame].handle(),
+                            generic_set[current_frame].handle()
+                        };
+
+                        std::array indices{
+                            static_cast<u32>(i),
+                            static_cast<u32>(submesh.albedo.index),
+                            static_cast<u32>(submesh.metallic.index),
+                            static_cast<u32>(submesh.normal.index),
+                            static_cast<u32>(submesh.roughness.index),
+                            static_cast<u32>(submesh.occlusion.index),
+                            static_cast<u32>(data.point_lights.size()),
+                            static_cast<u32>(data.directional_lights.size())
+                        };
+
+                        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pbr.handle, context.dispatcher);
+                        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pbr.layout, 0, sets, nullptr, context.dispatcher);
+                        command_buffer.pushConstants<u32>(pbr.layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, indices, context.dispatcher);
                     }
 
                     command_buffer.bindIndexBuffer(ibo.buffer.handle, 0, vk::IndexType::eUint32, context.dispatcher);
@@ -550,6 +602,11 @@ namespace tethys {
         template <>
         Pipeline& get<shader::generic>() {
             return renderer::generic;
+        }
+
+        template <>
+        Pipeline& get<shader::pbr>() {
+            return renderer::pbr;
         }
     } // namespace tethys::shader
 } // namespace tethys

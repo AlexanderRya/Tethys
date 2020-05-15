@@ -12,7 +12,6 @@ layout (location = 0) out vertex_out {
     vec2 uvs;
     vec3 view_pos;
     vec3 normals;
-    mat3 TBN;
 };
 
 layout (set = 0, binding = 0) uniform Camera {
@@ -28,8 +27,10 @@ layout (set = 0, binding = 1) buffer readonly Transform {
 layout (push_constant) uniform Constants {
     uint transform_index;
     uint albedo_index;
-    uint specular_index;
+    uint metallic_index;
     uint normal_index;
+    uint roughness_index;
+    uint occlusion_index;
     uint point_lights_count;
     uint directional_lights_count;
 };
@@ -37,15 +38,10 @@ layout (push_constant) uniform Constants {
 void main() {
     mat4 model = transforms[transform_index];
 
-    vec3 T = normalize(vec3(model * vec4(itangents, 0.0)));
-    vec3 B = normalize(vec3(model * vec4(ibi_tangents, 0.0)));
-    vec3 N = normalize(vec3(model * vec4(inormals, 0.0)));
-
-    TBN = mat3(T, B, N);
     vertex_pos = ivertex_pos;
     frag_pos = vec3(model * vec4(ivertex_pos, 1.0));
     uvs = iuvs;
     view_pos = vec3(camera.pos);
-    normals = inormals;
+    normals = mat3(model) * inormals;
     gl_Position = camera.proj * camera.view * vec4(frag_pos, 1.0);
 }

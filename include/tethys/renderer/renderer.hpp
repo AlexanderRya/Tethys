@@ -20,7 +20,9 @@ namespace tethys {
         [[nodiscard]] Texture upload_texture(const u8, const u8, const u8, const u8, const vk::Format);
         [[nodiscard]] Texture upload_texture(const char*, const vk::Format);
         [[nodiscard]] Model upload_model(const std::string&);
-        [[nodiscard]] Model upload_model(const VertexData&,  const char* = nullptr, const char* = nullptr, const char* = nullptr);
+        [[nodiscard]] Model upload_model_pbr(const std::string&);
+        [[nodiscard]] Model upload_model(const VertexData&, const char* = nullptr, const char* = nullptr, const char* = nullptr);
+        [[nodiscard]] Model upload_model(const VertexData&, const char* = nullptr, const char* = nullptr, const char* = nullptr, const char* = nullptr, const char* = nullptr);
 
         void draw(const RenderData&);
         void submit();

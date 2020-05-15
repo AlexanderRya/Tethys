@@ -14,31 +14,27 @@ layout (location = 0) in vertex_out {
 
 layout (location = 0) out vec4 frag_color;
 
-struct Falloff {
+struct PointLight {
+    vec4 position;
+    vec4 color;
     float intensity;
     float constant;
     float linear;
     float quadratic;
 };
 
-struct PointLight {
-    vec3 position;
-    vec3 color;
-    Falloff falloff;
-};
-
 struct DirectionalLight {
-    vec3 direction;
-    vec3 color;
+    vec4 direction;
+    vec4 color;
 };
 
 layout (set = 0, binding = 2) uniform sampler2D[] textures;
 
-layout (std140, set = 1, binding = 0) buffer readonly PointLights {
+layout (std430, set = 1, binding = 0) buffer readonly PointLights {
     PointLight[] point_lights;
 };
 
-layout (std140, set = 1, binding = 1) buffer readonly DirectionalLights {
+layout (std430, set = 1, binding = 1) buffer readonly DirectionalLights {
     DirectionalLight[] directional_lights;
 };
 
@@ -81,7 +77,7 @@ void main() {
 }
 
 vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir) {
-    vec3 light_dir = normalize(light.position - frag_pos);
+    vec3 light_dir = normalize(vec3(light.position) - frag_pos);
 
     // Diffuse
     float diff = max(dot(normal, light_dir), 0.0);
@@ -91,18 +87,18 @@ vec3 apply_point_light(PointLight light, vec3 color, vec3 specular, vec3 normal,
     float spec = pow(max(dot(normal, halfway_dir), 0.0), 64);
 
     // Attenuation
-    float distance = length(light.position - frag_pos);
-    float attenuation = 1.0 / (light.falloff.constant + (light.falloff.linear * distance) + (light.falloff.quadratic * (distance * distance)));
+    float distance = length(vec3(light.position) - frag_pos);
+    float attenuation = 1.0 / (light.constant + (light.linear * distance) + (light.quadratic * (distance * distance)));
 
     // Combine
-    vec3 result_diffuse = light.color * diff * color;
-    vec3 result_specular = light.color * spec * specular;
+    vec3 result_diffuse = vec3(light.color) * diff * color;
+    vec3 result_specular = vec3(light.color) * spec * specular;
 
-    return (result_diffuse + result_specular) * attenuation * light.falloff.intensity;
+    return (result_diffuse + result_specular) * attenuation * light.intensity;
 }
 
 vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, vec3 normal, vec3 view_dir) {
-    vec3 light_dir = normalize(-light.direction);
+    vec3 light_dir = normalize(-vec3(light.direction));
 
     // Diffuse
     float diff = max(dot(normal, light_dir), 0.0);
@@ -112,8 +108,8 @@ vec3 apply_directional_light(DirectionalLight light, vec3 color, vec3 specular, 
     float spec = pow(max(dot(normal, halfway_dir), 0.0), 64);
 
     // Combine
-    vec3 result_diffuse = light.color * diff * color;
-    vec3 result_specular = light.color * spec * specular;
+    vec3 result_diffuse = vec3(light.color) * diff * color;
+    vec3 result_specular = vec3(light.color) * spec * specular;
 
     return result_diffuse + result_specular;
 }

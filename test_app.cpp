@@ -28,66 +28,24 @@ int main() {
     tethys::api::initialise();
     tethys::renderer::initialise();
 
-    auto& generic = tethys::shader::get<tethys::shader::generic>();
     auto& minimal = tethys::shader::get<tethys::shader::minimal>();
+    auto& generic = tethys::shader::get<tethys::shader::generic>();
+    auto& pbr = tethys::shader::get<tethys::shader::pbr>();
 
-    //auto nanosuit_model = tethys::renderer::upload_model("../resources/models/nanosuit/nanosuit.obj");
-    auto dragon_model = tethys::renderer::upload_model("../resources/models/dragon/dragon.obj");
-    auto suzanne_model = tethys::renderer::upload_model("../resources/models/suzanne/suzanne.obj");
-    auto plane_model = tethys::renderer::upload_model("../resources/models/plane/plane.obj");
-    auto sphere_mesh = tethys::renderer::upload_model(tethys::generate_sphere(1.0f, 36, 18), "../resources/textures/wood.png");
-    //auto sponza_model = tethys::renderer::upload_model("../resources/models/sponza/sponza.obj");
-    tethys::Model cube_mesh;
+    auto sphere_model = tethys::renderer::upload_model_pbr("../resources/models/sphere/sphere.obj");
+    // Haccs
+    sphere_model.submeshes[0].albedo = tethys::renderer::upload_texture("../resources/models/sphere/rustediron2_basecolor.png", vk::Format::eR8G8B8A8Srgb);
+    sphere_model.submeshes[0].normal = tethys::renderer::upload_texture("../resources/models/sphere/rustediron2_normal.png", vk::Format::eR8G8B8A8Unorm);
+    sphere_model.submeshes[0].roughness = tethys::renderer::upload_texture("../resources/models/sphere/rustediron2_roughness.png", vk::Format::eR8G8B8A8Unorm);
+    sphere_model.submeshes[0].metallic = tethys::renderer::upload_texture("../resources/models/sphere/rustediron2_metallic.png", vk::Format::eR8G8B8A8Unorm);
+    sphere_model.submeshes[0].occlusion.index = 0;
 
-    /* Cube mesh */ {
-        std::vector<float> cube_vertices_floats{
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
-        };
-
-        tethys::VertexData cube_data{}; {
-            cube_data.geometry.resize(36);
-            cube_data.indices.resize(36);
-        }
-        std::memcpy(cube_data.geometry.data(), cube_vertices_floats.data(), sizeof(float) * cube_vertices_floats.size());
-        std::iota(cube_data.indices.begin(), cube_data.indices.end(), 0);
-
-        cube_mesh = tethys::renderer::upload_model(cube_data, "../resources/textures/wood.png");
-    }
+    auto sun = sphere_model;
+    sun.submeshes[0].albedo.index = 0;
+    sun.submeshes[0].normal.index = 0;
+    sun.submeshes[0].roughness.index = 0;
+    sun.submeshes[0].metallic.index = 0;
+    sun.submeshes[0].occlusion.index = 0;
 
     static CameraUtil camera;
 
@@ -110,8 +68,6 @@ int main() {
         camera.process(xoffset, yoffset);
     });
 
-    auto light_pos = glm::vec3(0.0f, 3.0f, 0.0f);
-
     glfwSetInputMode(tethys::window::handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float last_frame = 0;
@@ -123,53 +79,23 @@ int main() {
         float delta_time = frame_time - last_frame;
         last_frame = frame_time;
 
-        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_RIGHT)) {
-            light_pos.x += 1.25f * delta_time;
-        }
-        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_LEFT)) {
-            light_pos.x -= 1.25f * delta_time;
-        }
-        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_RIGHT_SHIFT)) {
-            light_pos.y += 1.25f * delta_time;
-        }
-        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_RIGHT_CONTROL)) {
-            light_pos.y -= 1.25f * delta_time;
-        }
-        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_DOWN)) {
-            light_pos.z += 1.25f * delta_time;
-        }
-        if (glfwGetKey(tethys::window::handle(), GLFW_KEY_UP)) {
-            light_pos.z -= 1.25f * delta_time;
-        }
+        auto light_pos = glm::vec3(25.0f * std::sin(glfwGetTime()), 8.0f * std::sin(glfwGetTime()), 25.0f * std::cos(glfwGetTime()));
 
-        data.camera.projection = glm::perspective(glm::radians(60.f), 1280 / 720.0f, 0.1f, 1000.f);
-        data.camera.view = camera.view();
-        data.camera.pos = glm::vec4(camera.cam_pos, 0.0f);
+        data.camera = {
+            glm::perspective(glm::radians(60.f), 1280 / 720.0f, 0.1f, 1000.f),
+            camera.view(),
+            glm::vec4(camera.cam_pos, 0.0f)
+        };
 
         data.draw_commands = {
             tethys::DrawCommand{
-                .model = dragon_model,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 0.5f, -0.5f)), glm::vec3(0.61f)),
-                .shader = generic
+                .model = sphere_model,
+                .transform = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)),
+                .shader = pbr
             },
             tethys::DrawCommand{
-                .model = suzanne_model,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.5, 0.5, 0.5)), glm::vec3(0.45f)),
-                .shader = generic
-            },
-            tethys::DrawCommand{
-                .model = plane_model,
-                .transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)),
-                .shader = generic
-            },
-            /*tethys::DrawCommand{
-                .model = sponza_model,
-                .transform = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f)),
-                .shader = generic
-            },*/
-            tethys::DrawCommand{
-                .model = sphere_mesh,
-                .transform = glm::scale(glm::translate(glm::mat4(1.0f), light_pos), glm::vec3(0.15f)),
+                .model = sun,
+                .transform = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(0.10f)), light_pos),
                 .shader = minimal
             }
         };
@@ -178,12 +104,10 @@ int main() {
             tethys::PointLight{
                 .position = light_pos,
                 .color = glm::vec3(1.0f),
-                .falloff = {
-                    .intensity = 1.0f,
-                    .constant = 1.0f,
-                    .linear = 0.14f,
-                    .quadratic = 0.007f
-                }
+                .intensity = 6.0f,
+                .constant = 1.0f,
+                .linear = 0.14f,
+                .quadratic = 0.007f
             }
         };
 

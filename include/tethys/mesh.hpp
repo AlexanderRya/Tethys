@@ -22,8 +22,6 @@ namespace tethys {
         usize vertex_count;
         usize index_count;
     };
-
-    [[nodiscard]] VertexData generate_sphere(const f32, const u32, const u32);
 } // namespace tethys
 
 #endif //TETHYS_MESH_HPP

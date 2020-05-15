@@ -5,8 +5,10 @@
 
 namespace tethys {
     struct DirectionalLight {
-        alignas(16) glm::vec3 direction;
-        alignas(16) glm::vec3 color;
+        glm::vec3 direction;
+        float pad0;
+        glm::vec3 color;
+        float pad1;
     };
 } // namespace tethys
 

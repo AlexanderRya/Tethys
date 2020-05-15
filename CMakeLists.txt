@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-project(Tethys)
+enable_language(CXX)
+project(Tethys CXX)
 
 find_package(Vulkan REQUIRED)
 
@@ -95,7 +96,7 @@ set(TETHYS_SOURCES
         "src/tethys/api/stb_image.cpp"
         "src/tethys/api/index_buffer.cpp"
         "src/tethys/model.cpp"
-        "src/tethys/api/render_target.cpp" src/tethys/mesh.cpp)
+        "src/tethys/api/render_target.cpp")
 
 add_library(Tethys STATIC
         ${TETHYS_HEADERS}
